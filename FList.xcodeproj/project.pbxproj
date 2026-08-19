@@ -1,0 +1,482 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		797B7C613035D18D00B833BA /* CloudKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A20000000000000000000018 /* CloudKit.framework */; };
+		A30000000000000000000001 /* FListApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000001 /* FListApp.swift */; };
+		A30000000000000000000002 /* AppConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000002 /* AppConfig.swift */; };
+		A30000000000000000000003 /* ShortageItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000003 /* ShortageItem.swift */; };
+		A30000000000000000000004 /* FamilyMember.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000004 /* FamilyMember.swift */; };
+		A30000000000000000000005 /* LocalPersistence.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000005 /* LocalPersistence.swift */; };
+		A30000000000000000000006 /* CloudKitService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000006 /* CloudKitService.swift */; };
+		A30000000000000000000007 /* FListStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000007 /* FListStore.swift */; };
+		A30000000000000000000008 /* FamilySharingController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000008 /* FamilySharingController.swift */; };
+		A30000000000000000000009 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000009 /* OnboardingView.swift */; };
+		A30000000000000000000010 /* ItemRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000010 /* ItemRowView.swift */; };
+		A30000000000000000000011 /* AddItemSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000011 /* AddItemSheet.swift */; };
+		A30000000000000000000012 /* FamilyMembersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000012 /* FamilyMembersView.swift */; };
+		A30000000000000000000013 /* ShortageListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000013 /* ShortageListView.swift */; };
+		A30000000000000000000014 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000014 /* Assets.xcassets */; };
+		A30000000000000000000017 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000017 /* PrivacyInfo.xcprivacy */; };
+		A30000000000000000000019 /* CloudKitShareAcceptance.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000019 /* CloudKitShareAcceptance.swift */; };
+		A30000000000000000000020 /* L10n.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000020 /* L10n.swift */; };
+		A30000000000000000000021 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000021 /* Localizable.xcstrings */; };
+		A30000000000000000000022 /* MemberEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000022 /* MemberEditorView.swift */; };
+		A30000000000000000000023 /* MemberAvatar.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000023 /* MemberAvatar.swift */; };
+		A30000000000000000000024 /* ProfileImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000024 /* ProfileImage.swift */; };
+		A30000000000000000000025 /* NotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000025 /* NotificationManager.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		A10000000000000000000300 /* FList.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FList.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A20000000000000000000001 /* FListApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FListApp.swift; sourceTree = "<group>"; };
+		A20000000000000000000002 /* AppConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfig.swift; sourceTree = "<group>"; };
+		A20000000000000000000003 /* ShortageItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShortageItem.swift; sourceTree = "<group>"; };
+		A20000000000000000000004 /* FamilyMember.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilyMember.swift; sourceTree = "<group>"; };
+		A20000000000000000000005 /* LocalPersistence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalPersistence.swift; sourceTree = "<group>"; };
+		A20000000000000000000006 /* CloudKitService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudKitService.swift; sourceTree = "<group>"; };
+		A20000000000000000000007 /* FListStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FListStore.swift; sourceTree = "<group>"; };
+		A20000000000000000000008 /* FamilySharingController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilySharingController.swift; sourceTree = "<group>"; };
+		A20000000000000000000009 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
+		A20000000000000000000010 /* ItemRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemRowView.swift; sourceTree = "<group>"; };
+		A20000000000000000000011 /* AddItemSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddItemSheet.swift; sourceTree = "<group>"; };
+		A20000000000000000000012 /* FamilyMembersView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilyMembersView.swift; sourceTree = "<group>"; };
+		A20000000000000000000013 /* ShortageListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShortageListView.swift; sourceTree = "<group>"; };
+		A20000000000000000000014 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		A20000000000000000000015 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		A20000000000000000000016 /* FList.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = FList.entitlements; sourceTree = "<group>"; };
+		A20000000000000000000017 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		A20000000000000000000018 /* CloudKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CloudKit.framework; path = System/Library/Frameworks/CloudKit.framework; sourceTree = SDKROOT; };
+		A20000000000000000000019 /* CloudKitShareAcceptance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudKitShareAcceptance.swift; sourceTree = "<group>"; };
+		A20000000000000000000020 /* L10n.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = L10n.swift; sourceTree = "<group>"; };
+		A20000000000000000000021 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
+		A20000000000000000000022 /* MemberEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemberEditorView.swift; sourceTree = "<group>"; };
+		A20000000000000000000023 /* MemberAvatar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemberAvatar.swift; sourceTree = "<group>"; };
+		A20000000000000000000024 /* ProfileImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileImage.swift; sourceTree = "<group>"; };
+		A20000000000000000000025 /* NotificationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationManager.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		A10000000000000000000B00 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				797B7C613035D18D00B833BA /* CloudKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		A10000000000000000000400 = {
+			isa = PBXGroup;
+			children = (
+				A10000000000000000000600 /* FList */,
+				A10000000000000000000500 /* Products */,
+				A10000000000000000001300 /* Frameworks */,
+			);
+			sourceTree = "<group>";
+		};
+		A10000000000000000000500 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				A10000000000000000000300 /* FList.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		A10000000000000000000600 /* FList */ = {
+			isa = PBXGroup;
+			children = (
+				A20000000000000000000001 /* FListApp.swift */,
+				A20000000000000000000019 /* CloudKitShareAcceptance.swift */,
+				A20000000000000000000002 /* AppConfig.swift */,
+				A20000000000000000000020 /* L10n.swift */,
+				A20000000000000000000021 /* Localizable.xcstrings */,
+				A10000000000000000000700 /* Models */,
+				A10000000000000000000800 /* Store */,
+				A10000000000000000000900 /* Views */,
+				A20000000000000000000014 /* Assets.xcassets */,
+				A20000000000000000000015 /* Info.plist */,
+				A20000000000000000000016 /* FList.entitlements */,
+				A20000000000000000000017 /* PrivacyInfo.xcprivacy */,
+			);
+			path = FList;
+			sourceTree = "<group>";
+		};
+		A10000000000000000000700 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				A20000000000000000000003 /* ShortageItem.swift */,
+				A20000000000000000000004 /* FamilyMember.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		A10000000000000000000800 /* Store */ = {
+			isa = PBXGroup;
+			children = (
+				A20000000000000000000007 /* FListStore.swift */,
+				A20000000000000000000006 /* CloudKitService.swift */,
+				A20000000000000000000005 /* LocalPersistence.swift */,
+				A20000000000000000000024 /* ProfileImage.swift */,
+				A20000000000000000000025 /* NotificationManager.swift */,
+			);
+			path = Store;
+			sourceTree = "<group>";
+		};
+		A10000000000000000000900 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				A20000000000000000000013 /* ShortageListView.swift */,
+				A20000000000000000000011 /* AddItemSheet.swift */,
+				A20000000000000000000010 /* ItemRowView.swift */,
+				A20000000000000000000012 /* FamilyMembersView.swift */,
+				A20000000000000000000022 /* MemberEditorView.swift */,
+				A20000000000000000000023 /* MemberAvatar.swift */,
+				A20000000000000000000009 /* OnboardingView.swift */,
+				A20000000000000000000008 /* FamilySharingController.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		A10000000000000000001300 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				A20000000000000000000018 /* CloudKit.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		A10000000000000000000200 /* FList */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A10000000000000000000D00 /* Build configuration list for PBXNativeTarget "FList" */;
+			buildPhases = (
+				A10000000000000000000A00 /* Sources */,
+				A10000000000000000000B00 /* Frameworks */,
+				A10000000000000000000C00 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = FList;
+			productName = FList;
+			productReference = A10000000000000000000300 /* FList.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		A10000000000000000000100 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1600;
+				LastUpgradeCheck = 1600;
+				TargetAttributes = {
+					A10000000000000000000200 = {
+						CreatedOnToolsVersion = 16.0;
+					};
+				};
+			};
+			buildConfigurationList = A10000000000000000000E00 /* Build configuration list for PBXProject "FList" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+				he,
+			);
+			mainGroup = A10000000000000000000400;
+			productRefGroup = A10000000000000000000500 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				A10000000000000000000200 /* FList */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		A10000000000000000000C00 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A30000000000000000000014 /* Assets.xcassets in Resources */,
+				A30000000000000000000017 /* PrivacyInfo.xcprivacy in Resources */,
+				A30000000000000000000021 /* Localizable.xcstrings in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		A10000000000000000000A00 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A30000000000000000000001 /* FListApp.swift in Sources */,
+				A30000000000000000000019 /* CloudKitShareAcceptance.swift in Sources */,
+				A30000000000000000000002 /* AppConfig.swift in Sources */,
+				A30000000000000000000020 /* L10n.swift in Sources */,
+				A30000000000000000000003 /* ShortageItem.swift in Sources */,
+				A30000000000000000000004 /* FamilyMember.swift in Sources */,
+				A30000000000000000000005 /* LocalPersistence.swift in Sources */,
+				A30000000000000000000006 /* CloudKitService.swift in Sources */,
+				A30000000000000000000007 /* FListStore.swift in Sources */,
+				A30000000000000000000008 /* FamilySharingController.swift in Sources */,
+				A30000000000000000000009 /* OnboardingView.swift in Sources */,
+				A30000000000000000000010 /* ItemRowView.swift in Sources */,
+				A30000000000000000000011 /* AddItemSheet.swift in Sources */,
+				A30000000000000000000012 /* FamilyMembersView.swift in Sources */,
+				A30000000000000000000022 /* MemberEditorView.swift in Sources */,
+				A30000000000000000000023 /* MemberAvatar.swift in Sources */,
+				A30000000000000000000024 /* ProfileImage.swift in Sources */,
+				A30000000000000000000025 /* NotificationManager.swift in Sources */,
+				A30000000000000000000013 /* ShortageListView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		A10000000000000000000F00 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = FList/FList.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = VW75X7DKA4;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = FList/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = FList;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
+				INFOPLIST_KEY_NSCameraUsageDescription = "FList uses the camera so you can add a photo for someone on the family list.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "FList uses your photo library so you can add a picture for someone on the family list.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UIBackgroundModes = "remote-notification";
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UIStatusBarStyle = "";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				MTL_ENABLE_DEBUG_INFO = "DWARF with dSYM File";
+				PRODUCT_BUNDLE_IDENTIFIER = com.tocnet.FList;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		A10000000000000000001000 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = FList/FList.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = VW75X7DKA4;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = FList/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = FList;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
+				INFOPLIST_KEY_NSCameraUsageDescription = "FList uses the camera so you can add a photo for someone on the family list.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "FList uses your photo library so you can add a picture for someone on the family list.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UIBackgroundModes = "remote-notification";
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UIStatusBarStyle = "";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				MTL_ENABLE_DEBUG_INFO = "DWARF with dSYM File";
+				PRODUCT_BUNDLE_IDENTIFIER = com.tocnet.FList;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		A10000000000000000001100 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		A10000000000000000001200 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dSYM";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		A10000000000000000000D00 /* Build configuration list for PBXNativeTarget "FList" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A10000000000000000000F00 /* Debug */,
+				A10000000000000000001000 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A10000000000000000000E00 /* Build configuration list for PBXProject "FList" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A10000000000000000001100 /* Debug */,
+				A10000000000000000001200 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = A10000000000000000000100 /* Project object */;
+}
