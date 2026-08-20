@@ -5,12 +5,17 @@ struct FListApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @Environment(\.scenePhase) private var scenePhase
     @State private var store = FListStore()
+    @AppStorage(AppLanguage.storageKey) private var languageRaw = AppLanguage.system.rawValue
+
+    private var language: AppLanguage {
+        AppLanguage(rawValue: languageRaw) ?? .system
+    }
 
     var body: some Scene {
         WindowGroup {
             ShortageListView(store: store)
-                .environment(\.locale, Locale(identifier: "he"))
-                .environment(\.layoutDirection, .rightToLeft)
+                .environment(\.locale, language.locale)
+                .environment(\.layoutDirection, language.layoutDirection)
                 .task {
                     CloudKitShareBridge.bind(store)
                     await CloudKitShareBridge.flushPending()
@@ -27,8 +32,13 @@ struct FListApp: App {
                     CloudKitShareBridge.accept(userActivity: activity)
                 }
                 .onChange(of: scenePhase) { _, phase in
-                    if phase == .active {
-                        Task { await store.retryJoinSharedListIfNeeded() }
+                    switch phase {
+                    case .active:
+                        Task { await store.handleBecameActive() }
+                    case .inactive, .background:
+                        store.handleBecameInactive()
+                    @unknown default:
+                        break
                     }
                 }
         }

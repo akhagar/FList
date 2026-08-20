@@ -9,9 +9,23 @@ struct FamilyMembersView: View {
     @State private var confirmAbandon = false
     @State private var linkCopied = false
     @State private var listName = ""
+    @AppStorage(AppLanguage.storageKey) private var languageRaw = AppLanguage.system.rawValue
 
     var body: some View {
         List {
+            Section {
+                Picker("Language", selection: $languageRaw) {
+                    Text("iPhone settings").tag(AppLanguage.system.rawValue)
+                    Text("English").tag(AppLanguage.english.rawValue)
+                    Text("Hebrew").tag(AppLanguage.hebrew.rawValue)
+                }
+                .pickerStyle(.navigationLink)
+            } header: {
+                Text("Language")
+            } footer: {
+                Text("Use iPhone settings, or choose English or Hebrew.")
+            }
+
             Section {
                 TextField("List name", text: $listName)
                     .textInputAutocapitalization(.words)
@@ -37,6 +51,7 @@ struct FamilyMembersView: View {
                     ForEach(store.members) { member in
                         NavigationLink {
                             MemberEditorView(store: store, member: member)
+                                .id(member.id)
                         } label: {
                             HStack(spacing: 12) {
                                 MemberAvatar(member: member, size: 44)

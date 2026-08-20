@@ -96,6 +96,7 @@ struct MemberEditorView: View {
                 if let data = try? await item.loadTransferable(type: Data.self),
                    let jpeg = ProfileImage.jpegData(from: data) {
                     member.photoData = jpeg
+                    return
                 }
             }
         }

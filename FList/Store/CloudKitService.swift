@@ -52,6 +52,8 @@ final class CloudKitService {
     let container: CKContainer
 
     private(set) var context: CloudKitContext?
+    private var zoneRecordCache: [CKRecord.ID: CKRecord] = [:]
+    private var zoneChangeToken: CKServerChangeToken?
 
     init(container: CKContainer = CKContainer(identifier: AppConfig.cloudKitContainerID)) {
         self.container = container
@@ -66,9 +68,12 @@ final class CloudKitService {
     }
 
     func listHouseholds() async -> [HouseholdChoice] {
-        var choices: [HouseholdChoice] = []
+        async let ownedTask = matchingZones(in: container.privateCloudDatabase)
+        async let sharedTask = matchingZones(in: container.sharedCloudDatabase)
+        let ownedZones = await ownedTask
+        let sharedZones = await sharedTask
 
-        let ownedZones = await matchingZones(in: container.privateCloudDatabase)
+        var choices: [HouseholdChoice] = []
         for zone in ownedZones {
             let share = await shareIfPresent(database: container.privateCloudDatabase, zoneID: zone.zoneID)
             let title = Self.title(from: share)
@@ -83,7 +88,6 @@ final class CloudKitService {
             )
         }
 
-        let sharedZones = await matchingZones(in: container.sharedCloudDatabase)
         for zone in sharedZones where !Self.isDefaultOwner(zone.zoneID.ownerName) {
             let share = await shareIfPresent(database: container.sharedCloudDatabase, zoneID: zone.zoneID)
             let title = Self.title(from: share)
@@ -104,23 +108,24 @@ final class CloudKitService {
     }
 
     func openHousehold(_ choice: HouseholdChoice) async throws -> CloudKitContext {
-        let userRecordID = try await container.userRecordID()
+        let userRecordID = try await resolvedUserRecordID()
         if choice.isOwner {
             let zoneID = CKRecordZone.ID(zoneName: choice.zoneName, ownerName: CKCurrentUserDefaultName)
-            _ = try await container.privateCloudDatabase.recordZone(for: zoneID)
             return await installContext(zoneID: zoneID, isOwner: true, userRecordID: userRecordID)
         }
-        let preferred = Self.isDefaultOwner(choice.ownerName) ? nil : choice.ownerName
-        let zoneID = try await waitForSharedZone(named: choice.zoneName, preferredOwner: preferred)
+        if !Self.isDefaultOwner(choice.ownerName) {
+            let zoneID = CKRecordZone.ID(zoneName: choice.zoneName, ownerName: choice.ownerName)
+            return await installContext(zoneID: zoneID, isOwner: false, userRecordID: userRecordID)
+        }
+        let zoneID = try await waitForSharedZone(named: choice.zoneName, preferredOwner: nil)
         return await installContext(zoneID: zoneID, isOwner: false, userRecordID: userRecordID)
     }
 
     func openSavedOrSingleHousehold() async throws -> CloudKitContext {
-        let lists = await listHouseholds()
-        if let saved = Self.savedSelection(),
-           let match = lists.first(where: { $0.id == saved.id }) {
-            return try await openHousehold(match)
+        if let saved = Self.savedSelection() {
+            return try await openHousehold(saved)
         }
+        let lists = await listHouseholds()
         if lists.count == 1, let only = lists.first {
             return try await openHousehold(only)
         }
@@ -136,6 +141,7 @@ final class CloudKitService {
             _ = try await container.sharedCloudDatabase.deleteRecordZone(withID: context.zoneID)
         }
         self.context = nil
+        resetZoneCache()
         Self.clearSelection()
     }
 
@@ -185,7 +191,9 @@ final class CloudKitService {
             currentUserRecordName: userRecordID.recordName,
             currentUserName: userName
         )
+        resetZoneCache()
         self.context = context
+        UserDefaults.standard.set(userRecordID.recordName, forKey: Self.userRecordNameKey)
         Self.saveSelection(
             HouseholdChoice(
                 zoneName: zone.zoneID.zoneName,
@@ -195,7 +203,7 @@ final class CloudKitService {
                 detail: ""
             )
         )
-        await saveCurrentUserProfileIgnoringSchemaLock()
+        Task { await saveCurrentUserProfileIgnoringSchemaLock() }
         _ = try? await prepareShare()
         return context
     }
@@ -225,22 +233,72 @@ final class CloudKitService {
 
     func subscribeToItemChanges() async {
         guard let context else { return }
-        let subscriptionID = "flist.zone.changes"
-        let subscription = CKRecordZoneSubscription(zoneID: context.zoneID, subscriptionID: subscriptionID)
         let info = CKSubscription.NotificationInfo()
         info.shouldSendContentAvailable = true
-        subscription.notificationInfo = info
-        do {
-            _ = try await context.database.save(subscription)
-        } catch {
-            // Duplicate or offline — next launch retries.
+
+        let databaseSubscription = CKDatabaseSubscription(
+            subscriptionID: context.isOwner ? "flist.private-db.changes" : "flist.shared-db.changes"
+        )
+        databaseSubscription.notificationInfo = info
+        await saveSubscription(databaseSubscription, on: context.database)
+
+        let zoneSubscription = CKRecordZoneSubscription(
+            zoneID: context.zoneID,
+            subscriptionID: "flist.zone.\(context.zoneID.zoneName).changes"
+        )
+        zoneSubscription.notificationInfo = info
+        await saveSubscription(zoneSubscription, on: context.database)
+    }
+
+    struct HouseholdState {
+        var items: [ShortageItem]
+        var members: [FamilyMember]
+        var householdName: String
+        var hasChanges: Bool
+    }
+
+    func fetchHouseholdState(fullReload: Bool = true, includingAssets: Bool = true) async throws -> HouseholdState {
+        let context = try requireContext()
+        let needsSnapshot = fullReload || zoneRecordCache.isEmpty || zoneChangeToken == nil
+        let fetch = try await fetchZoneChanges(
+            in: context,
+            previousToken: needsSnapshot ? nil : zoneChangeToken,
+            includingAssets: includingAssets
+        )
+
+        if needsSnapshot || fetch.tokenReset {
+            zoneRecordCache.removeAll(keepingCapacity: true)
+            for record in fetch.records {
+                zoneRecordCache[record.recordID] = record
+            }
+        } else {
+            for record in fetch.records {
+                zoneRecordCache[record.recordID] = mergedRecord(record, into: zoneRecordCache[record.recordID])
+            }
+            for id in fetch.deletedRecordIDs {
+                zoneRecordCache[id] = nil
+            }
         }
+        zoneChangeToken = fetch.serverChangeToken ?? zoneChangeToken
+
+        let records = Array(zoneRecordCache.values)
+        var share = records.compactMap { $0 as? CKShare }.first
+        if share == nil, needsSnapshot {
+            share = try await fetchShareIfPresent(in: context)
+        }
+        if let share {
+            zoneRecordCache[share.recordID] = share
+        }
+
+        let items = records.compactMap(ShortageItem.init(record:)).sorted { $0.createdAt > $1.createdAt }
+        let members = assembledMembers(from: records, share: share, context: context)
+        let name = Self.title(from: share) ?? ""
+        let hasChanges = needsSnapshot || !fetch.records.isEmpty || !fetch.deletedRecordIDs.isEmpty
+        return HouseholdState(items: items, members: members, householdName: name, hasChanges: hasChanges)
     }
 
     func fetchItems() async throws -> [ShortageItem] {
-        let context = try requireContext()
-        let records = try await fetchAllRecords(in: context)
-        return records.compactMap(ShortageItem.init(record:)).sorted { $0.createdAt > $1.createdAt }
+        try await fetchHouseholdState().items
     }
 
     func save(_ item: ShortageItem) async throws {
@@ -254,13 +312,14 @@ final class CloudKitService {
         }
         item.write(to: record)
         if let photoData = item.photoData {
-            let url = FileManager.default.temporaryDirectory.appendingPathComponent("item-\(item.id.uuidString).jpg")
+            let url = FileManager.default.temporaryDirectory.appendingPathComponent("item-\(UUID().uuidString).jpg")
             try photoData.write(to: url, options: [.atomic])
             record["photo"] = CKAsset(fileURL: url)
         } else {
             record["photo"] = nil
         }
-        _ = try await context.database.save(record)
+        let saved = try await context.database.save(record)
+        zoneRecordCache[saved.recordID] = saved
     }
 
     func delete(_ item: ShortageItem) async throws {
@@ -270,8 +329,14 @@ final class CloudKitService {
     }
 
     func fetchMembers() async throws -> [FamilyMember] {
-        let context = try requireContext()
-        let records = try await fetchAllRecords(in: context)
+        try await fetchHouseholdState().members
+    }
+
+    private func assembledMembers(
+        from records: [CKRecord],
+        share: CKShare?,
+        context: CloudKitContext
+    ) -> [FamilyMember] {
         let profiles = records.reduce(into: [String: (name: String, photo: Data?)]()) { result, record in
             guard record.recordType == AppConfig.profileRecordType,
                   let memberID = record["memberID"] as? String
@@ -284,51 +349,55 @@ final class CloudKitService {
             result[memberID] = (name, photo)
         }
 
-        var members: [FamilyMember]
-        if let share = try await fetchShareIfPresent(in: context) {
-            members = share.participants.map { participant in
-                let id = participant.userIdentity.userRecordID?.recordName ?? UUID().uuidString
-                let fallback = Self.name(from: participant) ?? L10n.string("Family member")
-                let profile = profiles[id]
-                let name = profile?.name.trimmingCharacters(in: .whitespacesAndNewlines)
-                return FamilyMember(
-                    id: id,
-                    name: (name?.isEmpty == false ? name : nil) ?? fallback,
-                    role: participant.role == .owner ? .organizer : .member,
-                    inviteState: Self.inviteState(from: participant.acceptanceStatus),
-                    isCurrentUser: id == context.currentUserRecordName,
-                    isCustom: false,
-                    photoData: profile?.photo
-                )
+        var membersByID: [String: FamilyMember] = [:]
+        if let share {
+            for participant in share.participants {
+                let member = Self.member(from: participant, context: context, profiles: profiles)
+                if var existing = membersByID[member.id] {
+                    if member.role == .organizer { existing.role = .organizer }
+                    if member.isCurrentUser { existing.isCurrentUser = true }
+                    if existing.photoData == nil { existing.photoData = member.photoData }
+                    if existing.name == L10n.string("Family member") { existing.name = member.name }
+                    membersByID[member.id] = existing
+                } else {
+                    membersByID[member.id] = member
+                }
             }
         } else {
-            members = [Self.soloMember(from: context)]
+            var solo = Self.soloMember(from: context)
             if let profile = profiles[context.currentUserRecordName] {
                 let trimmed = profile.name.trimmingCharacters(in: .whitespacesAndNewlines)
-                if !trimmed.isEmpty {
-                    members[0].name = trimmed
-                }
-                members[0].photoData = profile.photo
+                if !trimmed.isEmpty { solo.name = trimmed }
+                solo.photoData = profile.photo
             }
+            membersByID[solo.id] = solo
         }
 
-        let existingIDs = Set(members.map(\.id))
+        Self.applyProfile(profiles[context.currentUserRecordName], toCurrentUserIn: &membersByID, context: context)
+
+        let existingIDs = Set(membersByID.keys)
+        let representedNames = Set(membersByID.values.map { $0.name.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() })
         for (id, profile) in profiles where !existingIDs.contains(id) {
+            if id == context.currentUserRecordName || Self.isDefaultOwner(id) { continue }
             let trimmed = profile.name.trimmingCharacters(in: .whitespacesAndNewlines)
-            members.append(
-                FamilyMember(
-                    id: id,
-                    name: trimmed.isEmpty ? L10n.string("Family member") : trimmed,
-                    role: .member,
-                    inviteState: .accepted,
-                    isCurrentUser: id == context.currentUserRecordName,
-                    isCustom: true,
-                    photoData: profile.photo
-                )
+            let key = trimmed.lowercased()
+            if !key.isEmpty, representedNames.contains(key) { continue }
+            membersByID[id] = FamilyMember(
+                id: id,
+                name: trimmed.isEmpty ? L10n.string("Family member") : trimmed,
+                role: .member,
+                inviteState: .accepted,
+                isCurrentUser: false,
+                isCustom: true,
+                photoData: profile.photo
             )
         }
 
-        return members
+        return membersByID.values.sorted { lhs, rhs in
+            if lhs.role != rhs.role { return lhs.role == .organizer }
+            if lhs.isCurrentUser != rhs.isCurrentUser { return lhs.isCurrentUser }
+            return lhs.name.localizedCaseInsensitiveCompare(rhs.name) == .orderedAscending
+        }
     }
 
     func saveCurrentUserProfileIgnoringSchemaLock() async {
@@ -363,13 +432,14 @@ final class CloudKitService {
         record["memberID"] = member.id as CKRecordValue
         record["displayName"] = member.name as CKRecordValue
         if let photoData = member.photoData {
-            let url = FileManager.default.temporaryDirectory.appendingPathComponent("\(member.id).jpg")
+            let url = FileManager.default.temporaryDirectory.appendingPathComponent("profile-\(UUID().uuidString).jpg")
             try photoData.write(to: url, options: [.atomic])
             record["photo"] = CKAsset(fileURL: url)
         } else {
             record["photo"] = nil
         }
-        _ = try await context.database.save(record)
+        let saved = try await context.database.save(record)
+        zoneRecordCache[saved.recordID] = saved
     }
 
     func deleteProfile(memberID: String) async throws {
@@ -464,7 +534,9 @@ final class CloudKitService {
             currentUserRecordName: userRecordID.recordName,
             currentUserName: displayName()
         )
+        resetZoneCache()
         self.context = context
+        UserDefaults.standard.set(userRecordID.recordName, forKey: Self.userRecordNameKey)
         Self.saveSelection(
             HouseholdChoice(
                 zoneName: zoneID.zoneName,
@@ -474,7 +546,6 @@ final class CloudKitService {
                 detail: ""
             )
         )
-        await saveCurrentUserProfileIgnoringSchemaLock()
         return context
     }
 
@@ -545,14 +616,27 @@ final class CloudKitService {
         return context
     }
 
+    private static let userRecordNameKey = "flist.userRecordName"
+
+    private func resolvedUserRecordID() async throws -> CKRecord.ID {
+        if let cached = UserDefaults.standard.string(forKey: Self.userRecordNameKey), !cached.isEmpty {
+            return CKRecord.ID(recordName: cached)
+        }
+        let id = try await container.userRecordID()
+        UserDefaults.standard.set(id.recordName, forKey: Self.userRecordNameKey)
+        return id
+    }
+
     private func matchingZones(in database: CKDatabase) async -> [CKRecordZone] {
-        var ids = Set<CKRecordZone.ID>()
-        if let changed = try? await changedZoneIDs(in: database) {
-            ids.formUnion(changed)
-        }
         if let zones = try? await database.allRecordZones() {
-            ids.formUnion(zones.map(\.zoneID))
+            let wanted = zones.filter {
+                $0.zoneID.zoneName == AppConfig.recordZoneName
+                    && $0.zoneID != CKRecordZone.default().zoneID
+            }
+            if !wanted.isEmpty { return wanted }
         }
+
+        let ids = (try? await changedZoneIDs(in: database)) ?? []
         let wanted = ids.filter {
             $0.zoneName == AppConfig.recordZoneName
                 && $0 != CKRecordZone.default().zoneID
@@ -618,14 +702,75 @@ final class CloudKitService {
         await shareIfPresent(database: context.database, zoneID: context.zoneID)
     }
 
-    private func fetchAllRecords(in context: CloudKitContext) async throws -> [CKRecord] {
+    private func resetZoneCache() {
+        zoneRecordCache = [:]
+        zoneChangeToken = nil
+    }
+
+    private func saveSubscription(_ subscription: CKSubscription, on database: CKDatabase) async {
+        do {
+            _ = try await database.save(subscription)
+        } catch {
+            // Duplicate subscription or offline — live polling still keeps the list current.
+        }
+    }
+
+    private func mergedRecord(_ incoming: CKRecord, into existing: CKRecord?) -> CKRecord {
+        guard let existing else { return incoming }
+        for key in existing.allKeys() where incoming[key] == nil && existing[key] != nil {
+            incoming[key] = existing[key]
+        }
+        return incoming
+    }
+
+    private func fetchZoneChanges(
+        in context: CloudKitContext,
+        previousToken: CKServerChangeToken?,
+        includingAssets: Bool
+    ) async throws -> ZoneFetchResult {
+        do {
+            return try await performZoneFetch(
+                in: context,
+                previousToken: previousToken,
+                includingAssets: includingAssets
+            )
+        } catch {
+            if error.isCloudKitChangeTokenExpired, previousToken != nil {
+                resetZoneCache()
+                var snapshot = try await performZoneFetch(
+                    in: context,
+                    previousToken: nil,
+                    includingAssets: true
+                )
+                snapshot.tokenReset = true
+                return snapshot
+            }
+            throw error
+        }
+    }
+
+    private func performZoneFetch(
+        in context: CloudKitContext,
+        previousToken: CKServerChangeToken?,
+        includingAssets: Bool
+    ) async throws -> ZoneFetchResult {
         try await withCheckedThrowingContinuation { continuation in
             let configuration = CKFetchRecordZoneChangesOperation.ZoneConfiguration()
+            configuration.previousServerChangeToken = previousToken
+            if !includingAssets {
+                configuration.desiredKeys = [
+                    "name", "quantity", "note", "status",
+                    "addedByName", "addedByRecordName", "createdAt", "restockedAt",
+                    "memberID", "displayName", "photo",
+                    CKShare.SystemFieldKey.title
+                ]
+            }
             let operation = CKFetchRecordZoneChangesOperation(
                 recordZoneIDs: [context.zoneID],
                 configurationsByRecordZoneID: [context.zoneID: configuration]
             )
-            operation.qualityOfService = .userInitiated
+            operation.fetchAllChanges = true
+            operation.qualityOfService = previousToken == nil ? .userInitiated : .userInteractive
             let box = RecordCollector()
 
             operation.recordWasChangedBlock = { _, result in
@@ -633,8 +778,14 @@ final class CloudKitService {
                     box.append(record)
                 }
             }
+            operation.recordWithIDWasDeletedBlock = { recordID, _ in
+                box.appendDeleted(recordID)
+            }
             operation.recordZoneFetchResultBlock = { _, result in
-                if case .failure(let error) = result {
+                switch result {
+                case .success(let fetchDetails):
+                    box.setToken(fetchDetails.serverChangeToken)
+                case .failure(let error):
                     box.fail(error)
                 }
             }
@@ -656,6 +807,77 @@ final class CloudKitService {
         let stored = UserDefaults.standard.string(forKey: "flist.displayName")?
             .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         return stored.isEmpty ? L10n.string( "Me") : stored
+    }
+
+    private static func member(
+        from participant: CKShare.Participant,
+        context: CloudKitContext,
+        profiles: [String: (name: String, photo: Data?)]
+    ) -> FamilyMember {
+        let recordName = participant.userIdentity.userRecordID?.recordName
+        let isOwnerParticipant = participant.role == .owner
+        let isCurrent = recordName == context.currentUserRecordName
+            || (context.isOwner && isOwnerParticipant)
+
+        let id: String
+        if isCurrent {
+            id = context.currentUserRecordName
+        } else if let recordName, !isDefaultOwner(recordName) {
+            id = recordName
+        } else if let email = participant.userIdentity.lookupInfo?.emailAddress, !email.isEmpty {
+            id = email
+        } else if let phone = participant.userIdentity.lookupInfo?.phoneNumber, !phone.isEmpty {
+            id = phone
+        } else if isOwnerParticipant {
+            id = "owner:\(context.zoneID.ownerName)"
+        } else {
+            id = "participant:\(context.zoneID.ownerName):\(recordName ?? "unknown")"
+        }
+
+        let profile = isCurrent
+            ? (profiles[id] ?? profiles[context.currentUserRecordName])
+            : profiles[id]
+        let fallback = name(from: participant)
+            ?? (isCurrent ? context.currentUserName : nil)
+            ?? L10n.string("Family member")
+        let profileName = profile?.name.trimmingCharacters(in: .whitespacesAndNewlines)
+        return FamilyMember(
+            id: id,
+            name: (profileName?.isEmpty == false ? profileName : nil) ?? fallback,
+            role: isOwnerParticipant ? .organizer : .member,
+            inviteState: inviteState(from: participant.acceptanceStatus),
+            isCurrentUser: isCurrent,
+            isCustom: false,
+            photoData: profile?.photo
+        )
+    }
+
+    private static func applyProfile(
+        _ profile: (name: String, photo: Data?)?,
+        toCurrentUserIn members: inout [String: FamilyMember],
+        context: CloudKitContext
+    ) {
+        guard let profile else { return }
+        let trimmed = profile.name.trimmingCharacters(in: .whitespacesAndNewlines)
+        if let key = members.keys.first(where: { members[$0]?.isCurrentUser == true }),
+           var current = members[key] {
+            if !trimmed.isEmpty { current.name = trimmed }
+            if current.photoData == nil { current.photoData = profile.photo }
+            members[key] = current
+            return
+        }
+        if context.isOwner,
+           let key = members.keys.first(where: { members[$0]?.role == .organizer }),
+           var owner = members[key] {
+            owner.isCurrentUser = true
+            owner.id = context.currentUserRecordName
+            if !trimmed.isEmpty { owner.name = trimmed }
+            if owner.photoData == nil { owner.photoData = profile.photo }
+            if key != owner.id {
+                members.removeValue(forKey: key)
+            }
+            members[owner.id] = owner
+        }
     }
 
     private static func soloMember(from context: CloudKitContext) -> FamilyMember {
@@ -689,15 +911,36 @@ final class CloudKitService {
     }
 }
 
+private struct ZoneFetchResult {
+    var records: [CKRecord]
+    var deletedRecordIDs: [CKRecord.ID]
+    var serverChangeToken: CKServerChangeToken?
+    var tokenReset: Bool
+}
+
 private final class RecordCollector: @unchecked Sendable {
     private let lock = NSLock()
     private var storage: [CKRecord] = []
+    private var deleted: [CKRecord.ID] = []
+    private var token: CKServerChangeToken?
     private var zoneError: Error?
     private var didFinish = false
 
     func append(_ record: CKRecord) {
         lock.lock()
         storage.append(record)
+        lock.unlock()
+    }
+
+    func appendDeleted(_ recordID: CKRecord.ID) {
+        lock.lock()
+        deleted.append(recordID)
+        lock.unlock()
+    }
+
+    func setToken(_ token: CKServerChangeToken) {
+        lock.lock()
+        self.token = token
         lock.unlock()
     }
 
@@ -711,7 +954,7 @@ private final class RecordCollector: @unchecked Sendable {
 
     func finish(
         _ result: Result<Void, Error>,
-        continuation: CheckedContinuation<[CKRecord], Error>
+        continuation: CheckedContinuation<ZoneFetchResult, Error>
     ) {
         lock.lock()
         guard !didFinish else {
@@ -720,7 +963,12 @@ private final class RecordCollector: @unchecked Sendable {
         }
         didFinish = true
         let error = zoneError
-        let records = storage
+        let fetch = ZoneFetchResult(
+            records: storage,
+            deletedRecordIDs: deleted,
+            serverChangeToken: token,
+            tokenReset: false
+        )
         lock.unlock()
 
         if let error {
@@ -728,7 +976,7 @@ private final class RecordCollector: @unchecked Sendable {
         } else {
             switch result {
             case .success:
-                continuation.resume(returning: records)
+                continuation.resume(returning: fetch)
             case .failure(let error):
                 continuation.resume(throwing: error)
             }
@@ -771,6 +1019,10 @@ private final class ZoneCollector: @unchecked Sendable {
 }
 
 extension Error {
+    var isCloudKitChangeTokenExpired: Bool {
+        matchesCloudKitCode(.changeTokenExpired)
+    }
+
     var isCloudKitProductionSchemaLock: Bool {
         matchesCloudKitMessage("production schema")
     }

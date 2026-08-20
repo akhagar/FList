@@ -22,11 +22,18 @@ final class FListStore {
     var householdName = AppConfig.householdDisplayName
     var errorMessage: String?
     var isBusy = false
+    var isRefreshing = false
     var availableHouseholds: [HouseholdChoice] = []
 
     let cloudKit = CloudKitService()
     private var hasItemBaseline = UserDefaults.standard.bool(forKey: "flist.itemBaselineSaved")
     private var knownItems: [UUID: ItemStatus] = FListStore.loadKnownItems()
+
+    init(restoreCache: Bool = true) {
+        if restoreCache {
+            restoreCachedSession()
+        }
+    }
 
     var neededItems: [ShortageItem] {
         items.filter { $0.status == .needed }
@@ -39,37 +46,32 @@ final class FListStore {
     var usesiCloud: Bool { accountKind == .iCloud }
 
     func start() async {
-        accountKind = .checking
-        let storedName = UserDefaults.standard.string(forKey: "flist.displayName")?
-            .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        if !storedName.isEmpty {
-            currentUserName = storedName
-        }
-        if let storedList = UserDefaults.standard.string(forKey: "flist.householdName")?
-            .trimmingCharacters(in: .whitespacesAndNewlines),
-           !storedList.isEmpty {
-            householdName = storedList
+        let cachedHousehold = hasHousehold
+        if !cachedHousehold {
+            accountKind = .checking
         }
         let status = await cloudKit.accountStatus()
         switch status {
         case .available:
             accountKind = .iCloud
-            await refreshAvailableHouseholds()
             do {
                 _ = try await cloudKit.bootstrapExistingHousehold()
                 try await adoptCloudHousehold()
             } catch {
-                hasHousehold = false
-                items = []
-                members = []
-                householdName = AppConfig.householdDisplayName
+                if !cachedHousehold {
+                    hasHousehold = false
+                    items = []
+                    members = []
+                    householdName = AppConfig.householdDisplayName
+                }
             }
+            Task { await refreshAvailableHouseholds() }
         case .restricted, .temporarilyUnavailable:
             accountKind = .restricted
-            loadLocal()
+            if !cachedHousehold { loadLocal() }
         default:
             accountKind = .localOnly
-            loadLocal()
+            if !cachedHousehold { loadLocal() }
         }
     }
 
@@ -190,18 +192,26 @@ final class FListStore {
     func refresh() async {
         guard hasHousehold else { return }
         if usesiCloud {
-            householdName = await cloudKit.householdName()
-            persistHouseholdName()
-            try? await reloadFromCloud(notify: true)
+            try? await reloadFromCloud(notify: true, showProgress: true, fullReload: true)
         } else {
             loadLocal()
         }
     }
 
     func handleRemoteNotification(_ userInfo: [AnyHashable: Any]) async {
-        guard usesiCloud, hasHousehold else { return }
-        guard CKNotification(fromRemoteNotificationDictionary: userInfo) != nil else { return }
-        try? await reloadFromCloud(notify: true)
+        guard usesiCloud, hasHousehold, cloudKit.context != nil else { return }
+        try? await reloadFromCloud(notify: true, showProgress: false, fullReload: false)
+    }
+
+    func handleBecameActive() async {
+        await retryJoinSharedListIfNeeded()
+        guard usesiCloud, hasHousehold, cloudKit.context != nil else { return }
+        startLiveSync()
+        try? await reloadFromCloud(notify: true, showProgress: false, fullReload: false)
+    }
+
+    func handleBecameInactive() {
+        stopLiveSync()
     }
 
     func acceptShare(_ metadata: CKShare.Metadata) async {
@@ -232,14 +242,16 @@ final class FListStore {
         isOwner = cloudKit.context?.isOwner ?? true
         currentUserName = cloudKit.context?.currentUserName ?? L10n.string("Me")
         currentUserRecordName = cloudKit.context?.currentUserRecordName ?? "local"
-        householdName = await cloudKit.householdName()
-        persistHouseholdName()
-        try await reloadFromCloud(notify: true)
+        UserDefaults.standard.set(currentUserRecordName, forKey: "flist.userRecordName")
         hasHousehold = true
-        await enableChangeNotifications()
+        startLiveSync()
+        Task { await enableChangeNotifications() }
+        Task { await cloudKit.saveCurrentUserProfileIgnoringSchemaLock() }
+        try await reloadFromCloud(notify: true, showProgress: true, fullReload: true)
     }
 
     private func clearHouseholdLocally() {
+        stopLiveSync()
         hasHousehold = false
         isOwner = true
         items = []
@@ -325,6 +337,7 @@ final class FListStore {
         if usesiCloud {
             do {
                 try await cloudKit.delete(item)
+                persistLocalCache()
             } catch {
                 errorMessage = error.flistDisplayMessage
                 await refresh()
@@ -339,20 +352,20 @@ final class FListStore {
         updated.name = member.name.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !updated.name.isEmpty else { return }
 
-        if let index = members.firstIndex(where: { $0.id == updated.id }) {
-            members[index] = updated
-        } else {
-            members.append(updated)
-        }
-
-        if updated.isCurrentUser {
+        if updated.isCurrentUser || (isOwner && updated.role == .organizer) {
+            updated.isCurrentUser = true
+            updated.id = currentUserRecordName
             currentUserName = updated.name
             UserDefaults.standard.set(updated.name, forKey: "flist.displayName")
         }
 
+        members.removeAll { $0.id == member.id || $0.id == updated.id }
+        members.append(updated)
+
         if usesiCloud {
             do {
                 try await cloudKit.saveProfile(updated)
+                persistLocalCache()
             } catch {
                 errorMessage = error.flistDisplayMessage
                 await refresh()
@@ -377,6 +390,7 @@ final class FListStore {
 
     func canRemove(_ member: FamilyMember) -> Bool {
         guard !member.isCurrentUser else { return false }
+        guard member.role != .organizer else { return false }
         if member.isCustom || !usesiCloud { return true }
         return isOwner
     }
@@ -387,6 +401,7 @@ final class FListStore {
         if usesiCloud {
             do {
                 try await cloudKit.removeMember(member)
+                persistLocalCache()
             } catch {
                 errorMessage = error.flistDisplayMessage
                 await refresh()
@@ -408,6 +423,7 @@ final class FListStore {
         if usesiCloud {
             do {
                 try await cloudKit.updateHouseholdName(trimmed)
+                persistLocalCache()
                 await refreshAvailableHouseholds()
             } catch {
                 errorMessage = error.flistDisplayMessage
@@ -432,6 +448,7 @@ final class FListStore {
             do {
                 try await cloudKit.save(item)
                 remember(item)
+                persistLocalCache()
             } catch {
                 errorMessage = error.flistDisplayMessage
                 await refresh()
@@ -447,16 +464,129 @@ final class FListStore {
         await cloudKit.subscribeToItemChanges()
     }
 
-    private func reloadFromCloud(notify: Bool) async throws {
+    private var liveSyncTask: Task<Void, Never>?
+    private var isSyncing = false
+    private var queuedFullReload = false
+
+    private func startLiveSync() {
+        guard usesiCloud, hasHousehold, cloudKit.context != nil else { return }
+        liveSyncTask?.cancel()
+        liveSyncTask = Task { [weak self] in
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(2))
+                guard !Task.isCancelled else { break }
+                await self?.syncWhileActive()
+            }
+        }
+    }
+
+    private func stopLiveSync() {
+        liveSyncTask?.cancel()
+        liveSyncTask = nil
+    }
+
+    private func syncWhileActive() async {
+        guard usesiCloud, hasHousehold, cloudKit.context != nil else { return }
+        try? await reloadFromCloud(notify: true, showProgress: false, fullReload: false)
+    }
+
+    private func reloadFromCloud(notify: Bool, showProgress: Bool, fullReload: Bool) async throws {
+        if isSyncing {
+            if fullReload { queuedFullReload = true }
+            if showProgress {
+                while isSyncing {
+                    try await Task.sleep(for: .milliseconds(50))
+                }
+                if queuedFullReload {
+                    queuedFullReload = false
+                    try await reloadFromCloud(notify: notify, showProgress: true, fullReload: true)
+                }
+            }
+            return
+        }
+
+        isSyncing = true
+        if showProgress { isRefreshing = true }
+        defer {
+            isSyncing = false
+            if showProgress { isRefreshing = false }
+        }
+
+        let shouldReloadFully = fullReload || queuedFullReload
+        queuedFullReload = false
         let previous = knownItems
         let hadBaseline = hasItemBaseline
-        items = try await cloudKit.fetchItems()
-        members = try await cloudKit.fetchMembers()
+        let state = try await cloudKit.fetchHouseholdState(
+            fullReload: shouldReloadFully,
+            includingAssets: shouldReloadFully
+        )
+        if !state.hasChanges, !shouldReloadFully {
+            return
+        }
+        items = keepingPhotos(in: state.items, from: items)
+        members = keepingPhotos(in: state.members, from: members)
+        if !state.householdName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            householdName = state.householdName
+            persistHouseholdName()
+        }
         persistLocalCache()
         knownItems = Dictionary(uniqueKeysWithValues: items.map { ($0.id, $0.status) })
         persistKnownItems()
         if notify, hadBaseline {
             postChangeNotifications(previous: previous, current: items)
+        }
+    }
+
+    private func keepingPhotos(in incoming: [ShortageItem], from existing: [ShortageItem]) -> [ShortageItem] {
+        let photos = existing.reduce(into: [UUID: Data]()) { result, item in
+            if let photo = item.photoData {
+                result[item.id] = photo
+            }
+        }
+        return incoming.map { item in
+            guard item.photoData == nil, let photo = photos[item.id] else { return item }
+            var copy = item
+            copy.photoData = photo
+            return copy
+        }
+    }
+
+    private func keepingPhotos(in incoming: [FamilyMember], from existing: [FamilyMember]) -> [FamilyMember] {
+        let photos = existing.reduce(into: [String: Data]()) { result, member in
+            if let photo = member.photoData {
+                result[member.id] = photo
+            }
+        }
+        return incoming.map { member in
+            guard member.photoData == nil, let photo = photos[member.id] else { return member }
+            var copy = member
+            copy.photoData = photo
+            return copy
+        }
+    }
+
+    private func restoreCachedSession() {
+        let storedName = UserDefaults.standard.string(forKey: "flist.displayName")?
+            .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        if !storedName.isEmpty {
+            currentUserName = storedName
+        }
+        if let storedList = UserDefaults.standard.string(forKey: "flist.householdName")?
+            .trimmingCharacters(in: .whitespacesAndNewlines),
+           !storedList.isEmpty {
+            householdName = storedList
+        }
+        if let recordName = UserDefaults.standard.string(forKey: "flist.userRecordName"),
+           !recordName.isEmpty {
+            currentUserRecordName = recordName
+        }
+        if UserDefaults.standard.object(forKey: "flist.selectedZoneName") != nil {
+            isOwner = UserDefaults.standard.bool(forKey: "flist.selectedZoneIsOwner")
+            accountKind = .iCloud
+        }
+        loadLocal()
+        if hasHousehold, accountKind == .checking {
+            accountKind = .localOnly
         }
     }
 
@@ -557,7 +687,7 @@ final class FListStore {
 
 extension FListStore {
     static var preview: FListStore {
-        let store = FListStore()
+        let store = FListStore(restoreCache: false)
         store.accountKind = .localOnly
         store.hasHousehold = true
         store.currentUserName = "Alex"

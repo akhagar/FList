@@ -31,12 +31,17 @@ struct ShortageListView: View {
                         .accessibilityLabel("Family")
                     }
                     ToolbarItem(placement: .topBarTrailing) {
-                        Button {
-                            showAddItem = true
-                        } label: {
-                            Image(systemName: "plus")
+                        HStack(spacing: 12) {
+                            if store.isRefreshing {
+                                ProgressView()
+                            }
+                            Button {
+                                showAddItem = true
+                            } label: {
+                                Image(systemName: "plus")
+                            }
+                            .accessibilityLabel("Add item")
                         }
-                        .accessibilityLabel("Add item")
                     }
                 }
             }
