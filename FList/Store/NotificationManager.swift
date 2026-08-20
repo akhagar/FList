@@ -24,6 +24,14 @@ final class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
         )
     }
 
+    func notifyGoingShopping(name: String) {
+        post(
+            identifier: "shop-\(UUID().uuidString)",
+            title: L10n.string("Going shopping"),
+            body: String(format: L10n.string("%@ is going shopping. Add anything that's missing."), name)
+        )
+    }
+
     func notifyRestocked(name: String) {
         post(
             identifier: "stock-\(name)-\(UUID().uuidString)",

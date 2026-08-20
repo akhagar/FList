@@ -24,10 +24,15 @@ final class FListStore {
     var isBusy = false
     var isRefreshing = false
     var availableHouseholds: [HouseholdChoice] = []
+    var shoppingTrips: [ShoppingTrip] = []
+    var familyAlertTitle: String?
+    var familyAlertMessage: String?
 
     let cloudKit = CloudKitService()
     private var hasItemBaseline = UserDefaults.standard.bool(forKey: "flist.itemBaselineSaved")
     private var knownItems: [UUID: ItemStatus] = FListStore.loadKnownItems()
+    private var hasShoppingBaseline = UserDefaults.standard.bool(forKey: "flist.shoppingBaselineSaved")
+    private var seenShoppingTripIDs: Set<UUID> = FListStore.loadSeenShoppingTripIDs()
 
     init(restoreCache: Bool = true) {
         if restoreCache {
@@ -44,6 +49,30 @@ final class FListStore {
     }
 
     var usesiCloud: Bool { accountKind == .iCloud }
+
+    var activeShoppingTrip: ShoppingTrip? {
+        let cutoff = Date.now.addingTimeInterval(-2 * 60 * 60)
+        return shoppingTrips.first { $0.createdAt > cutoff }
+    }
+
+    func announceGoingShopping() async {
+        guard hasHousehold else { return }
+        guard usesiCloud else {
+            errorMessage = L10n.string("Sign in to iCloud and share this list to notify family.")
+            return
+        }
+        isBusy = true
+        defer { isBusy = false }
+        do {
+            let trip = try await cloudKit.announceShoppingTrip()
+            shoppingTrips.insert(trip, at: 0)
+            rememberShoppingTrip(trip)
+            familyAlertTitle = L10n.string("Family notified")
+            familyAlertMessage = L10n.string("Everyone on this list was asked to add anything that's missing.")
+        } catch {
+            errorMessage = error.flistDisplayMessage
+        }
+    }
 
     func start() async {
         let cachedHousehold = hasHousehold
@@ -259,6 +288,7 @@ final class FListStore {
         householdName = AppConfig.householdDisplayName
         persistHouseholdName()
         resetItemBaseline()
+        resetShoppingBaseline()
         LocalPersistence.clear()
         CloudKitService.clearSelection()
     }
@@ -535,6 +565,52 @@ final class FListStore {
         if notify, hadBaseline {
             postChangeNotifications(previous: previous, current: items)
         }
+        let hadShoppingBaseline = hasShoppingBaseline
+        applyShoppingTrips(state.shoppingTrips, notify: notify && hadShoppingBaseline)
+    }
+
+    private func applyShoppingTrips(_ trips: [ShoppingTrip], notify: Bool) {
+        shoppingTrips = trips
+        if notify {
+            for trip in trips where !seenShoppingTripIDs.contains(trip.id) {
+                guard trip.announcedByRecordName != currentUserRecordName else { continue }
+                let name = members.first(where: { $0.id == trip.announcedByRecordName })?.name
+                    ?? trip.announcedByName
+                NotificationManager.shared.notifyGoingShopping(name: name)
+                familyAlertTitle = L10n.string("Going shopping")
+                familyAlertMessage = String(
+                    format: L10n.string("%@ is going shopping. Add anything that's missing."),
+                    name
+                )
+            }
+        }
+        seenShoppingTripIDs.formUnion(trips.map(\.id))
+        persistSeenShoppingTripIDs()
+    }
+
+    private func rememberShoppingTrip(_ trip: ShoppingTrip) {
+        seenShoppingTripIDs.insert(trip.id)
+        persistSeenShoppingTripIDs()
+    }
+
+    private func persistSeenShoppingTripIDs() {
+        let raw = seenShoppingTripIDs.map(\.uuidString)
+        UserDefaults.standard.set(raw, forKey: "flist.seenShoppingTrips")
+        UserDefaults.standard.set(true, forKey: "flist.shoppingBaselineSaved")
+        hasShoppingBaseline = true
+    }
+
+    private static func loadSeenShoppingTripIDs() -> Set<UUID> {
+        let raw = UserDefaults.standard.stringArray(forKey: "flist.seenShoppingTrips") ?? []
+        return Set(raw.compactMap(UUID.init(uuidString:)))
+    }
+
+    private func resetShoppingBaseline() {
+        shoppingTrips = []
+        seenShoppingTripIDs = []
+        hasShoppingBaseline = false
+        UserDefaults.standard.removeObject(forKey: "flist.seenShoppingTrips")
+        UserDefaults.standard.removeObject(forKey: "flist.shoppingBaselineSaved")
     }
 
     private func keepingPhotos(in incoming: [ShortageItem], from existing: [ShortageItem]) -> [ShortageItem] {

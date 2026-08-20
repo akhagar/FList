@@ -6,6 +6,7 @@ struct ShortageListView: View {
     @State private var showAddItem = false
     @State private var itemToEdit: ShortageItem?
     @State private var itemToView: ShortageItem?
+    @State private var confirmGoingShopping = false
 
     var body: some View {
         NavigationStack {
@@ -36,6 +37,12 @@ struct ShortageListView: View {
                                 ProgressView()
                             }
                             Button {
+                                confirmGoingShopping = true
+                            } label: {
+                                Image(systemName: "cart.fill")
+                            }
+                            .accessibilityLabel("I'm going shopping")
+                            Button {
                                 showAddItem = true
                             } label: {
                                 Image(systemName: "plus")
@@ -59,6 +66,18 @@ struct ShortageListView: View {
             .refreshable {
                 await store.refresh()
             }
+            .confirmationDialog(
+                "I'm going shopping",
+                isPresented: $confirmGoingShopping,
+                titleVisibility: .visible
+            ) {
+                Button("Notify family") {
+                    Task { await store.announceGoingShopping() }
+                }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text("Everyone on this list will be asked to add anything that's missing.")
+            }
             .alert("Something went wrong", isPresented: Binding(
                 get: { store.errorMessage != nil },
                 set: { if !$0 { store.errorMessage = nil } }
@@ -67,11 +86,32 @@ struct ShortageListView: View {
             } message: {
                 Text(store.errorMessage ?? "")
             }
+            .alert(
+                store.familyAlertTitle ?? "",
+                isPresented: Binding(
+                    get: { store.familyAlertMessage != nil },
+                    set: { if !$0 {
+                        store.familyAlertTitle = nil
+                        store.familyAlertMessage = nil
+                    } }
+                )
+            ) {
+                Button("OK", role: .cancel) {
+                    store.familyAlertTitle = nil
+                    store.familyAlertMessage = nil
+                }
+            } message: {
+                Text(store.familyAlertMessage ?? "")
+            }
         }
     }
 
     private var listContent: some View {
         VStack(spacing: 0) {
+            if let trip = store.activeShoppingTrip {
+                shoppingBanner(for: trip)
+            }
+
             Picker("Filter", selection: $selectedStatus) {
                 Text("Needed").tag(ItemStatus.needed)
                 Text("Back in stock").tag(ItemStatus.restocked)
@@ -142,6 +182,26 @@ struct ShortageListView: View {
             }
         }
         .frame(maxHeight: .infinity)
+    }
+
+    private func shoppingBanner(for trip: ShoppingTrip) -> some View {
+        let name = store.members.first(where: { $0.id == trip.announcedByRecordName })?.name
+            ?? trip.announcedByName
+        let isMine = trip.announcedByRecordName == store.currentUserRecordName
+        return HStack(alignment: .top, spacing: 10) {
+            Image(systemName: "cart.fill")
+                .foregroundStyle(Color.accentColor)
+            Text(
+                isMine
+                    ? L10n.string("You asked the family to update the list.")
+                    : String(format: L10n.string("%@ is going shopping. Add anything that's missing."), name)
+            )
+            .font(.subheadline)
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 10)
+        .background(Color.accentColor.opacity(0.12))
     }
 }
 

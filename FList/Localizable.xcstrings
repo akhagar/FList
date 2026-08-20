@@ -1868,6 +1868,150 @@
           }
         }
       }
+    },
+    "I'm going shopping": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I'm going shopping"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "אני יוצא/ת לקניות"
+          }
+        }
+      }
+    },
+    "Notify family": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notify family"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "הודיעו למשפחה"
+          }
+        }
+      }
+    },
+    "Everyone on this list will be asked to add anything that's missing.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Everyone on this list will be asked to add anything that's missing."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "כולם ברשימה יתבקשו להוסיף מה שחסר."
+          }
+        }
+      }
+    },
+    "Family notified": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Family notified"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "המשפחה עודכנה"
+          }
+        }
+      }
+    },
+    "Everyone on this list was asked to add anything that's missing.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Everyone on this list was asked to add anything that's missing."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "כולם ברשימה התבקשו להוסיף מה שחסר."
+          }
+        }
+      }
+    },
+    "Going shopping": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Going shopping"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "יוצאים לקניות"
+          }
+        }
+      }
+    },
+    "%@ is going shopping. Add anything that's missing.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ is going shopping. Add anything that's missing."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ יוצא/ת לקניות. הוסיפו מה שחסר."
+          }
+        }
+      }
+    },
+    "You asked the family to update the list.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You asked the family to update the list."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ביקשת מהמשפחה לעדכן את הרשימה."
+          }
+        }
+      }
+    },
+    "Sign in to iCloud and share this list to notify family.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign in to iCloud and share this list to notify family."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "התחברו ל‑iCloud ושתפו את הרשימה כדי להודיע למשפחה."
+          }
+        }
+      }
     }
   },
   "version": "1.1"

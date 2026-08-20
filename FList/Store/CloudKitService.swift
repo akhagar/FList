@@ -46,6 +46,13 @@ struct HouseholdChoice: Identifiable, Hashable {
     }
 }
 
+struct ShoppingTrip: Identifiable, Hashable {
+    var id: UUID
+    var announcedByName: String
+    var announcedByRecordName: String
+    var createdAt: Date
+}
+
 /// Talks to Apple CloudKit: one custom zone is the family list, shared with other Apple IDs.
 @MainActor
 final class CloudKitService {
@@ -255,6 +262,7 @@ final class CloudKitService {
         var members: [FamilyMember]
         var householdName: String
         var hasChanges: Bool
+        var shoppingTrips: [ShoppingTrip]
     }
 
     func fetchHouseholdState(fullReload: Bool = true, includingAssets: Bool = true) async throws -> HouseholdState {
@@ -292,9 +300,10 @@ final class CloudKitService {
 
         let items = records.compactMap(ShortageItem.init(record:)).sorted { $0.createdAt > $1.createdAt }
         let members = assembledMembers(from: records, share: share, context: context)
+        let shoppingTrips = records.compactMap(ShoppingTrip.init(record:)).sorted { $0.createdAt > $1.createdAt }
         let name = Self.title(from: share) ?? ""
         let hasChanges = needsSnapshot || !fetch.records.isEmpty || !fetch.deletedRecordIDs.isEmpty
-        return HouseholdState(items: items, members: members, householdName: name, hasChanges: hasChanges)
+        return HouseholdState(items: items, members: members, householdName: name, hasChanges: hasChanges, shoppingTrips: shoppingTrips)
     }
 
     func fetchItems() async throws -> [ShortageItem] {
@@ -320,6 +329,31 @@ final class CloudKitService {
         }
         let saved = try await context.database.save(record)
         zoneRecordCache[saved.recordID] = saved
+    }
+
+    func announceShoppingTrip() async throws -> ShoppingTrip {
+        let context = try requireContext()
+        let id = UUID()
+        let now = Date.now
+        let record = CKRecord(
+            recordType: AppConfig.itemRecordType,
+            recordID: CKRecord.ID(recordName: AppConfig.shoppingRecordName(for: id), zoneID: context.zoneID)
+        )
+        record["name"] = "Shopping" as CKRecordValue
+        record["quantity"] = Int64(1) as CKRecordValue
+        record["status"] = ItemStatus.needed.rawValue as CKRecordValue
+        record["note"] = "" as CKRecordValue
+        record["addedByName"] = context.currentUserName as CKRecordValue
+        record["addedByRecordName"] = context.currentUserRecordName as CKRecordValue
+        record["createdAt"] = now as CKRecordValue
+        let saved = try await context.database.save(record)
+        zoneRecordCache[saved.recordID] = saved
+        return ShoppingTrip(
+            id: id,
+            announcedByName: context.currentUserName,
+            announcedByRecordName: context.currentUserRecordName,
+            createdAt: now
+        )
     }
 
     func delete(_ item: ShortageItem) async throws {
@@ -762,6 +796,7 @@ final class CloudKitService {
                     "name", "quantity", "note", "status",
                     "addedByName", "addedByRecordName", "createdAt", "restockedAt",
                     "memberID", "displayName", "photo",
+                    "announcedByName", "announcedByRecordName",
                     CKShare.SystemFieldKey.title
                 ]
             }
@@ -1105,6 +1140,7 @@ extension Error {
 extension ShortageItem {
     init?(record: CKRecord) {
         guard record.recordType == AppConfig.itemRecordType,
+              !AppConfig.isShoppingRecord(record.recordID.recordName),
               let name = record["name"] as? String
         else { return nil }
 
@@ -1140,5 +1176,19 @@ extension ShortageItem {
     fileprivate static func photoData(from record: CKRecord) -> Data? {
         guard let asset = record["photo"] as? CKAsset, let url = asset.fileURL else { return nil }
         return try? Data(contentsOf: url)
+    }
+}
+
+extension ShoppingTrip {
+    init?(record: CKRecord) {
+        guard record.recordType == AppConfig.itemRecordType,
+              let id = AppConfig.shoppingTripID(from: record.recordID.recordName)
+        else { return nil }
+        self.init(
+            id: id,
+            announcedByName: record["addedByName"] as? String ?? L10n.string("Family"),
+            announcedByRecordName: record["addedByRecordName"] as? String ?? "",
+            createdAt: record["createdAt"] as? Date ?? record.creationDate ?? .now
+        )
     }
 }
