@@ -5,9 +5,30 @@ struct FamilyMembersView: View {
     @State private var shareError: String?
     @State private var newMember: FamilyMember?
     @State private var memberToRemove: FamilyMember?
+    @State private var showHouseholdPicker = false
+    @State private var confirmAbandon = false
+    @State private var linkCopied = false
+    @State private var listName = ""
 
     var body: some View {
         List {
+            Section {
+                TextField("List name", text: $listName)
+                    .textInputAutocapitalization(.words)
+                    .submitLabel(.done)
+                    .onSubmit {
+                        Task { await store.renameHousehold(listName) }
+                    }
+                Button("Save") {
+                    Task { await store.renameHousehold(listName) }
+                }
+                .disabled(listName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+            } header: {
+                Text("List name")
+            } footer: {
+                Text("This name appears at the top of the list for everyone who shares it.")
+            }
+
             Section("Household") {
                 if store.members.isEmpty {
                     Text("Just you for now")
@@ -57,6 +78,7 @@ struct FamilyMembersView: View {
                 if store.usesiCloud {
                     Button {
                         CloudSharingPresenter.present(
+                            title: store.householdName,
                             prepareShare: { try await store.prepareShare() },
                             onError: { shareError = $0 },
                             onChanged: {
@@ -67,13 +89,52 @@ struct FamilyMembersView: View {
                         Label(store.isOwner ? "Invite family" : "Sharing details", systemImage: "square.and.arrow.up")
                     }
                     .disabled(!store.isOwner)
+
+                    if store.isOwner {
+                        Button {
+                            CloudSharingPresenter.copyInviteLink(
+                                prepareShare: { try await store.prepareShare() },
+                                onError: { shareError = $0 },
+                                onCopied: { linkCopied = true }
+                            )
+                        } label: {
+                            Label("Copy invite link", systemImage: "link")
+                        }
+                    }
                 }
             } footer: {
                 Text(footerText)
             }
+
+            Section {
+                if store.usesiCloud {
+                    Button {
+                        showHouseholdPicker = true
+                    } label: {
+                        Label("Switch list", systemImage: "arrow.left.arrow.right")
+                    }
+                }
+
+                Button(store.isOwner || !store.usesiCloud ? "Delete this list" : "Leave this list", role: .destructive) {
+                    confirmAbandon = true
+                }
+            } footer: {
+                Text(store.isOwner || !store.usesiCloud
+                     ? "Deletes this list for everyone who shares it."
+                     : "You leave this shared list. The rest of the family keeps it.")
+            }
         }
         .navigationTitle("Family")
         .navigationBarTitleDisplayMode(.inline)
+        .onAppear {
+            listName = store.householdName
+        }
+        .onDisappear {
+            Task { await store.renameHousehold(listName) }
+        }
+        .onChange(of: store.householdName) { _, name in
+            listName = name
+        }
         .sheet(item: $newMember) { member in
             NavigationStack {
                 MemberEditorView(store: store, member: member, isNew: true)
@@ -100,6 +161,28 @@ struct FamilyMembersView: View {
         } message: { member in
             Text("Remove \(member.name) from the family list?")
         }
+        .sheet(isPresented: $showHouseholdPicker) {
+            HouseholdPickerView(store: store)
+        }
+        .confirmationDialog(
+            store.isOwner || !store.usesiCloud ? "Delete this list" : "Leave this list",
+            isPresented: $confirmAbandon,
+            titleVisibility: .visible
+        ) {
+            Button(store.isOwner || !store.usesiCloud ? "Delete this list" : "Leave this list", role: .destructive) {
+                Task { await store.abandonCurrentHousehold() }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text(store.isOwner || !store.usesiCloud
+                 ? "Deletes this list for everyone who shares it."
+                 : "You leave this shared list. The rest of the family keeps it.")
+        }
+        .alert("Invite link copied", isPresented: $linkCopied) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("Send it in Messages. The other person should paste it in FList and tap Join with link.")
+        }
         .alert("Couldn't share", isPresented: Binding(
             get: { shareError != nil },
             set: { if !$0 { shareError = nil } }
@@ -122,6 +205,6 @@ struct FamilyMembersView: View {
         if !store.usesiCloud {
             return L10n.string("Sign in to iCloud in Settings to invite people from your Family Sharing group. Apple doesn't let apps read that group automatically — you invite them once with Share.")
         }
-        return L10n.string("Send the invite once with Messages. Whoever opens the link on their iPhone can join this list.")
+        return L10n.string("Your items stay in your Private FamilyShortage zone. Invited people don't get a copy there — after they join, the same zone shows under Shared on their iCloud account. Use Copy invite link — a Messages invitation expires and can't be pasted.")
     }
 }

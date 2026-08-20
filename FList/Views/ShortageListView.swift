@@ -4,6 +4,8 @@ struct ShortageListView: View {
     @Bindable var store: FListStore
     @State private var selectedStatus: ItemStatus = .needed
     @State private var showAddItem = false
+    @State private var itemToEdit: ShortageItem?
+    @State private var itemToView: ShortageItem?
 
     var body: some View {
         NavigationStack {
@@ -16,7 +18,8 @@ struct ShortageListView: View {
                     OnboardingView(store: store)
                 }
             }
-            .navigationTitle("FList")
+            .navigationTitle(store.hasHousehold ? store.householdName : L10n.string("FList"))
+            .navigationBarTitleDisplayMode(store.hasHousehold ? .large : .inline)
             .toolbar {
                 if store.hasHousehold {
                     ToolbarItem(placement: .topBarLeading) {
@@ -39,6 +42,14 @@ struct ShortageListView: View {
             }
             .sheet(isPresented: $showAddItem) {
                 AddItemSheet(store: store)
+            }
+            .sheet(item: $itemToEdit) { item in
+                AddItemSheet(store: store, item: item)
+            }
+            .fullScreenCover(item: $itemToView) { item in
+                if let photoData = item.photoData, let image = UIImage(data: photoData) {
+                    ItemPhotoViewer(image: image, title: item.name)
+                }
             }
             .refreshable {
                 await store.refresh()
@@ -70,15 +81,21 @@ struct ShortageListView: View {
             } else {
                 List {
                     ForEach(visible) { item in
-                        ItemRowView(item: item, addedByDisplayName: store.displayName(for: item)) {
-                            Task {
-                                if item.status == .needed {
-                                    await store.markRestocked(item)
-                                } else {
-                                    await store.markNeeded(item)
+                        ItemRowView(
+                            item: item,
+                            addedByDisplayName: store.displayName(for: item),
+                            onToggle: {
+                                Task {
+                                    if item.status == .needed {
+                                        await store.markRestocked(item)
+                                    } else {
+                                        await store.markNeeded(item)
+                                    }
                                 }
-                            }
-                        }
+                            },
+                            onEdit: { itemToEdit = item },
+                            onViewPhoto: { itemToView = item }
+                        )
                         .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                             Button(role: .destructive) {
                                 Task { await store.delete(item) }

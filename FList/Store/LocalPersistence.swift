@@ -3,24 +3,34 @@ import Foundation
 struct LocalSnapshot: Codable {
     var hasHousehold: Bool
     var currentUserName: String
+    var householdName: String
     var items: [ShortageItem]
     var members: [FamilyMember]
 
-    init(hasHousehold: Bool, currentUserName: String, items: [ShortageItem], members: [FamilyMember] = []) {
+    init(
+        hasHousehold: Bool,
+        currentUserName: String,
+        householdName: String = AppConfig.householdDisplayName,
+        items: [ShortageItem],
+        members: [FamilyMember] = []
+    ) {
         self.hasHousehold = hasHousehold
         self.currentUserName = currentUserName
+        self.householdName = householdName
         self.items = items
         self.members = members
     }
 
     enum CodingKeys: String, CodingKey {
-        case hasHousehold, currentUserName, items, members
+        case hasHousehold, currentUserName, householdName, items, members
     }
 
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         hasHousehold = try container.decode(Bool.self, forKey: .hasHousehold)
         currentUserName = try container.decode(String.self, forKey: .currentUserName)
+        householdName = try container.decodeIfPresent(String.self, forKey: .householdName)
+            ?? AppConfig.householdDisplayName
         items = try container.decode([ShortageItem].self, forKey: .items)
         members = try container.decodeIfPresent([FamilyMember].self, forKey: .members) ?? []
     }
@@ -46,5 +56,9 @@ enum LocalPersistence {
     static func save(_ snapshot: LocalSnapshot) {
         guard let data = try? JSONEncoder().encode(snapshot) else { return }
         try? data.write(to: fileURL, options: [.atomic])
+    }
+
+    static func clear() {
+        try? FileManager.default.removeItem(at: fileURL)
     }
 }

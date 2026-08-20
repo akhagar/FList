@@ -19,8 +19,10 @@ final class FListStore {
     var isOwner = true
     var currentUserName = L10n.string( "Me")
     var currentUserRecordName = "local"
+    var householdName = AppConfig.householdDisplayName
     var errorMessage: String?
     var isBusy = false
+    var availableHouseholds: [HouseholdChoice] = []
 
     let cloudKit = CloudKitService()
     private var hasItemBaseline = UserDefaults.standard.bool(forKey: "flist.itemBaselineSaved")
@@ -43,22 +45,24 @@ final class FListStore {
         if !storedName.isEmpty {
             currentUserName = storedName
         }
+        if let storedList = UserDefaults.standard.string(forKey: "flist.householdName")?
+            .trimmingCharacters(in: .whitespacesAndNewlines),
+           !storedList.isEmpty {
+            householdName = storedList
+        }
         let status = await cloudKit.accountStatus()
         switch status {
         case .available:
             accountKind = .iCloud
+            await refreshAvailableHouseholds()
             do {
                 _ = try await cloudKit.bootstrapExistingHousehold()
-                hasHousehold = true
-                isOwner = cloudKit.context?.isOwner ?? true
-                currentUserName = cloudKit.context?.currentUserName ?? L10n.string( "Me")
-                currentUserRecordName = cloudKit.context?.currentUserRecordName ?? "local"
-                try await reloadFromCloud(notify: true)
-                await enableChangeNotifications()
+                try await adoptCloudHousehold()
             } catch {
                 hasHousehold = false
                 items = []
                 members = []
+                householdName = AppConfig.householdDisplayName
             }
         case .restricted, .temporarilyUnavailable:
             accountKind = .restricted
@@ -75,26 +79,119 @@ final class FListStore {
 
         if accountKind == .iCloud {
             do {
+                resetItemBaseline()
                 _ = try await cloudKit.createHousehold()
-                hasHousehold = true
-                isOwner = true
-                currentUserName = cloudKit.context?.currentUserName ?? L10n.string( "Me")
-                currentUserRecordName = cloudKit.context?.currentUserRecordName ?? "local"
-                items = []
-                try await reloadFromCloud(notify: true)
-                await enableChangeNotifications()
+                try await adoptCloudHousehold()
+                await refreshAvailableHouseholds()
             } catch {
-                errorMessage = error.localizedDescription
+                errorMessage = error.flistDisplayMessage
             }
         } else {
             hasHousehold = true
+            if householdName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                householdName = AppConfig.householdDisplayName
+            }
             persistLocal()
+        }
+    }
+
+    func joinFromInvite() async {
+        isBusy = true
+        defer { isBusy = false }
+        errorMessage = nil
+
+        if let url = CloudKitShareBridge.shareURLFromPasteboard() {
+            await CloudKitShareBridge.acceptShareAndWait(at: url)
+            if errorMessage != nil { return }
+            if hasHousehold, cloudKit.context?.isOwner == false { return }
+        }
+
+        await refreshAvailableHouseholds()
+        if let shared = availableHouseholds.first(where: { !$0.isOwner }) {
+            await selectHousehold(shared)
+            return
+        }
+
+        errorMessage = L10n.string("Couldn't join that shared list. On Family, tap Copy invite link and paste that link here. Both phones need the same kind of build — Xcode or TestFlight.")
+    }
+
+    func joinFromInviteLink(_ raw: String) async {
+        isBusy = true
+        defer { isBusy = false }
+        errorMessage = nil
+
+        guard let url = CloudKitShareBridge.shareURL(from: raw) else {
+            errorMessage = L10n.string("That doesn't look like an FList invite link.")
+            return
+        }
+        await CloudKitShareBridge.acceptShareAndWait(at: url)
+        if errorMessage != nil { return }
+        if hasHousehold, cloudKit.context?.isOwner == false { return }
+
+        await refreshAvailableHouseholds()
+        if let shared = availableHouseholds.first(where: { !$0.isOwner }) {
+            await selectHousehold(shared)
+            return
+        }
+
+        errorMessage = L10n.string("Couldn't join that shared list. On Family, tap Copy invite link and paste that link here. Both phones need the same kind of build — Xcode or TestFlight.")
+    }
+
+    func refreshAvailableHouseholds() async {
+        guard accountKind == .iCloud else {
+            availableHouseholds = []
+            return
+        }
+        availableHouseholds = await cloudKit.listHouseholds()
+    }
+
+    func selectHousehold(_ choice: HouseholdChoice) async {
+        isBusy = true
+        defer { isBusy = false }
+        do {
+            resetItemBaseline()
+            _ = try await cloudKit.openHousehold(choice)
+            try await adoptCloudHousehold()
+            await refreshAvailableHouseholds()
+        } catch {
+            errorMessage = error.flistDisplayMessage
+        }
+    }
+
+    func abandonCurrentHousehold() async {
+        isBusy = true
+        defer { isBusy = false }
+        do {
+            if usesiCloud {
+                try await cloudKit.abandonCurrentHousehold()
+            }
+            clearHouseholdLocally()
+            await refreshAvailableHouseholds()
+        } catch {
+            errorMessage = error.flistDisplayMessage
+        }
+    }
+
+    func isCurrentHousehold(_ choice: HouseholdChoice) -> Bool {
+        guard let context = cloudKit.context else { return false }
+        return context.zoneID.zoneName == choice.zoneName
+            && context.zoneID.ownerName == choice.ownerName
+            && context.isOwner == choice.isOwner
+    }
+
+    func retryJoinSharedListIfNeeded() async {
+        guard accountKind == .iCloud, !hasHousehold else { return }
+        await refreshAvailableHouseholds()
+        if availableHouseholds.count == 1, let only = availableHouseholds.first {
+            await selectHousehold(only)
         }
     }
 
     func refresh() async {
         guard hasHousehold else { return }
         if usesiCloud {
+            householdName = await cloudKit.householdName()
+            persistHouseholdName()
             try? await reloadFromCloud(notify: true)
         } else {
             loadLocal()
@@ -110,19 +207,62 @@ final class FListStore {
     func acceptShare(_ metadata: CKShare.Metadata) async {
         do {
             accountKind = .iCloud
+            resetItemBaseline()
             _ = try await cloudKit.acceptShare(metadata)
-            hasHousehold = true
-            isOwner = cloudKit.context?.isOwner ?? false
-            currentUserName = cloudKit.context?.currentUserName ?? L10n.string( "Me")
-            currentUserRecordName = cloudKit.context?.currentUserRecordName ?? "local"
-            try await reloadFromCloud(notify: true)
-            await enableChangeNotifications()
+            try await adoptCloudHousehold()
+            await refreshAvailableHouseholds()
         } catch {
-            errorMessage = error.localizedDescription
+            errorMessage = error.flistDisplayMessage
         }
     }
 
-    func addItem(name: String, quantity: Int, note: String) async {
+    func openAcceptedSharedList() async {
+        do {
+            accountKind = .iCloud
+            resetItemBaseline()
+            _ = try await cloudKit.openAcceptedSharedList()
+            try await adoptCloudHousehold()
+            await refreshAvailableHouseholds()
+        } catch {
+            errorMessage = error.flistDisplayMessage
+        }
+    }
+
+    private func adoptCloudHousehold() async throws {
+        isOwner = cloudKit.context?.isOwner ?? true
+        currentUserName = cloudKit.context?.currentUserName ?? L10n.string("Me")
+        currentUserRecordName = cloudKit.context?.currentUserRecordName ?? "local"
+        householdName = await cloudKit.householdName()
+        persistHouseholdName()
+        try await reloadFromCloud(notify: true)
+        hasHousehold = true
+        await enableChangeNotifications()
+    }
+
+    private func clearHouseholdLocally() {
+        hasHousehold = false
+        isOwner = true
+        items = []
+        members = []
+        householdName = AppConfig.householdDisplayName
+        persistHouseholdName()
+        resetItemBaseline()
+        LocalPersistence.clear()
+        CloudKitService.clearSelection()
+    }
+
+    private func persistHouseholdName() {
+        UserDefaults.standard.set(householdName, forKey: "flist.householdName")
+    }
+
+    private func resetItemBaseline() {
+        knownItems = [:]
+        hasItemBaseline = false
+        UserDefaults.standard.removeObject(forKey: "flist.knownItemStatus")
+        UserDefaults.standard.removeObject(forKey: "flist.itemBaselineSaved")
+    }
+
+    func addItem(name: String, quantity: Int, note: String, photoData: Data? = nil) async {
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
 
@@ -137,6 +277,9 @@ final class FListStore {
                 updated.quantity = match.quantity + max(1, quantity)
                 if !note.isEmpty { updated.note = note }
             }
+            if let photoData {
+                updated.photoData = photoData
+            }
             await upsert(updated)
             return
         }
@@ -146,9 +289,19 @@ final class FListStore {
             quantity: quantity,
             note: note.trimmingCharacters(in: .whitespacesAndNewlines),
             addedByName: currentUserName,
-            addedByRecordName: currentUserRecordName
+            addedByRecordName: currentUserRecordName,
+            photoData: photoData
         )
         await upsert(item)
+    }
+
+    func saveItem(_ item: ShortageItem) async {
+        var updated = item
+        updated.name = item.name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !updated.name.isEmpty else { return }
+        updated.quantity = max(1, item.quantity)
+        updated.note = item.note.trimmingCharacters(in: .whitespacesAndNewlines)
+        await upsert(updated)
     }
 
     func markRestocked(_ item: ShortageItem) async {
@@ -173,7 +326,7 @@ final class FListStore {
             do {
                 try await cloudKit.delete(item)
             } catch {
-                errorMessage = error.localizedDescription
+                errorMessage = error.flistDisplayMessage
                 await refresh()
             }
         } else {
@@ -201,7 +354,7 @@ final class FListStore {
             do {
                 try await cloudKit.saveProfile(updated)
             } catch {
-                errorMessage = error.localizedDescription
+                errorMessage = error.flistDisplayMessage
                 await refresh()
             }
         } else {
@@ -235,7 +388,7 @@ final class FListStore {
             do {
                 try await cloudKit.removeMember(member)
             } catch {
-                errorMessage = error.localizedDescription
+                errorMessage = error.flistDisplayMessage
                 await refresh()
             }
         } else {
@@ -247,8 +400,25 @@ final class FListStore {
         members.first(where: { $0.id == item.addedByRecordName })?.name ?? item.addedByName
     }
 
+    func renameHousehold(_ name: String) async {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty, trimmed != householdName else { return }
+        householdName = trimmed
+        persistHouseholdName()
+        if usesiCloud {
+            do {
+                try await cloudKit.updateHouseholdName(trimmed)
+                await refreshAvailableHouseholds()
+            } catch {
+                errorMessage = error.flistDisplayMessage
+            }
+        } else {
+            persistLocal()
+        }
+    }
+
     func prepareShare() async throws -> CKShare {
-        try await cloudKit.prepareShare()
+        try await cloudKit.prepareShare(title: householdName)
     }
 
     private func upsert(_ item: ShortageItem) async {
@@ -263,7 +433,7 @@ final class FListStore {
                 try await cloudKit.save(item)
                 remember(item)
             } catch {
-                errorMessage = error.localizedDescription
+                errorMessage = error.flistDisplayMessage
                 await refresh()
             }
         } else {
@@ -330,6 +500,9 @@ final class FListStore {
         let snapshot = LocalPersistence.load()
         hasHousehold = snapshot.hasHousehold
         currentUserName = snapshot.currentUserName
+        householdName = snapshot.householdName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            ? AppConfig.householdDisplayName
+            : snapshot.householdName
         items = snapshot.items
         if snapshot.members.isEmpty {
             members = [
@@ -359,13 +532,25 @@ final class FListStore {
             ]
         }
         LocalPersistence.save(
-            LocalSnapshot(hasHousehold: hasHousehold, currentUserName: currentUserName, items: items, members: members)
+            LocalSnapshot(
+                hasHousehold: hasHousehold,
+                currentUserName: currentUserName,
+                householdName: householdName,
+                items: items,
+                members: members
+            )
         )
     }
 
     private func persistLocalCache() {
         LocalPersistence.save(
-            LocalSnapshot(hasHousehold: hasHousehold, currentUserName: currentUserName, items: items, members: members)
+            LocalSnapshot(
+                hasHousehold: hasHousehold,
+                currentUserName: currentUserName,
+                householdName: householdName,
+                items: items,
+                members: members
+            )
         )
     }
 }
@@ -376,6 +561,7 @@ extension FListStore {
         store.accountKind = .localOnly
         store.hasHousehold = true
         store.currentUserName = "Alex"
+        store.householdName = "Home"
         store.items = [
             ShortageItem(name: "Milk", quantity: 1, note: "Oat if they have it", addedByName: "Alex", addedByRecordName: "local"),
             ShortageItem(name: "Dish soap", quantity: 1, addedByName: "Sam", addedByRecordName: "local"),

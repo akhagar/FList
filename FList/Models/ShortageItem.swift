@@ -24,6 +24,7 @@ struct ShortageItem: Identifiable, Hashable, Codable {
     var addedByRecordName: String
     var createdAt: Date
     var restockedAt: Date?
+    var photoData: Data?
 
     init(
         id: UUID = UUID(),
@@ -34,7 +35,8 @@ struct ShortageItem: Identifiable, Hashable, Codable {
         addedByName: String,
         addedByRecordName: String,
         createdAt: Date = .now,
-        restockedAt: Date? = nil
+        restockedAt: Date? = nil,
+        photoData: Data? = nil
     ) {
         self.id = id
         self.name = name
@@ -45,5 +47,6 @@ struct ShortageItem: Identifiable, Hashable, Codable {
         self.addedByRecordName = addedByRecordName
         self.createdAt = createdAt
         self.restockedAt = restockedAt
+        self.photoData = photoData
     }
 }

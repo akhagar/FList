@@ -1,11 +1,11 @@
 import CloudKit
 import UIKit
 
-/// One Messages/Mail picker. Avoids UICloudSharingController's two-step
-/// "choose a participant" then "choose a contact" flow.
+/// Presents CloudKit sharing from UIKit so SwiftUI sheets don't break Auto Layout.
 @MainActor
 enum CloudSharingPresenter {
     static func present(
+        title: String,
         prepareShare: @escaping () async throws -> CKShare,
         onError: @escaping (String) -> Void,
         onChanged: @escaping () -> Void
@@ -15,26 +15,18 @@ enum CloudSharingPresenter {
         Task {
             do {
                 let share = try await prepareShare()
-                guard let url = share.url else {
-                    throw CloudKitServiceError.missingInviteLink
-                }
-                let activity = UIActivityViewController(
-                    activityItems: [
-                        L10n.string("Join our family shortage list in FList"),
-                        url
-                    ],
-                    applicationActivities: nil
+                CloudSharingSession.shared.onChanged = onChanged
+                CloudSharingSession.shared.onError = onError
+                CloudSharingSession.shared.listTitle = title
+
+                let controller = UICloudSharingController(
+                    share: share,
+                    container: CKContainer(identifier: AppConfig.cloudKitContainerID)
                 )
-                activity.excludedActivityTypes = [
-                    .addToReadingList,
-                    .assignToContact,
-                    .print,
-                    .saveToCameraRoll
-                ]
-                activity.completionWithItemsHandler = { _, _, _, _ in
-                    onChanged()
-                }
-                if let popover = activity.popoverPresentationController {
+                controller.delegate = CloudSharingSession.shared
+                controller.availablePermissions = [.allowPrivate, .allowReadWrite]
+                controller.modalPresentationStyle = .formSheet
+                if let popover = controller.popoverPresentationController {
                     popover.sourceView = presenter.view
                     popover.sourceRect = CGRect(
                         x: presenter.view.bounds.midX,
@@ -44,11 +36,53 @@ enum CloudSharingPresenter {
                     )
                     popover.permittedArrowDirections = []
                 }
-                presenter.present(activity, animated: true)
+                presenter.present(controller, animated: true)
             } catch {
-                onError(error.localizedDescription)
+                onError(error.flistDisplayMessage)
             }
         }
+    }
+
+    static func copyInviteLink(
+        prepareShare: @escaping () async throws -> CKShare,
+        onError: @escaping (String) -> Void,
+        onCopied: @escaping () -> Void
+    ) {
+        Task {
+            do {
+                let share = try await prepareShare()
+                guard let url = share.url else {
+                    throw CloudKitServiceError.missingInviteLink
+                }
+                UIPasteboard.general.url = url
+                onCopied()
+            } catch {
+                onError(error.flistDisplayMessage)
+            }
+        }
+    }
+}
+
+final class CloudSharingSession: NSObject, UICloudSharingControllerDelegate {
+    static let shared = CloudSharingSession()
+    var onChanged: (() -> Void)?
+    var onError: ((String) -> Void)?
+    var listTitle: String = AppConfig.householdDisplayName
+
+    func cloudSharingController(_ csc: UICloudSharingController, failedToSaveShareWithError error: Error) {
+        onError?(error.flistDisplayMessage)
+    }
+
+    func cloudSharingControllerDidSaveShare(_ csc: UICloudSharingController) {
+        onChanged?()
+    }
+
+    func cloudSharingControllerDidStopSharing(_ csc: UICloudSharingController) {
+        onChanged?()
+    }
+
+    func itemTitle(for csc: UICloudSharingController) -> String? {
+        listTitle.isEmpty ? AppConfig.householdDisplayName : listTitle
     }
 }
 
