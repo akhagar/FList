@@ -6,6 +6,7 @@ struct ShortageListView: View {
     @State private var showAddItem = false
     @State private var itemToEdit: ShortageItem?
     @State private var itemToView: ShortageItem?
+    @State private var itemToRestock: ShortageItem?
     @State private var confirmGoingShopping = false
 
     var body: some View {
@@ -27,9 +28,9 @@ struct ShortageListView: View {
                         NavigationLink {
                             FamilyMembersView(store: store)
                         } label: {
-                            Image(systemName: "person.3.fill")
+                            Image(systemName: "gearshape.fill")
                         }
-                        .accessibilityLabel("Family")
+                        .accessibilityLabel("Settings")
                     }
                     ToolbarItem(placement: .topBarTrailing) {
                         HStack(spacing: 12) {
@@ -57,6 +58,9 @@ struct ShortageListView: View {
             }
             .sheet(item: $itemToEdit) { item in
                 AddItemSheet(store: store, item: item)
+            }
+            .sheet(item: $itemToRestock) { item in
+                RestockItemSheet(store: store, item: item)
             }
             .fullScreenCover(item: $itemToView) { item in
                 if let photoData = item.photoData, let image = UIImage(data: photoData) {
@@ -129,13 +133,12 @@ struct ShortageListView: View {
                         ItemRowView(
                             item: item,
                             addedByDisplayName: store.displayName(for: item),
+                            restockFeedbackLine: store.restockFeedback(for: item),
                             onToggle: {
-                                Task {
-                                    if item.status == .needed {
-                                        await store.markRestocked(item)
-                                    } else {
-                                        await store.markNeeded(item)
-                                    }
+                                if item.status == .needed {
+                                    itemToRestock = item
+                                } else {
+                                    Task { await store.markNeeded(item) }
                                 }
                             },
                             onEdit: { itemToEdit = item },
@@ -151,7 +154,7 @@ struct ShortageListView: View {
                         .swipeActions(edge: .leading) {
                             if item.status == .needed {
                                 Button {
-                                    Task { await store.markRestocked(item) }
+                                    itemToRestock = item
                                 } label: {
                                     Label("Back in stock", systemImage: "checkmark")
                                 }

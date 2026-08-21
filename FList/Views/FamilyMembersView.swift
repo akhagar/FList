@@ -9,23 +9,9 @@ struct FamilyMembersView: View {
     @State private var confirmAbandon = false
     @State private var linkCopied = false
     @State private var listName = ""
-    @AppStorage(AppLanguage.storageKey) private var languageRaw = AppLanguage.system.rawValue
 
     var body: some View {
         List {
-            Section {
-                Picker("Language", selection: $languageRaw) {
-                    Text("iPhone settings").tag(AppLanguage.system.rawValue)
-                    Text("English").tag(AppLanguage.english.rawValue)
-                    Text("Hebrew").tag(AppLanguage.hebrew.rawValue)
-                }
-                .pickerStyle(.navigationLink)
-            } header: {
-                Text("Language")
-            } footer: {
-                Text("Use iPhone settings, or choose English or Hebrew.")
-            }
-
             Section {
                 TextField("List name", text: $listName)
                     .textInputAutocapitalization(.words)
@@ -41,6 +27,20 @@ struct FamilyMembersView: View {
                 Text("List name")
             } footer: {
                 Text("This name appears at the top of the list for everyone who shares it.")
+            }
+
+            if !store.members.isEmpty {
+                Section {
+                    ForEach(store.members) { member in
+                        Toggle(isOn: notifyBinding(for: member)) {
+                            Text(member.isCurrentUser ? L10n.string("\(member.name) (you)") : member.name)
+                        }
+                    }
+                } header: {
+                    Text("Notify when items are added")
+                } footer: {
+                    Text("Choose who gets a notification when someone adds a missing item.")
+                }
             }
 
             Section("Household") {
@@ -139,7 +139,7 @@ struct FamilyMembersView: View {
                      : "You leave this shared list. The rest of the family keeps it.")
             }
         }
-        .navigationTitle("Family")
+        .navigationTitle("Settings")
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
             listName = store.householdName
@@ -206,6 +206,13 @@ struct FamilyMembersView: View {
         } message: {
             Text(shareError ?? "")
         }
+    }
+
+    private func notifyBinding(for member: FamilyMember) -> Binding<Bool> {
+        Binding(
+            get: { store.receivesNewItemNotifications(member) },
+            set: { store.setReceivesNewItemNotifications(member, enabled: $0) }
+        )
     }
 
     private func statusLine(for member: FamilyMember) -> String {

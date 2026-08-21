@@ -4,6 +4,7 @@ import UIKit
 struct ItemRowView: View {
     let item: ShortageItem
     var addedByDisplayName: String
+    var restockFeedbackLine: String = ""
     var onToggle: () -> Void
     var onEdit: () -> Void
     var onViewPhoto: () -> Void
@@ -50,6 +51,11 @@ struct ItemRowView: View {
                         }
                         if !item.note.isEmpty {
                             Text(item.note)
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                        }
+                        if item.status == .restocked, !restockFeedbackLine.isEmpty {
+                            Text(restockFeedbackLine)
                                 .font(.subheadline)
                                 .foregroundStyle(.secondary)
                         }

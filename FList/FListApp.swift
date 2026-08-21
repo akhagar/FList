@@ -5,17 +5,10 @@ struct FListApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @Environment(\.scenePhase) private var scenePhase
     @State private var store = FListStore()
-    @AppStorage(AppLanguage.storageKey) private var languageRaw = AppLanguage.system.rawValue
-
-    private var language: AppLanguage {
-        AppLanguage(rawValue: languageRaw) ?? .system
-    }
 
     var body: some Scene {
         WindowGroup {
             ShortageListView(store: store)
-                .environment(\.locale, language.locale)
-                .environment(\.layoutDirection, language.layoutDirection)
                 .task {
                     CloudKitShareBridge.bind(store)
                     await CloudKitShareBridge.flushPending()

@@ -32,11 +32,17 @@ final class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
         )
     }
 
-    func notifyRestocked(name: String) {
+    func notifyRestocked(name: String, note: String = "") {
+        let body: String
+        if note.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            body = String(format: L10n.string("%@ is back in stock"), name)
+        } else {
+            body = String(format: L10n.string("%@ is back in stock. %@"), name, note)
+        }
         post(
             identifier: "stock-\(name)-\(UUID().uuidString)",
             title: L10n.string("Back in stock"),
-            body: String(format: L10n.string("%@ is back in stock"), name)
+            body: body
         )
     }
 

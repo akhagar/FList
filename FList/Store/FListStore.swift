@@ -27,6 +27,7 @@ final class FListStore {
     var shoppingTrips: [ShoppingTrip] = []
     var familyAlertTitle: String?
     var familyAlertMessage: String?
+    var notificationPrefs = FListStore.loadNotificationPrefs()
 
     let cloudKit = CloudKitService()
     private var hasItemBaseline = UserDefaults.standard.bool(forKey: "flist.itemBaselineSaved")
@@ -49,6 +50,33 @@ final class FListStore {
     }
 
     var usesiCloud: Bool { accountKind == .iCloud }
+
+    func receivesNewItemNotifications(_ member: FamilyMember) -> Bool {
+        notificationPrefs.includes(member.id)
+    }
+
+    func setReceivesNewItemNotifications(_ member: FamilyMember, enabled: Bool) {
+        var ids = Set(notificationPrefs.recipientIDs ?? members.map(\.id))
+        if enabled {
+            ids.insert(member.id)
+        } else {
+            ids.remove(member.id)
+        }
+        if ids == Set(members.map(\.id)) {
+            notificationPrefs = .everyone
+        } else {
+            notificationPrefs = ItemNotificationPrefs(recipientIDs: ids.sorted())
+        }
+        persistNotificationPrefs()
+        guard usesiCloud else { return }
+        Task {
+            do {
+                try await cloudKit.saveNotificationPrefs(notificationPrefs)
+            } catch {
+                errorMessage = error.flistDisplayMessage
+            }
+        }
+    }
 
     var activeShoppingTrip: ShoppingTrip? {
         let cutoff = Date.now.addingTimeInterval(-2 * 60 * 60)
@@ -289,6 +317,7 @@ final class FListStore {
         persistHouseholdName()
         resetItemBaseline()
         resetShoppingBaseline()
+        resetNotificationPrefs()
         LocalPersistence.clear()
         CloudKitService.clearSelection()
     }
@@ -313,6 +342,9 @@ final class FListStore {
             if match.status == .restocked {
                 updated.status = .needed
                 updated.restockedAt = nil
+                updated.restockNote = ""
+                updated.restockedByName = ""
+                updated.restockedByRecordName = ""
                 updated.quantity = quantity
                 updated.note = note.isEmpty ? match.note : note
             } else {
@@ -330,7 +362,7 @@ final class FListStore {
             name: trimmed,
             quantity: quantity,
             note: note.trimmingCharacters(in: .whitespacesAndNewlines),
-            addedByName: currentUserName,
+            addedByName: currentUserDisplayName,
             addedByRecordName: currentUserRecordName,
             photoData: photoData
         )
@@ -346,10 +378,18 @@ final class FListStore {
         await upsert(updated)
     }
 
-    func markRestocked(_ item: ShortageItem) async {
+    func markRestocked(_ item: ShortageItem, note: String = "") async {
         var updated = item
         updated.status = .restocked
         updated.restockedAt = .now
+        updated.restockNote = note.trimmingCharacters(in: .whitespacesAndNewlines)
+        if updated.restockNote.isEmpty {
+            updated.restockedByName = ""
+            updated.restockedByRecordName = ""
+        } else {
+            updated.restockedByName = currentUserDisplayName
+            updated.restockedByRecordName = currentUserRecordName
+        }
         await upsert(updated)
     }
 
@@ -357,6 +397,9 @@ final class FListStore {
         var updated = item
         updated.status = .needed
         updated.restockedAt = nil
+        updated.restockNote = ""
+        updated.restockedByName = ""
+        updated.restockedByRecordName = ""
         await upsert(updated)
     }
 
@@ -442,7 +485,62 @@ final class FListStore {
     }
 
     func displayName(for item: ShortageItem) -> String {
-        members.first(where: { $0.id == item.addedByRecordName })?.name ?? item.addedByName
+        displayName(forRecordName: item.addedByRecordName, fallback: item.addedByName)
+    }
+
+    func restockFeedback(for item: ShortageItem) -> String {
+        let name = displayName(
+            forRecordName: item.restockedByRecordName,
+            fallback: item.restockedByName
+        )
+        return item.restockFeedbackLine(
+            restockerName: isPlaceholderName(name) ? "" : name
+        )
+    }
+
+    var currentUserDisplayName: String {
+        displayName(forRecordName: currentUserRecordName, fallback: currentUserName)
+    }
+
+    private func displayName(forRecordName id: String, fallback: String) -> String {
+        if let member = members.first(where: { $0.id == id }), !isPlaceholderName(member.name) {
+            return member.name
+        }
+        if isCurrentUserRecordName(id),
+           let me = members.first(where: \.isCurrentUser),
+           !isPlaceholderName(me.name) {
+            return me.name
+        }
+        if !isPlaceholderName(fallback) {
+            return fallback.trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+        if isCurrentUserRecordName(id),
+           let me = members.first(where: \.isCurrentUser) {
+            return me.name
+        }
+        let trimmed = fallback.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !trimmed.isEmpty { return trimmed }
+        return currentUserName
+    }
+
+    private func isCurrentUserRecordName(_ id: String) -> Bool {
+        !id.isEmpty && (id == currentUserRecordName || id == "local")
+    }
+
+    private func isPlaceholderName(_ name: String) -> Bool {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmed.isEmpty { return true }
+        let me = L10n.string("Me")
+        return trimmed.caseInsensitiveCompare(me) == .orderedSame
+            || trimmed.caseInsensitiveCompare("Me") == .orderedSame
+    }
+
+    private func adoptCurrentUserNameFromMembers() {
+        guard let me = members.first(where: \.isCurrentUser) else { return }
+        let trimmed = me.name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty, !isPlaceholderName(trimmed) else { return }
+        currentUserName = trimmed
+        UserDefaults.standard.set(trimmed, forKey: "flist.displayName")
     }
 
     func renameHousehold(_ name: String) async {
@@ -555,6 +653,7 @@ final class FListStore {
         }
         items = keepingPhotos(in: state.items, from: items)
         members = keepingPhotos(in: state.members, from: members)
+        adoptCurrentUserNameFromMembers()
         if !state.householdName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             householdName = state.householdName
             persistHouseholdName()
@@ -562,6 +661,10 @@ final class FListStore {
         persistLocalCache()
         knownItems = Dictionary(uniqueKeysWithValues: items.map { ($0.id, $0.status) })
         persistKnownItems()
+        if let prefs = state.notificationPrefs {
+            notificationPrefs = prefs
+            persistNotificationPrefs()
+        }
         if notify, hadBaseline {
             postChangeNotifications(previous: previous, current: items)
         }
@@ -611,6 +714,31 @@ final class FListStore {
         hasShoppingBaseline = false
         UserDefaults.standard.removeObject(forKey: "flist.seenShoppingTrips")
         UserDefaults.standard.removeObject(forKey: "flist.shoppingBaselineSaved")
+    }
+
+    private func persistNotificationPrefs() {
+        if let ids = notificationPrefs.recipientIDs {
+            UserDefaults.standard.set(ids, forKey: "flist.notifyRecipientIDs")
+            UserDefaults.standard.set(true, forKey: "flist.notifyPrefsCustom")
+        } else {
+            UserDefaults.standard.removeObject(forKey: "flist.notifyRecipientIDs")
+            UserDefaults.standard.removeObject(forKey: "flist.notifyPrefsCustom")
+        }
+    }
+
+    private static func loadNotificationPrefs() -> ItemNotificationPrefs {
+        if UserDefaults.standard.bool(forKey: "flist.notifyPrefsCustom") {
+            return ItemNotificationPrefs(
+                recipientIDs: UserDefaults.standard.stringArray(forKey: "flist.notifyRecipientIDs") ?? []
+            )
+        }
+        return .everyone
+    }
+
+    private func resetNotificationPrefs() {
+        notificationPrefs = .everyone
+        UserDefaults.standard.removeObject(forKey: "flist.notifyRecipientIDs")
+        UserDefaults.standard.removeObject(forKey: "flist.notifyPrefsCustom")
     }
 
     private func keepingPhotos(in incoming: [ShortageItem], from existing: [ShortageItem]) -> [ShortageItem] {
@@ -689,15 +817,22 @@ final class FListStore {
     }
 
     private func postChangeNotifications(previous: [UUID: ItemStatus], current: [ShortageItem]) {
+        let notifyNewItems = notificationPrefs.includes(currentUserRecordName)
         for item in current {
             let oldStatus = previous[item.id]
-            if oldStatus == nil, item.status == .needed, item.addedByRecordName != currentUserRecordName {
+            if notifyNewItems,
+               (oldStatus == nil || oldStatus == .restocked),
+               item.status == .needed,
+               item.addedByRecordName != currentUserRecordName {
                 NotificationManager.shared.notifyNewItem(
                     name: item.name,
                     addedBy: displayName(for: item)
                 )
             } else if oldStatus == .needed, item.status == .restocked, item.addedByRecordName == currentUserRecordName {
-                NotificationManager.shared.notifyRestocked(name: item.name)
+                NotificationManager.shared.notifyRestocked(
+                    name: item.name,
+                    note: restockFeedback(for: item)
+                )
             }
         }
     }
@@ -723,6 +858,7 @@ final class FListStore {
         } else {
             members = snapshot.members
         }
+        adoptCurrentUserNameFromMembers()
     }
 
     private func persistLocal() {

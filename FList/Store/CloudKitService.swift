@@ -53,6 +53,32 @@ struct ShoppingTrip: Identifiable, Hashable {
     var createdAt: Date
 }
 
+struct ItemNotificationPrefs: Equatable, Codable {
+    /// `nil` means everyone on the list receives a notification.
+    var recipientIDs: [String]?
+
+    static let everyone = ItemNotificationPrefs(recipientIDs: nil)
+
+    func includes(_ memberID: String) -> Bool {
+        guard let recipientIDs else { return true }
+        return recipientIDs.contains(memberID)
+    }
+
+    var noteJSON: String {
+        let data = (try? JSONEncoder().encode(self)) ?? Data("{}".utf8)
+        return String(data: data, encoding: .utf8) ?? "{}"
+    }
+
+    static func decode(from note: String) -> ItemNotificationPrefs {
+        guard let data = note.data(using: .utf8),
+              let prefs = try? JSONDecoder().decode(ItemNotificationPrefs.self, from: data)
+        else {
+            return .everyone
+        }
+        return prefs
+    }
+}
+
 /// Talks to Apple CloudKit: one custom zone is the family list, shared with other Apple IDs.
 @MainActor
 final class CloudKitService {
@@ -263,6 +289,7 @@ final class CloudKitService {
         var householdName: String
         var hasChanges: Bool
         var shoppingTrips: [ShoppingTrip]
+        var notificationPrefs: ItemNotificationPrefs?
     }
 
     func fetchHouseholdState(fullReload: Bool = true, includingAssets: Bool = true) async throws -> HouseholdState {
@@ -301,9 +328,17 @@ final class CloudKitService {
         let items = records.compactMap(ShortageItem.init(record:)).sorted { $0.createdAt > $1.createdAt }
         let members = assembledMembers(from: records, share: share, context: context)
         let shoppingTrips = records.compactMap(ShoppingTrip.init(record:)).sorted { $0.createdAt > $1.createdAt }
+        let notificationPrefs = records.compactMap(ItemNotificationPrefs.init(record:)).first
         let name = Self.title(from: share) ?? ""
         let hasChanges = needsSnapshot || !fetch.records.isEmpty || !fetch.deletedRecordIDs.isEmpty
-        return HouseholdState(items: items, members: members, householdName: name, hasChanges: hasChanges, shoppingTrips: shoppingTrips)
+        return HouseholdState(
+            items: items,
+            members: members,
+            householdName: name,
+            hasChanges: hasChanges,
+            shoppingTrips: shoppingTrips,
+            notificationPrefs: notificationPrefs
+        )
     }
 
     func fetchItems() async throws -> [ShortageItem] {
@@ -354,6 +389,30 @@ final class CloudKitService {
             announcedByRecordName: context.currentUserRecordName,
             createdAt: now
         )
+    }
+
+    func saveNotificationPrefs(_ prefs: ItemNotificationPrefs) async throws {
+        let context = try requireContext()
+        let recordID = CKRecord.ID(recordName: AppConfig.notifyPrefsRecordName, zoneID: context.zoneID)
+        var record: CKRecord
+        if let existing = zoneRecordCache[recordID] {
+            record = existing
+        } else if let existing = try? await context.database.record(for: recordID) {
+            record = existing
+        } else {
+            record = CKRecord(recordType: AppConfig.itemRecordType, recordID: recordID)
+        }
+        record["name"] = "NotifyPrefs" as CKRecordValue
+        record["quantity"] = Int64(1) as CKRecordValue
+        record["status"] = ItemStatus.needed.rawValue as CKRecordValue
+        record["note"] = prefs.noteJSON as CKRecordValue
+        record["addedByName"] = context.currentUserName as CKRecordValue
+        record["addedByRecordName"] = context.currentUserRecordName as CKRecordValue
+        if record["createdAt"] == nil {
+            record["createdAt"] = Date.now as CKRecordValue
+        }
+        let saved = try await context.database.save(record)
+        zoneRecordCache[saved.recordID] = saved
     }
 
     func delete(_ item: ShortageItem) async throws {
@@ -1140,15 +1199,19 @@ extension Error {
 extension ShortageItem {
     init?(record: CKRecord) {
         guard record.recordType == AppConfig.itemRecordType,
-              !AppConfig.isShoppingRecord(record.recordID.recordName),
+              !AppConfig.isMetaItemRecord(record.recordID.recordName),
               let name = record["name"] as? String
         else { return nil }
 
+        let parsed = ItemNoteCodec.decode(record["note"] as? String ?? "")
         self.init(
             id: UUID(uuidString: record.recordID.recordName) ?? UUID(),
             name: name,
             quantity: Int(record["quantity"] as? Int64 ?? 1),
-            note: record["note"] as? String ?? "",
+            note: parsed.itemNote,
+            restockNote: parsed.restockNote,
+            restockedByName: parsed.restockedByName,
+            restockedByRecordName: parsed.restockedByRecordName,
             status: ItemStatus(rawValue: record["status"] as? String ?? "") ?? .needed,
             addedByName: record["addedByName"] as? String ?? L10n.string( "Family"),
             addedByRecordName: record["addedByRecordName"] as? String ?? "",
@@ -1161,7 +1224,12 @@ extension ShortageItem {
     func write(to record: CKRecord) {
         record["name"] = name as CKRecordValue
         record["quantity"] = Int64(quantity) as CKRecordValue
-        record["note"] = note as CKRecordValue
+        record["note"] = ItemNoteCodec.encode(
+            itemNote: note,
+            restockNote: restockNote,
+            restockedByName: restockedByName,
+            restockedByRecordName: restockedByRecordName
+        ) as CKRecordValue
         record["status"] = status.rawValue as CKRecordValue
         record["addedByName"] = addedByName as CKRecordValue
         record["addedByRecordName"] = addedByRecordName as CKRecordValue
@@ -1176,6 +1244,15 @@ extension ShortageItem {
     fileprivate static func photoData(from record: CKRecord) -> Data? {
         guard let asset = record["photo"] as? CKAsset, let url = asset.fileURL else { return nil }
         return try? Data(contentsOf: url)
+    }
+}
+
+extension ItemNotificationPrefs {
+    init?(record: CKRecord) {
+        guard record.recordType == AppConfig.itemRecordType,
+              AppConfig.isNotifyPrefsRecord(record.recordID.recordName)
+        else { return nil }
+        self = ItemNotificationPrefs.decode(from: record["note"] as? String ?? "")
     }
 }
 
