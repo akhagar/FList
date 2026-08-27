@@ -171,7 +171,7 @@ final class FListStore {
             return
         }
 
-        errorMessage = L10n.string("Couldn't join that shared list. On Family, tap Copy invite link and paste that link here. Both phones need the same kind of build — Xcode or TestFlight.")
+        errorMessage = L10n.string("Couldn't join that shared list. In Settings, tap Show invite code and paste that code here. Both phones need the same kind of build — Xcode or TestFlight.")
     }
 
     func joinFromInviteLink(_ raw: String) async {
@@ -180,7 +180,7 @@ final class FListStore {
         errorMessage = nil
 
         guard let url = CloudKitShareBridge.shareURL(from: raw) else {
-            errorMessage = L10n.string("That doesn't look like an FList invite link.")
+            errorMessage = L10n.string("That doesn't look like an FList invite code or link.")
             return
         }
         await CloudKitShareBridge.acceptShareAndWait(at: url)
@@ -193,7 +193,7 @@ final class FListStore {
             return
         }
 
-        errorMessage = L10n.string("Couldn't join that shared list. On Family, tap Copy invite link and paste that link here. Both phones need the same kind of build — Xcode or TestFlight.")
+        errorMessage = L10n.string("Couldn't join that shared list. In Settings, tap Show invite code and paste that code here. Both phones need the same kind of build — Xcode or TestFlight.")
     }
 
     func refreshAvailableHouseholds() async {

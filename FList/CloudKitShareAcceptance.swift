@@ -55,7 +55,7 @@ enum CloudKitShareBridge {
 
     static func acceptShareAndWait(at url: URL, openIfShortToken: Bool = false) async {
         guard let shareURL = shareURL(from: url.absoluteString) else {
-            store?.errorMessage = L10n.string("That doesn't look like an FList invite link.")
+            store?.errorMessage = L10n.string("That doesn't look like an FList invite code or link.")
             return
         }
         do {
@@ -123,8 +123,10 @@ enum CloudKitShareBridge {
                 return strippedFragment(url)
             }
         }
-        guard let url = URL(string: trimmed), isCloudKitShareHost(url) else { return nil }
-        return strippedFragment(url)
+        if let url = URL(string: trimmed), isCloudKitShareHost(url) {
+            return strippedFragment(url)
+        }
+        return ShareInvite.url(fromPastedToken: trimmed)
     }
 
     static func isCloudKitShareURL(_ url: URL) -> Bool {
@@ -170,6 +172,53 @@ enum CloudKitShareBridge {
             }
         }
         return try await container.shareMetadata(for: url)
+    }
+}
+
+enum ShareInvite {
+    static let icloudShareBase = "https://www.icloud.com/share/"
+    static let minimumTokenLength = 12
+
+    static func token(from url: URL) -> String? {
+        let parts = url.path.split(separator: "/").map(String.init)
+        if let shareIndex = parts.firstIndex(where: { $0.caseInsensitiveCompare("share") == .orderedSame }),
+           shareIndex + 1 < parts.count {
+            let token = parts[shareIndex + 1]
+            if token.count >= minimumTokenLength { return token }
+        }
+        if let fragment = url.fragment, fragment.count >= minimumTokenLength,
+           parts.last?.caseInsensitiveCompare("share") == .orderedSame {
+            return fragment
+        }
+        return nil
+    }
+
+    static func grouped(_ token: String) -> String {
+        let characters = Array(token)
+        var groups: [String] = []
+        var index = 0
+        while index < characters.count {
+            let end = min(index + 4, characters.count)
+            groups.append(String(characters[index..<end]))
+            index = end
+        }
+        return groups.joined(separator: " ")
+    }
+
+    static func displayCode(from url: URL) -> String {
+        guard let token = token(from: url) else { return url.absoluteString }
+        return grouped(token)
+    }
+
+    static func url(fromPastedToken raw: String) -> URL? {
+        if raw.localizedCaseInsensitiveContains("icloud.com") || raw.contains("://") {
+            return nil
+        }
+        let token = raw.filter { !$0.isWhitespace }
+        guard token.count >= minimumTokenLength else { return nil }
+        let allowed = CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "-_~."))
+        guard token.unicodeScalars.allSatisfy({ allowed.contains($0) }) else { return nil }
+        return URL(string: icloudShareBase + token)
     }
 }
 

@@ -26,11 +26,11 @@ Open **Settings** (gear) to rename the list, edit people, choose who is notified
 
 ### Inviting someone
 
-1. In Settings, tap **Copy invite link** (or **Invite family**).
-2. Send that link in Messages or another app.
-3. The other person opens FList, pastes the link, and taps **Join with link**.
+1. In Settings, tap **Show invite code**.
+2. Send the code in a message, or let the other person scan the QR in FList.
+3. They paste the code (or scan the QR) and tap **Join**.
 
-Use **Copy invite link**. A short Messages invitation can expire and often can’t be pasted. Both phones need the same kind of build (Xcode or TestFlight). After they join, the list shows under **Shared** on their iCloud account — not as a second private copy.
+The code is the iCloud share token — the same as the old invite link, just shorter to type. A Messages invitation can expire and often can’t be pasted. Both phones need the same kind of build (Xcode or TestFlight). After they join, the list shows under **Shared** on their iCloud account — not as a second private copy.
 
 Language is not chosen inside the app. Change it in **iPhone Settings → General → Language & Region**, or under **Settings → FList** if you set a language just for this app.
 

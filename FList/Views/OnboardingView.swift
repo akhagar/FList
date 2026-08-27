@@ -83,7 +83,7 @@ struct OnboardingView: View {
                 .disabled(store.isBusy)
                 .padding(.horizontal, 24)
 
-                Text("The family list stays in the owner's Private iCloud database. After you join with the invite link, it appears under Shared on your account — not in a second Private zone.")
+                Text("The family list stays in the owner's Private iCloud database. After you join with the invite code, it appears under Shared on your account — not in a second Private zone.")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
@@ -108,25 +108,43 @@ struct InviteLinkField: View {
     @Bindable var store: FListStore
     var onFinished: (() -> Void)? = nil
     @State private var inviteLink = ""
+    @State private var showScanner = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            TextField("Paste invite link", text: $inviteLink)
-                .textInputAutocapitalization(.never)
-                .keyboardType(.URL)
-                .textContentType(.URL)
-                .autocorrectionDisabled()
-            Button("Join with link") {
-                Task {
-                    await store.joinFromInviteLink(inviteLink)
-                    if store.errorMessage == nil, store.hasHousehold {
-                        onFinished?()
+            HStack(spacing: 10) {
+                TextField("Paste invite code or link", text: $inviteLink)
+                    .textInputAutocapitalization(.never)
+                    .keyboardType(.asciiCapable)
+                    .autocorrectionDisabled()
+                if InviteQRScanning.isAvailable {
+                    Button {
+                        showScanner = true
+                    } label: {
+                        Image(systemName: "qrcode.viewfinder")
                     }
+                    .accessibilityLabel("Scan QR")
                 }
+            }
+            Button("Join") {
+                Task { await join(inviteLink) }
             }
             .disabled(store.isBusy || inviteLink.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
         }
         .padding(.horizontal, 24)
+        .sheet(isPresented: $showScanner) {
+            InviteQRScannerSheet { value in
+                inviteLink = value
+                Task { await join(value) }
+            }
+        }
+    }
+
+    private func join(_ raw: String) async {
+        await store.joinFromInviteLink(raw)
+        if store.errorMessage == nil, store.hasHousehold {
+            onFinished?()
+        }
     }
 }
 
@@ -225,7 +243,7 @@ struct HouseholdPickerView: View {
                     }
                     .disabled(store.isBusy)
                 } footer: {
-                    Text("The family list stays in the owner's Private iCloud database. After you join with the invite link, it appears under Shared on your account — not in a second Private zone.")
+                    Text("The family list stays in the owner's Private iCloud database. After you join with the invite code, it appears under Shared on your account — not in a second Private zone.")
                 }
             }
             .navigationTitle("Choose a list")

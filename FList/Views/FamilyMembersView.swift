@@ -6,8 +6,8 @@ struct FamilyMembersView: View {
     @State private var newMember: FamilyMember?
     @State private var memberToRemove: FamilyMember?
     @State private var showHouseholdPicker = false
+    @State private var showInviteCode = false
     @State private var confirmAbandon = false
-    @State private var linkCopied = false
     @State private var listName = ""
 
     var body: some View {
@@ -107,13 +107,9 @@ struct FamilyMembersView: View {
 
                     if store.isOwner {
                         Button {
-                            CloudSharingPresenter.copyInviteLink(
-                                prepareShare: { try await store.prepareShare() },
-                                onError: { shareError = $0 },
-                                onCopied: { linkCopied = true }
-                            )
+                            showInviteCode = true
                         } label: {
-                            Label("Copy invite link", systemImage: "link")
+                            Label("Show invite code", systemImage: "qrcode")
                         }
                     }
                 }
@@ -179,6 +175,9 @@ struct FamilyMembersView: View {
         .sheet(isPresented: $showHouseholdPicker) {
             HouseholdPickerView(store: store)
         }
+        .sheet(isPresented: $showInviteCode) {
+            InviteCodeSheet(store: store)
+        }
         .confirmationDialog(
             store.isOwner || !store.usesiCloud ? "Delete this list" : "Leave this list",
             isPresented: $confirmAbandon,
@@ -192,11 +191,6 @@ struct FamilyMembersView: View {
             Text(store.isOwner || !store.usesiCloud
                  ? "Deletes this list for everyone who shares it."
                  : "You leave this shared list. The rest of the family keeps it.")
-        }
-        .alert("Invite link copied", isPresented: $linkCopied) {
-            Button("OK", role: .cancel) {}
-        } message: {
-            Text("Send it in Messages. The other person should paste it in FList and tap Join with link.")
         }
         .alert("Couldn't share", isPresented: Binding(
             get: { shareError != nil },
@@ -227,6 +221,6 @@ struct FamilyMembersView: View {
         if !store.usesiCloud {
             return L10n.string("Sign in to iCloud in Settings to invite people from your Family Sharing group. Apple doesn't let apps read that group automatically — you invite them once with Share.")
         }
-        return L10n.string("Your items stay in your Private FamilyShortage zone. Invited people don't get a copy there — after they join, the same zone shows under Shared on their iCloud account. Use Copy invite link — a Messages invitation expires and can't be pasted.")
+        return L10n.string("Your items stay in your Private FamilyShortage zone. Invited people don't get a copy there — after they join, the same zone shows under Shared on their iCloud account. Use the invite code or QR — a Messages invitation expires and can't be pasted.")
     }
 }
