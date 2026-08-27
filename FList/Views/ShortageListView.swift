@@ -8,6 +8,7 @@ struct ShortageListView: View {
     @State private var itemToView: ShortageItem?
     @State private var itemToRestock: ShortageItem?
     @State private var confirmGoingShopping = false
+    @State private var searchText = ""
 
     var body: some View {
         NavigationStack {
@@ -107,6 +108,7 @@ struct ShortageListView: View {
             } message: {
                 Text(store.familyAlertMessage ?? "")
             }
+            .flistSearchable(enabled: store.hasHousehold, text: $searchText)
         }
     }
 
@@ -116,6 +118,24 @@ struct ShortageListView: View {
                 shoppingBanner(for: trip)
             }
 
+            if showsBothLists {
+                bothListsContent
+            } else {
+                filteredListContent
+            }
+        }
+    }
+
+    private var showsBothLists: Bool {
+        !normalizedSearch.isEmpty
+    }
+
+    private var normalizedSearch: String {
+        searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private var filteredListContent: some View {
+        VStack(spacing: 0) {
             Picker("Filter", selection: $selectedStatus) {
                 Text("Needed").tag(ItemStatus.needed)
                 Text("Back in stock").tag(ItemStatus.restocked)
@@ -128,42 +148,78 @@ struct ShortageListView: View {
             if visible.isEmpty {
                 emptyState
             } else {
-                List {
-                    ForEach(visible) { item in
-                        ItemRowView(
-                            item: item,
-                            addedByDisplayName: store.displayName(for: item),
-                            restockFeedbackLine: store.restockFeedback(for: item),
-                            onToggle: {
-                                if item.status == .needed {
-                                    itemToRestock = item
-                                } else {
-                                    Task { await store.markNeeded(item) }
-                                }
-                            },
-                            onEdit: { itemToEdit = item },
-                            onViewPhoto: { itemToView = item }
-                        )
-                        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                            Button(role: .destructive) {
-                                Task { await store.delete(item) }
-                            } label: {
-                                Label("Delete", systemImage: "trash")
-                            }
+                itemsList {
+                    itemRows(visible)
+                }
+            }
+        }
+    }
+
+    private var bothListsContent: some View {
+        let matches = store.itemsMatching(searchText)
+        let needed = matches.filter { $0.status == .needed }
+        let restocked = matches.filter { $0.status == .restocked }
+        return Group {
+            if matches.isEmpty {
+                ContentUnavailableView.search(text: searchText)
+                    .frame(maxHeight: .infinity)
+            } else {
+                itemsList {
+                    if !needed.isEmpty {
+                        Section("Needed") {
+                            itemRows(needed)
                         }
-                        .swipeActions(edge: .leading) {
-                            if item.status == .needed {
-                                Button {
-                                    itemToRestock = item
-                                } label: {
-                                    Label("Back in stock", systemImage: "checkmark")
-                                }
-                                .tint(.green)
-                            }
+                    }
+                    if !restocked.isEmpty {
+                        Section("Back in stock") {
+                            itemRows(restocked)
                         }
                     }
                 }
-                .listStyle(.insetGrouped)
+            }
+        }
+    }
+
+    private func itemsList<Content: View>(@ViewBuilder content: () -> Content) -> some View {
+        List {
+            content()
+        }
+        .listStyle(.insetGrouped)
+    }
+
+    @ViewBuilder
+    private func itemRows(_ items: [ShortageItem]) -> some View {
+        ForEach(items) { item in
+            ItemRowView(
+                item: item,
+                addedByDisplayName: store.displayName(for: item),
+                restockFeedbackLine: store.restockFeedback(for: item),
+                onToggle: {
+                    if item.status == .needed {
+                        itemToRestock = item
+                    } else {
+                        Task { await store.markNeeded(item) }
+                    }
+                },
+                onEdit: { itemToEdit = item },
+                onViewPhoto: { itemToView = item }
+            )
+            .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                Button(role: .destructive) {
+                    Task { await store.delete(item) }
+                } label: {
+                    Label("Delete", systemImage: "trash")
+                }
+            }
+            .swipeActions(edge: .leading) {
+                if item.status == .needed {
+                    Button {
+                        itemToRestock = item
+                    } label: {
+                        Label("Back in stock", systemImage: "checkmark")
+                    }
+                    .tint(.green)
+                }
             }
         }
     }
@@ -210,4 +266,19 @@ struct ShortageListView: View {
 
 #Preview {
     ShortageListView(store: .preview)
+}
+
+private extension View {
+    @ViewBuilder
+    func flistSearchable(enabled: Bool, text: Binding<String>) -> some View {
+        if enabled {
+            searchable(
+                text: text,
+                placement: .navigationBarDrawer(displayMode: .automatic),
+                prompt: Text("Search items")
+            )
+        } else {
+            self
+        }
+    }
 }

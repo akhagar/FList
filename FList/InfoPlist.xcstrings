@@ -54,19 +54,19 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "FList uses the camera so you can add a photo of an item or someone on the family list."
+            "value": "FList uses the camera so you can add a photo of an item or someone on the family list, and scan an invite code."
           }
         },
         "he": {
           "stringUnit": {
             "state": "translated",
-            "value": "FList משתמש במצלמה כדי להוסיף תמונה של פריט או של מישהו ברשימת המשפחה."
+            "value": "FList משתמש במצלמה כדי להוסיף תמונה של פריט או של מישהו ברשימת המשפחה, ולסרוק קוד הזמנה."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "FList использует камеру, чтобы добавить фото товара или человека из семейного списка."
+            "value": "FList использует камеру, чтобы добавить фото товара или человека из семейного списка и чтобы сканировать код приглашения."
           }
         }
       }

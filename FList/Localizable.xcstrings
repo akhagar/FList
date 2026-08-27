@@ -89,6 +89,28 @@
         }
       }
     },
+    "%@ is back in stock. %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ is back in stock. %@"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ חזר למלאי. %@"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ снова в наличии. %@"
+          }
+        }
+      }
+    },
     "%@ is going shopping. Add anything that's missing.": {
       "localizations": {
         "en": {
@@ -487,7 +509,30 @@
         }
       }
     },
+    "Copy code": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy code"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "העתק קוד"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Скопировать код"
+          }
+        }
+      }
+    },
     "Copy invite link": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -509,7 +554,52 @@
         }
       }
     },
+    "Copy link": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy link"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "העתק קישור"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Скопировать ссылку"
+          }
+        }
+      }
+    },
+    "Couldn't join that shared list. In Settings, tap Show invite code and paste that code here. Both phones need the same kind of build — Xcode or TestFlight.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't join that shared list. In Settings, tap Show invite code and paste that code here. Both phones need the same kind of build — Xcode or TestFlight."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "לא ניתן להצטרף לרשימה המשותפת. בהגדרות, הקישו על הצג קוד הזמנה והדביקו את הקוד כאן. בשני הטלפונים צריכה להיות אותה סוג בנייה — Xcode או TestFlight."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не удалось присоединиться к общему списку. В Настройках нажмите «Показать код приглашения» и вставьте его здесь. На обоих телефонах должна быть одна и та же сборка — Xcode или TestFlight."
+          }
+        }
+      }
+    },
     "Couldn't join that shared list. On Family, tap Copy invite link and paste that link here. Both phones need the same kind of build — Xcode or TestFlight.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -1061,6 +1151,50 @@
         }
       }
     },
+    "If something wasn't as described, add a note.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "If something wasn't as described, add a note."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "אם משהו לא תאם לתיאור, הוסיפו הערה."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Если что-то не совпало с описанием, добавьте заметку."
+          }
+        }
+      }
+    },
+    "If something wasn't as described, add a note. It will be sent to %@.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "If something wasn't as described, add a note. It will be sent to %@."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "אם משהו לא תאם לתיאור, הוסיפו הערה. היא תישלח אל %@."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Если что-то не совпало с описанием, добавьте заметку. Она будет отправлена: %@."
+          }
+        }
+      }
+    },
     "In stock": {
       "extractionState": "stale",
       "localizations": {
@@ -1080,6 +1214,50 @@
           "stringUnit": {
             "state": "translated",
             "value": "В наличии"
+          }
+        }
+      }
+    },
+    "Invite code": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invite code"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "קוד הזמנה"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Код приглашения"
+          }
+        }
+      }
+    },
+    "Invite code copied": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invite code copied"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "קוד ההזמנה הועתק"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Код приглашения скопирован"
           }
         }
       }
@@ -1124,6 +1302,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ссылка-приглашение скопирована"
+          }
+        }
+      }
+    },
+    "Invite QR code": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invite QR code"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "קוד QR להזמנה"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "QR-код приглашения"
           }
         }
       }
@@ -1239,6 +1439,28 @@
         }
       }
     },
+    "Join": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Join"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "הצטרף"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Присоединиться"
+          }
+        }
+      }
+    },
     "Join our family shortage list in FList": {
       "extractionState": "stale",
       "localizations": {
@@ -1263,6 +1485,7 @@
       }
     },
     "Join with link": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -1813,7 +2036,30 @@
         }
       }
     },
+    "Paste invite code or link": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paste invite code or link"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "הדביקו קוד הזמנה או קישור"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вставьте код приглашения или ссылку"
+          }
+        }
+      }
+    },
     "Paste invite link": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -1990,7 +2236,30 @@
         }
       }
     },
+    "Scan QR": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scan QR"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "סריקת QR"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сканировать QR"
+          }
+        }
+      }
+    },
     "Send it in Messages. The other person should paste it in FList and tap Join with link.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -2008,6 +2277,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "Отправьте её в Сообщениях. Другой человек должен вставить её в FList и нажать «Войти по ссылке»."
+          }
+        }
+      }
+    },
+    "Send the code in a message. The other person pastes it in FList, or scans this QR in the app.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send the code in a message. The other person pastes it in FList, or scans this QR in the app."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "שלחו את הקוד בהודעה. הצד השני מדביק אותו ב-FList, או סורק את ה-QR באפליקציה."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Отправьте код в сообщении. Другой человек вставит его в FList или отсканирует QR в приложении."
           }
         }
       }
@@ -2163,6 +2454,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "Сведения о доступе"
+          }
+        }
+      }
+    },
+    "Show invite code": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show invite code"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "הצג קוד הזמנה"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Показать код приглашения"
           }
         }
       }
@@ -2343,7 +2656,30 @@
         }
       }
     },
+    "That doesn't look like an FList invite code or link.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "That doesn't look like an FList invite code or link."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "זה לא נראה כמו קוד הזמנה או קישור של FList."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Это не похоже на код приглашения или ссылку FList."
+          }
+        }
+      }
+    },
     "That doesn't look like an FList invite link.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -2365,7 +2701,30 @@
         }
       }
     },
+    "That Messages invite can't be pasted. In Settings, tap Show invite code and use that code instead.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "That Messages invite can't be pasted. In Settings, tap Show invite code and use that code instead."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "את ההזמנה מהודעות אי אפשר להדביק. בהגדרות, הקישו על הצג קוד הזמנה והשתמשו בקוד הזה."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Это приглашение из Сообщений нельзя вставить. В Настройках нажмите «Показать код приглашения» и используйте этот код."
+          }
+        }
+      }
+    },
     "That Messages invite can't be pasted. On Family, tap Copy invite link and paste that link instead.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -2387,7 +2746,30 @@
         }
       }
     },
+    "The family list stays in the owner's Private iCloud database. After you join with the invite code, it appears under Shared on your account — not in a second Private zone.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The family list stays in the owner's Private iCloud database. After you join with the invite code, it appears under Shared on your account — not in a second Private zone."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "רשימת המשפחה נשארת במסד הנתונים הפרטי של הבעלים ב-iCloud. אחרי הצטרפות עם קוד ההזמנה היא מופיעה אצלכם תחת משותף — לא באזור פרטי שני."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Семейный список хранится в личной базе iCloud владельца. После входа по коду приглашения он появится в разделе «Общие» вашего аккаунта — не во второй личной зоне."
+          }
+        }
+      }
+    },
     "The family list stays in the owner's Private iCloud database. After you join with the invite link, it appears under Shared on your account — not in a second Private zone.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -2453,6 +2835,28 @@
         }
       }
     },
+    "They paste the code in FList, or scan this QR code in the app.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "They paste the code in FList, or scan this QR code in the app."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "מדביקים את הקוד ב-FList, או סורקים את קוד ה-QR באפליקציה."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вставьте код в FList или отсканируйте QR в приложении."
+          }
+        }
+      }
+    },
     "This name appears at the top of the list for everyone who shares it.": {
       "localizations": {
         "en": {
@@ -2476,6 +2880,7 @@
       }
     },
     "This shared list isn't available on this iPhone yet. Join with Copy invite link first. Both phones need the same kind of build — Xcode or TestFlight.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -2493,6 +2898,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "Этот общий список пока недоступен на этом iPhone. Сначала войдите по скопированной ссылке. На обоих телефонах должна быть одна и та же сборка — Xcode или TestFlight."
+          }
+        }
+      }
+    },
+    "This shared list isn't available on this iPhone yet. Join with the invite code first. Both phones need the same kind of build — Xcode or TestFlight.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This shared list isn't available on this iPhone yet. Join with the invite code first. Both phones need the same kind of build — Xcode or TestFlight."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "הרשימה המשותפת עדיין לא זמינה באייפון הזה. קודם הצטרפו עם קוד ההזמנה. בשני הטלפונים צריכה להיות אותה סוג בנייה — Xcode או TestFlight."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Этот общий список пока недоступен на этом iPhone. Сначала войдите по коду приглашения. На обоих телефонах должна быть одна и та же сборка — Xcode или TestFlight."
           }
         }
       }
@@ -2653,6 +3080,7 @@
       }
     },
     "Your items stay in your Private FamilyShortage zone. Invited people don't get a copy there — after they join, the same zone shows under Shared on their iCloud account. Use Copy invite link — a Messages invitation expires and can't be pasted.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -2670,6 +3098,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ваши товары остаются в вашей личной зоне FamilyShortage. Приглашённые не получают копию там — после входа та же зона появится у них в разделе «Общие». Используйте «Скопировать ссылку-приглашение»: приглашение из Сообщений истекает и его нельзя вставить."
+          }
+        }
+      }
+    },
+    "Your items stay in your Private FamilyShortage zone. Invited people don't get a copy there — after they join, the same zone shows under Shared on their iCloud account. Use the invite code or QR — a Messages invitation expires and can't be pasted.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your items stay in your Private FamilyShortage zone. Invited people don't get a copy there — after they join, the same zone shows under Shared on their iCloud account. Use the invite code or QR — a Messages invitation expires and can't be pasted."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "הפריטים נשארים באזור FamilyShortage הפרטי שלכם. מוזמנים לא מקבלים עותק שם — אחרי שהם מצטרפים, אותו אזור מופיע אצלם תחת משותף. השתמשו בקוד ההזמנה או ב-QR — הזמנה מהודעות פגה ואי אפשר להדביק אותה."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ваши товары остаются в вашей личной зоне FamilyShortage. Приглашённые не получают копию там — после входа та же зона появится у них в разделе «Общие». Используйте код приглашения или QR: приглашение из Сообщений истекает и его нельзя вставить."
           }
         }
       }
@@ -2719,68 +3169,310 @@
         }
       }
     },
-    "%@ is back in stock. %@": {
+    "Search items": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ is back in stock. %@"
+            "value": "Search items"
           }
         },
         "he": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ חזר למלאי. %@"
+            "value": "חיפוש פריטים"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ снова в наличии. %@"
+            "value": "Поиск товаров"
           }
         }
       }
     },
-    "If something wasn't as described, add a note.": {
+    "Theme": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "If something wasn't as described, add a note."
+            "value": "Theme"
           }
         },
         "he": {
           "stringUnit": {
             "state": "translated",
-            "value": "אם משהו לא תאם לתיאור, הוסיפו הערה."
+            "value": "ערכת נושא"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Если что-то не совпало с описанием, добавьте заметку."
+            "value": "Оформление"
           }
         }
       }
     },
-    "If something wasn't as described, add a note. It will be sent to %@.": {
+    "Appearance": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "If something wasn't as described, add a note. It will be sent to %@."
+            "value": "Appearance"
           }
         },
         "he": {
           "stringUnit": {
             "state": "translated",
-            "value": "אם משהו לא תאם לתיאור, הוסיפו הערה. היא תישלח אל %@."
+            "value": "מראה"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Если что-то не совпало с описанием, добавьте заметку. Она будет отправлена: %@."
+            "value": "Внешний вид"
+          }
+        }
+      }
+    },
+    "iPhone settings": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iPhone settings"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "הגדרות האייפון"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Настройки iPhone"
+          }
+        }
+      }
+    },
+    "Light": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Light"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "בהיר"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Светлая"
+          }
+        }
+      }
+    },
+    "Dark": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dark"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "כהה"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Тёмная"
+          }
+        }
+      }
+    },
+    "Only on this iPhone.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only on this iPhone."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "רק באייפון הזה."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Только на этом iPhone."
+          }
+        }
+      }
+    },
+    "Green": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Green"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ירוק"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Зелёный"
+          }
+        }
+      }
+    },
+    "Blue": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Blue"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "כחול"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Синий"
+          }
+        }
+      }
+    },
+    "Teal": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Teal"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "טורקיז"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Бирюзовый"
+          }
+        }
+      }
+    },
+    "Orange": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Orange"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "כתום"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Оранжевый"
+          }
+        }
+      }
+    },
+    "Pink": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pink"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ורוד"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Розовый"
+          }
+        }
+      }
+    },
+    "Purple": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Purple"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "סגול"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Фиолетовый"
+          }
+        }
+      }
+    },
+    "Indigo": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Indigo"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "אינדיגו"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Индиго"
           }
         }
       }

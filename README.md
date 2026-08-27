@@ -12,6 +12,8 @@ FList is a native iPhone app. Lists sync over iCloud with [CloudKit](https://dev
 - Cart button to tell the family you’re going shopping, so they can add anything that’s missing
 - Invite others with iCloud sharing (they keep their own Apple ID)
 - Choose who gets a notification when someone adds a missing item
+- Search Needed and Back in stock together
+- Light, dark, or iPhone appearance, plus accent colors (this iPhone only)
 - English, Hebrew, and Russian, following the iPhone language
 
 ## Using FList
@@ -26,11 +28,11 @@ Open **Settings** (gear) to rename the list, edit people, choose who is notified
 
 ### Inviting someone
 
-1. In Settings, tap **Copy invite link** (or **Invite family**).
-2. Send that link in Messages or another app.
-3. The other person opens FList, pastes the link, and taps **Join with link**.
+1. In Settings, tap **Show invite code**.
+2. Send the code in a message, or let the other person scan the QR in FList.
+3. They paste the code (or scan the QR) and tap **Join**.
 
-Use **Copy invite link**. A short Messages invitation can expire and often can’t be pasted. Both phones need the same kind of build (Xcode or TestFlight). After they join, the list shows under **Shared** on their iCloud account — not as a second private copy.
+The code is the iCloud share token — the same as the old invite link, just shorter to type. A Messages invitation can expire and often can’t be pasted. Both phones need the same kind of build (Xcode or TestFlight). After they join, the list shows under **Shared** on their iCloud account — not as a second private copy.
 
 Language is not chosen inside the app. Change it in **iPhone Settings → General → Language & Region**, or under **Settings → FList** if you set a language just for this app.
 
@@ -44,7 +46,7 @@ Language is not chosen inside the app. Change it in **iPhone Settings → Genera
 | --- | --- |
 | Bundle ID | `com.tocnet.FList` |
 | CloudKit container | `iCloud.com.tocnet.FList` |
-| Version | 1.2 |
+| Version | 1.3 |
 
 The CloudKit container ID in `FList/AppConfig.swift` must stay in sync with the app entitlements. Debug builds use the Development environment; Release/TestFlight uses Production. New CloudKit record types or fields need a schema deploy in CloudKit Console before they work in Production.
 
