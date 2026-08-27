@@ -49,6 +49,18 @@ final class FListStore {
         items.filter { $0.status == .restocked }
     }
 
+    func itemsMatching(_ query: String) -> [ShortageItem] {
+        let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return items }
+        return items.filter { item in
+            item.matches(
+                trimmed,
+                addedBy: displayName(for: item),
+                restockFeedback: restockFeedback(for: item)
+            )
+        }
+    }
+
     var usesiCloud: Bool { accountKind == .iCloud }
 
     func receivesNewItemNotifications(_ member: FamilyMember) -> Bool {

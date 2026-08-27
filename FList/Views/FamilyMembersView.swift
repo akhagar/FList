@@ -9,6 +9,8 @@ struct FamilyMembersView: View {
     @State private var showInviteCode = false
     @State private var confirmAbandon = false
     @State private var listName = ""
+    @AppStorage(AppAppearance.storageKey) private var appearanceRaw = AppAppearance.system.rawValue
+    @AppStorage(AppAccent.storageKey) private var accentRaw = AppAccent.green.rawValue
 
     var body: some View {
         List {
@@ -27,6 +29,48 @@ struct FamilyMembersView: View {
                 Text("List name")
             } footer: {
                 Text("This name appears at the top of the list for everyone who shares it.")
+            }
+
+            Section {
+                Picker("Appearance", selection: $appearanceRaw) {
+                    Text("iPhone settings").tag(AppAppearance.system.rawValue)
+                    Text("Light").tag(AppAppearance.light.rawValue)
+                    Text("Dark").tag(AppAppearance.dark.rawValue)
+                }
+                .pickerStyle(.segmented)
+                .labelsHidden()
+                .accessibilityLabel("Appearance")
+
+                HStack(spacing: 10) {
+                    ForEach(AppAccent.allCases) { accent in
+                        Button {
+                            accentRaw = accent.rawValue
+                        } label: {
+                            Circle()
+                                .fill(accent.color)
+                                .frame(width: 28, height: 28)
+                                .overlay {
+                                    if accentRaw == accent.rawValue {
+                                        Image(systemName: "checkmark")
+                                            .font(.caption.weight(.bold))
+                                            .foregroundStyle(.white)
+                                    }
+                                }
+                                .overlay {
+                                    Circle().strokeBorder(.primary.opacity(0.12), lineWidth: 1)
+                                }
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel(accent.titleKey)
+                        .accessibilityAddTraits(accentRaw == accent.rawValue ? .isSelected : [])
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .center)
+                .padding(.vertical, 4)
+            } header: {
+                Text("Theme")
+            } footer: {
+                Text("Only on this iPhone.")
             }
 
             if !store.members.isEmpty {

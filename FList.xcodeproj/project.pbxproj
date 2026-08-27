@@ -25,6 +25,7 @@
 		A30000000000000000000017 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000017 /* PrivacyInfo.xcprivacy */; };
 		A30000000000000000000019 /* CloudKitShareAcceptance.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000019 /* CloudKitShareAcceptance.swift */; };
 		A30000000000000000000020 /* L10n.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000020 /* L10n.swift */; };
+		A30000000000000000000030 /* AppTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000030 /* AppTheme.swift */; };
 		A30000000000000000000021 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000021 /* Localizable.xcstrings */; };
 		A30000000000000000000022 /* MemberEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000022 /* MemberEditorView.swift */; };
 		A30000000000000000000023 /* MemberAvatar.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000023 /* MemberAvatar.swift */; };
@@ -57,6 +58,7 @@
 		A20000000000000000000018 /* CloudKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CloudKit.framework; path = System/Library/Frameworks/CloudKit.framework; sourceTree = SDKROOT; };
 		A20000000000000000000019 /* CloudKitShareAcceptance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudKitShareAcceptance.swift; sourceTree = "<group>"; };
 		A20000000000000000000020 /* L10n.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = L10n.swift; sourceTree = "<group>"; };
+		A20000000000000000000030 /* AppTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTheme.swift; sourceTree = "<group>"; };
 		A20000000000000000000021 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		A20000000000000000000022 /* MemberEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemberEditorView.swift; sourceTree = "<group>"; };
 		A20000000000000000000023 /* MemberAvatar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemberAvatar.swift; sourceTree = "<group>"; };
@@ -104,6 +106,7 @@
 				A20000000000000000000019 /* CloudKitShareAcceptance.swift */,
 				A20000000000000000000002 /* AppConfig.swift */,
 				A20000000000000000000020 /* L10n.swift */,
+				A20000000000000000000030 /* AppTheme.swift */,
 				A20000000000000000000021 /* Localizable.xcstrings */,
 				A20000000000000000000027 /* InfoPlist.xcstrings */,
 				A10000000000000000000700 /* Models */,
@@ -242,6 +245,7 @@
 				A30000000000000000000019 /* CloudKitShareAcceptance.swift in Sources */,
 				A30000000000000000000002 /* AppConfig.swift in Sources */,
 				A30000000000000000000020 /* L10n.swift in Sources */,
+				A30000000000000000000030 /* AppTheme.swift in Sources */,
 				A30000000000000000000003 /* ShortageItem.swift in Sources */,
 				A30000000000000000000004 /* FamilyMember.swift in Sources */,
 				A30000000000000000000005 /* LocalPersistence.swift in Sources */,

@@ -5,10 +5,22 @@ struct FListApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @Environment(\.scenePhase) private var scenePhase
     @State private var store = FListStore()
+    @AppStorage(AppAppearance.storageKey) private var appearanceRaw = AppAppearance.system.rawValue
+    @AppStorage(AppAccent.storageKey) private var accentRaw = AppAccent.green.rawValue
+
+    private var appearance: AppAppearance {
+        AppAppearance(rawValue: appearanceRaw) ?? .system
+    }
+
+    private var accent: AppAccent {
+        AppAccent(rawValue: accentRaw) ?? .green
+    }
 
     var body: some Scene {
         WindowGroup {
             ShortageListView(store: store)
+                .tint(accent.color)
+                .preferredColorScheme(appearance.colorScheme)
                 .task {
                     CloudKitShareBridge.bind(store)
                     await CloudKitShareBridge.flushPending()

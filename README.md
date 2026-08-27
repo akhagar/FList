@@ -12,6 +12,8 @@ FList is a native iPhone app. Lists sync over iCloud with [CloudKit](https://dev
 - Cart button to tell the family you’re going shopping, so they can add anything that’s missing
 - Invite others with iCloud sharing (they keep their own Apple ID)
 - Choose who gets a notification when someone adds a missing item
+- Search Needed and Back in stock together
+- Light, dark, or iPhone appearance, plus accent colors (this iPhone only)
 - English, Hebrew, and Russian, following the iPhone language
 
 ## Using FList
@@ -44,7 +46,7 @@ Language is not chosen inside the app. Change it in **iPhone Settings → Genera
 | --- | --- |
 | Bundle ID | `com.tocnet.FList` |
 | CloudKit container | `iCloud.com.tocnet.FList` |
-| Version | 1.2 |
+| Version | 1.3 |
 
 The CloudKit container ID in `FList/AppConfig.swift` must stay in sync with the app entitlements. Debug builds use the Development environment; Release/TestFlight uses Production. New CloudKit record types or fields need a schema deploy in CloudKit Console before they work in Production.
 

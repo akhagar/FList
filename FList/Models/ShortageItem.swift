@@ -103,12 +103,26 @@ struct ShortageItem: Identifiable, Hashable, Codable {
         try container.encodeIfPresent(photoData, forKey: .photoData)
     }
 
+    var restockFeedbackLine: String {
+        restockFeedbackLine(restockerName: restockedByName)
+    }
+
     func restockFeedbackLine(restockerName: String) -> String {
         let trimmed = restockNote.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return "" }
         let by = restockerName.trimmingCharacters(in: .whitespacesAndNewlines)
         if by.isEmpty { return trimmed }
         return "\(by): \(trimmed)"
+    }
+
+    func matches(_ query: String, addedBy: String, restockFeedback: String) -> Bool {
+        let needle = query.folding(options: [.diacriticInsensitive, .caseInsensitive], locale: .current)
+        guard !needle.isEmpty else { return true }
+        func hit(_ value: String) -> Bool {
+            value.folding(options: [.diacriticInsensitive, .caseInsensitive], locale: .current)
+                .contains(needle)
+        }
+        return hit(name) || hit(note) || hit(restockNote) || hit(addedBy) || hit(restockFeedback)
     }
 }
 
