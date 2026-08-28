@@ -18,7 +18,7 @@ struct FListApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ShortageListView(store: store)
+            FListRootView(store: store)
                 .tint(accent.color)
                 .preferredColorScheme(appearance.colorScheme)
                 .task {

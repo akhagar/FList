@@ -124,6 +124,16 @@ struct ShortageItem: Identifiable, Hashable, Codable {
         }
         return hit(name) || hit(note) || hit(restockNote) || hit(addedBy) || hit(restockFeedback)
     }
+
+    static func nameKey(_ name: String) -> String {
+        name.trimmingCharacters(in: .whitespacesAndNewlines)
+            .folding(options: [.caseInsensitive, .diacriticInsensitive], locale: .current)
+    }
+
+    static func namesMatch(_ a: String, _ b: String) -> Bool {
+        let left = nameKey(a)
+        return !left.isEmpty && left == nameKey(b)
+    }
 }
 
 enum ItemNoteCodec {

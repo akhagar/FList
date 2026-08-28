@@ -289,6 +289,7 @@ final class CloudKitService {
         var householdName: String
         var hasChanges: Bool
         var shoppingTrips: [ShoppingTrip]
+        var recipes: [Recipe]
         var notificationPrefs: ItemNotificationPrefs?
     }
 
@@ -328,6 +329,7 @@ final class CloudKitService {
         let items = records.compactMap(ShortageItem.init(record:)).sorted { $0.createdAt > $1.createdAt }
         let members = assembledMembers(from: records, share: share, context: context)
         let shoppingTrips = records.compactMap(ShoppingTrip.init(record:)).sorted { $0.createdAt > $1.createdAt }
+        let recipes = records.compactMap(Recipe.init(record:))
         let notificationPrefs = records.compactMap(ItemNotificationPrefs.init(record:)).first
         let name = Self.title(from: share) ?? ""
         let hasChanges = needsSnapshot || !fetch.records.isEmpty || !fetch.deletedRecordIDs.isEmpty
@@ -337,6 +339,7 @@ final class CloudKitService {
             householdName: name,
             hasChanges: hasChanges,
             shoppingTrips: shoppingTrips,
+            recipes: recipes,
             notificationPrefs: notificationPrefs
         )
     }
@@ -419,6 +422,37 @@ final class CloudKitService {
         let context = try requireContext()
         let recordID = CKRecord.ID(recordName: item.id.uuidString, zoneID: context.zoneID)
         _ = try await context.database.deleteRecord(withID: recordID)
+        zoneRecordCache[recordID] = nil
+    }
+
+    func save(_ recipe: Recipe) async throws {
+        let context = try requireContext()
+        let recordID = CKRecord.ID(recordName: AppConfig.recipeRecordName(for: recipe.id), zoneID: context.zoneID)
+        var record: CKRecord
+        if let existing = zoneRecordCache[recordID] {
+            record = existing
+        } else if let existing = try? await context.database.record(for: recordID) {
+            record = existing
+        } else {
+            record = CKRecord(recordType: AppConfig.itemRecordType, recordID: recordID)
+        }
+        recipe.write(to: record)
+        if let photoData = recipe.photoData {
+            let url = FileManager.default.temporaryDirectory.appendingPathComponent("recipe-\(UUID().uuidString).jpg")
+            try photoData.write(to: url, options: [.atomic])
+            record["photo"] = CKAsset(fileURL: url)
+        } else {
+            record["photo"] = nil
+        }
+        let saved = try await context.database.save(record)
+        zoneRecordCache[saved.recordID] = saved
+    }
+
+    func delete(_ recipe: Recipe) async throws {
+        let context = try requireContext()
+        let recordID = CKRecord.ID(recordName: AppConfig.recipeRecordName(for: recipe.id), zoneID: context.zoneID)
+        _ = try await context.database.deleteRecord(withID: recordID)
+        zoneRecordCache[recordID] = nil
     }
 
     func fetchMembers() async throws -> [FamilyMember] {
@@ -1253,6 +1287,45 @@ extension ItemNotificationPrefs {
               AppConfig.isNotifyPrefsRecord(record.recordID.recordName)
         else { return nil }
         self = ItemNotificationPrefs.decode(from: record["note"] as? String ?? "")
+    }
+}
+
+extension Recipe {
+    init?(record: CKRecord) {
+        guard record.recordType == AppConfig.itemRecordType,
+              let id = AppConfig.recipeID(from: record.recordID.recordName),
+              let title = record["name"] as? String
+        else { return nil }
+        let payload = RecipeNoteCodec.decode(record["note"] as? String ?? "")
+        var photo: Data?
+        if let asset = record["photo"] as? CKAsset, let url = asset.fileURL {
+            photo = try? Data(contentsOf: url)
+        }
+        self.init(
+            id: id,
+            title: title,
+            detail: payload.description,
+            method: payload.method,
+            groceries: payload.groceries,
+            addedByName: record["addedByName"] as? String ?? L10n.string("Family"),
+            addedByRecordName: record["addedByRecordName"] as? String ?? "",
+            createdAt: record["createdAt"] as? Date ?? record.creationDate ?? .now,
+            photoData: photo
+        )
+    }
+
+    func write(to record: CKRecord) {
+        record["name"] = title as CKRecordValue
+        record["quantity"] = Int64(1) as CKRecordValue
+        record["status"] = ItemStatus.needed.rawValue as CKRecordValue
+        record["note"] = RecipeNoteCodec.encode(
+            detail: detail,
+            method: method,
+            groceries: groceries
+        ) as CKRecordValue
+        record["addedByName"] = addedByName as CKRecordValue
+        record["addedByRecordName"] = addedByRecordName as CKRecordValue
+        record["createdAt"] = createdAt as CKRecordValue
     }
 }
 

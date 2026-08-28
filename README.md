@@ -13,6 +13,7 @@ FList is a native iPhone app. Lists sync over iCloud with [CloudKit](https://dev
 - Invite others with iCloud sharing (they keep their own Apple ID)
 - Choose who gets a notification when someone adds a missing item
 - Search Needed and Back in stock together
+- Shared recipes: save a dish with groceries and how to prepare it, then add those groceries to the missing list
 - Light, dark, or iPhone appearance, plus accent colors (this iPhone only)
 - English, Hebrew, and Russian, following the iPhone language
 
@@ -24,7 +25,7 @@ FList is a native iPhone app. Lists sync over iCloud with [CloudKit](https://dev
 4. When it’s back, mark it **Back in stock**. You can leave a note for the person who asked for it.
 5. Tap the cart when you’re heading to the store.
 
-Open **Settings** (gear) to rename the list, edit people, choose who is notified about new items, and invite the rest of the family.
+Open **Settings** (gear) to rename the list, edit people, choose who is notified about new items, and invite the rest of the family. The **Recipes** tab is for dishes the household cooks — adding groceries from a recipe uses the same merge as typing them on the list.
 
 ### Inviting someone
 
@@ -52,4 +53,4 @@ The CloudKit container ID in `FList/AppConfig.swift` must stay in sync with the 
 
 ## Privacy
 
-FList does not use tracking. List data lives in your iCloud account (and on the device as a local cache). Camera and photo library access are only for optional pictures of items or people on the list.
+FList does not use tracking. List data lives in your iCloud account (and on the device as a local cache). Camera and photo library access are only for optional pictures of items, recipes, or people on the list.

@@ -12,49 +12,39 @@ struct ShortageListView: View {
 
     var body: some View {
         NavigationStack {
-            Group {
-                if store.hasHousehold {
-                    listContent
-                } else if store.accountKind == .checking {
-                    ProgressView("Checking iCloud…")
-                } else {
-                    OnboardingView(store: store)
-                }
-            }
-            .navigationTitle(store.hasHousehold ? store.householdName : L10n.string("FList"))
-            .navigationBarTitleDisplayMode(store.hasHousehold ? .large : .inline)
+            listContent
+            .navigationTitle(store.householdName)
+            .navigationBarTitleDisplayMode(.large)
             .toolbar {
-                if store.hasHousehold {
-                    ToolbarItem(placement: .topBarLeading) {
-                        NavigationLink {
-                            FamilyMembersView(store: store)
-                        } label: {
-                            Image(systemName: "gearshape.fill")
-                        }
-                        .accessibilityLabel("Settings")
+                ToolbarItem(placement: .topBarLeading) {
+                    NavigationLink {
+                        FamilyMembersView(store: store)
+                    } label: {
+                        Image(systemName: "gearshape.fill")
                     }
-                    ToolbarItemGroup(placement: .topBarTrailing) {
-                        if store.isRefreshing {
-                            ProgressView()
-                        }
-                        Button {
-                            confirmGoingShopping = true
-                        } label: {
-                            Image(systemName: "cart.fill")
-                                .frame(minWidth: 44, minHeight: 32)
-                                .contentShape(Rectangle())
-                        }
-                        .accessibilityLabel("I'm going shopping")
-                        Button {
-                            showAddItem = true
-                        } label: {
-                            Image(systemName: "plus")
-                                .fontWeight(.semibold)
-                                .frame(minWidth: 44, minHeight: 32)
-                                .contentShape(Rectangle())
-                        }
-                        .accessibilityLabel("Add item")
+                    .accessibilityLabel("Settings")
+                }
+                ToolbarItemGroup(placement: .topBarTrailing) {
+                    if store.isRefreshing {
+                        ProgressView()
                     }
+                    Button {
+                        confirmGoingShopping = true
+                    } label: {
+                        Image(systemName: "cart.fill")
+                            .frame(minWidth: 44, minHeight: 32)
+                            .contentShape(Rectangle())
+                    }
+                    .accessibilityLabel("I'm going shopping")
+                    Button {
+                        showAddItem = true
+                    } label: {
+                        Image(systemName: "plus")
+                            .fontWeight(.semibold)
+                            .frame(minWidth: 44, minHeight: 32)
+                            .contentShape(Rectangle())
+                    }
+                    .accessibilityLabel("Add item")
                 }
             }
             .sheet(isPresented: $showAddItem) {
@@ -86,32 +76,11 @@ struct ShortageListView: View {
             } message: {
                 Text("Everyone on this list will be asked to add anything that's missing.")
             }
-            .alert("Something went wrong", isPresented: Binding(
-                get: { store.errorMessage != nil },
-                set: { if !$0 { store.errorMessage = nil } }
-            )) {
-                Button("OK", role: .cancel) { store.errorMessage = nil }
-            } message: {
-                Text(store.errorMessage ?? "")
-            }
-            .alert(
-                store.familyAlertTitle ?? "",
-                isPresented: Binding(
-                    get: { store.familyAlertMessage != nil },
-                    set: { if !$0 {
-                        store.familyAlertTitle = nil
-                        store.familyAlertMessage = nil
-                    } }
-                )
-            ) {
-                Button("OK", role: .cancel) {
-                    store.familyAlertTitle = nil
-                    store.familyAlertMessage = nil
-                }
-            } message: {
-                Text(store.familyAlertMessage ?? "")
-            }
-            .flistSearchable(enabled: store.hasHousehold, text: $searchText)
+            .searchable(
+                text: $searchText,
+                placement: .navigationBarDrawer(displayMode: .automatic),
+                prompt: Text("Search items")
+            )
         }
     }
 
@@ -269,19 +238,4 @@ struct ShortageListView: View {
 
 #Preview {
     ShortageListView(store: .preview)
-}
-
-private extension View {
-    @ViewBuilder
-    func flistSearchable(enabled: Bool, text: Binding<String>) -> some View {
-        if enabled {
-            searchable(
-                text: text,
-                placement: .navigationBarDrawer(displayMode: .automatic),
-                prompt: Text("Search items")
-            )
-        } else {
-            self
-        }
-    }
 }
