@@ -48,7 +48,7 @@ Language is not chosen inside the app. Change it in **iPhone Settings → Genera
 | --- | --- |
 | Bundle ID | `com.tocnet.FList` |
 | CloudKit container | `iCloud.com.tocnet.FList` |
-| Version | 1.3.1 |
+| Version | 1.4 |
 
 The CloudKit container ID in `FList/AppConfig.swift` must stay in sync with the app entitlements. Debug builds use the Development environment; Release/TestFlight uses Production. New CloudKit record types or fields need a schema deploy in CloudKit Console before they work in Production.
 
