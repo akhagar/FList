@@ -3,26 +3,45 @@ import Foundation
 struct RecipeGrocery: Identifiable, Hashable, Codable {
     var id: UUID
     var name: String
-    var quantity: Int
-    var note: String
+    /// How this recipe uses the item, such as "one glass". Not a purchase quantity.
+    var amount: String
 
-    init(id: UUID = UUID(), name: String = "", quantity: Int = 1, note: String = "") {
+    init(id: UUID = UUID(), name: String = "", amount: String = "") {
         self.id = id
         self.name = name
-        self.quantity = max(1, quantity)
-        self.note = note
+        self.amount = amount
     }
 
     enum CodingKeys: String, CodingKey {
-        case id, name, quantity, note
+        case id, name, amount, quantity, note
     }
 
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         id = try container.decodeIfPresent(UUID.self, forKey: .id) ?? UUID()
         name = try container.decodeIfPresent(String.self, forKey: .name) ?? ""
-        quantity = max(1, try container.decodeIfPresent(Int.self, forKey: .quantity) ?? 1)
-        note = try container.decodeIfPresent(String.self, forKey: .note) ?? ""
+        let storedAmount = (try container.decodeIfPresent(String.self, forKey: .amount) ?? "")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        let note = (try container.decodeIfPresent(String.self, forKey: .note) ?? "")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        if !storedAmount.isEmpty {
+            amount = storedAmount
+        } else if !note.isEmpty {
+            amount = note
+        } else if let quantity = try container.decodeIfPresent(Int.self, forKey: .quantity), quantity > 1 {
+            amount = String(quantity)
+        } else {
+            amount = ""
+        }
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
+        try container.encode(name, forKey: .name)
+        try container.encode(amount, forKey: .amount)
+        try container.encode(amount, forKey: .note)
+        try container.encode(1, forKey: .quantity)
     }
 }
 
@@ -71,7 +90,7 @@ struct Recipe: Identifiable, Hashable, Codable {
                 .contains(needle)
         }
         return hit(title) || hit(detail) || hit(method)
-            || groceries.contains { hit($0.name) || hit($0.note) }
+            || groceries.contains { hit($0.name) || hit($0.amount) }
     }
 }
 

@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ShortageListView: View {
     @Bindable var store: FListStore
+    @Environment(\.horizontalSizeClass) private var sizeClass
     @State private var selectedPane: ListPane = .needed
     @State private var showAddItem = false
     @State private var showBuyPicker = false
@@ -131,7 +132,7 @@ struct ShortageListView: View {
                 Text("Back in stock").tag(ListPane.restocked)
             }
             .pickerStyle(.segmented)
-            .padding(.horizontal)
+            .padding(.horizontal, sizeClass == .regular ? 32 : 16)
             .padding(.vertical, 12)
 
             let visible = itemsForSelectedPane

@@ -33,7 +33,7 @@ struct FamilyMembersView: View {
 
             Section {
                 Picker("Appearance", selection: $appearanceRaw) {
-                    Text("iPhone settings").tag(AppAppearance.system.rawValue)
+                    Text("Automatic").tag(AppAppearance.system.rawValue)
                     Text("Light").tag(AppAppearance.light.rawValue)
                     Text("Dark").tag(AppAppearance.dark.rawValue)
                 }
@@ -70,7 +70,7 @@ struct FamilyMembersView: View {
             } header: {
                 Text("Theme")
             } footer: {
-                Text("Only on this iPhone.")
+                Text("Only on this device.")
             }
 
             if !store.members.isEmpty {

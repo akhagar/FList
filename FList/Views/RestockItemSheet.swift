@@ -34,7 +34,7 @@ struct RestockItemSheet: View {
                 }
             }
         }
-        .presentationDetents([.medium, .large])
+        .flistSheetDetents()
     }
 
     private var footerText: String {

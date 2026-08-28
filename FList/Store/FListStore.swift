@@ -264,7 +264,7 @@ final class FListStore {
             return
         }
 
-        errorMessage = L10n.string("Couldn't join that shared list. In Settings, tap Show invite code and paste that code here. Both phones need the same kind of build — Xcode or TestFlight.")
+        errorMessage = L10n.string("Couldn't join that shared list. In Settings, tap Show invite code and paste that code here. Both devices need the same kind of build — Xcode or TestFlight.")
     }
 
     func joinFromInviteLink(_ raw: String) async {
@@ -286,7 +286,7 @@ final class FListStore {
             return
         }
 
-        errorMessage = L10n.string("Couldn't join that shared list. In Settings, tap Show invite code and paste that code here. Both phones need the same kind of build — Xcode or TestFlight.")
+        errorMessage = L10n.string("Couldn't join that shared list. In Settings, tap Show invite code and paste that code here. Both devices need the same kind of build — Xcode or TestFlight.")
     }
 
     func refreshAvailableHouseholds() async {
@@ -560,8 +560,7 @@ final class FListStore {
             guard !name.isEmpty else { return nil }
             var row = grocery
             row.name = name
-            row.quantity = max(1, grocery.quantity)
-            row.note = grocery.note.trimmingCharacters(in: .whitespacesAndNewlines)
+            row.amount = grocery.amount.trimmingCharacters(in: .whitespacesAndNewlines)
             return row
         }
         if updated.addedByName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
@@ -623,12 +622,10 @@ final class FListStore {
             let choice = availability[grocery.id] ?? .missing
             switch choice {
             case .missing:
-                let trimmedNote = grocery.note.trimmingCharacters(in: .whitespacesAndNewlines)
-                let note = trimmedNote.isEmpty ? fromRecipe : trimmedNote
                 let outcome = await ensureNeeded(
                     name: grocery.name,
-                    quantity: grocery.quantity,
-                    note: note
+                    quantity: 1,
+                    note: fromRecipe
                 )
                 if errorMessage != nil { return }
                 if outcome != .ignored { missingCount += 1 }
@@ -1376,8 +1373,8 @@ extension FListStore {
                 detail: "Eggs poached in a spiced tomato sauce.",
                 method: "Simmer tomatoes and peppers, then nestle in the eggs until just set.",
                 groceries: [
-                    RecipeGrocery(name: "Tomatoes", quantity: 4),
-                    RecipeGrocery(name: "Eggs", quantity: 6, note: "Large")
+                    RecipeGrocery(name: "Tomatoes", amount: "4, chopped"),
+                    RecipeGrocery(name: "Eggs", amount: "6 large")
                 ],
                 addedByName: "Alex",
                 addedByRecordName: "local"
@@ -1387,8 +1384,8 @@ extension FListStore {
                 detail: "Weekend breakfast.",
                 method: "Mix, pour, flip.",
                 groceries: [
-                    RecipeGrocery(name: "Flour", quantity: 1),
-                    RecipeGrocery(name: "Milk", quantity: 1)
+                    RecipeGrocery(name: "Flour", amount: "1 cup"),
+                    RecipeGrocery(name: "Milk", amount: "one glass")
                 ],
                 addedByName: "Sam",
                 addedByRecordName: "2"

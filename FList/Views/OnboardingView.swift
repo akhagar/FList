@@ -41,7 +41,7 @@ struct OnboardingView: View {
             }
 
             if store.accountKind == .localOnly {
-                Text("You're not signed in to iCloud, so this list stays on this iPhone. Sign in under Settings to share it.")
+                Text("You're not signed in to iCloud, so this list stays on this device. Sign in under Settings to share it.")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
@@ -59,7 +59,7 @@ struct OnboardingView: View {
             Button {
                 Task { await store.createHousehold() }
             } label: {
-                Text(store.accountKind == .iCloud ? "Create family list" : "Start list on this iPhone")
+                Text(store.accountKind == .iCloud ? "Create family list" : "Start list on this device")
                     .font(.headline)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 8)
@@ -91,6 +91,7 @@ struct OnboardingView: View {
             }
         }
         .padding(.bottom, 24)
+        .flistReadableColumn()
         .overlay {
             if store.isBusy {
                 ProgressView()
