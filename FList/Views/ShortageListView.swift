@@ -33,24 +33,27 @@ struct ShortageListView: View {
                         }
                         .accessibilityLabel("Settings")
                     }
-                    ToolbarItem(placement: .topBarTrailing) {
-                        HStack(spacing: 12) {
-                            if store.isRefreshing {
-                                ProgressView()
-                            }
-                            Button {
-                                confirmGoingShopping = true
-                            } label: {
-                                Image(systemName: "cart.fill")
-                            }
-                            .accessibilityLabel("I'm going shopping")
-                            Button {
-                                showAddItem = true
-                            } label: {
-                                Image(systemName: "plus")
-                            }
-                            .accessibilityLabel("Add item")
+                    ToolbarItemGroup(placement: .topBarTrailing) {
+                        if store.isRefreshing {
+                            ProgressView()
                         }
+                        Button {
+                            confirmGoingShopping = true
+                        } label: {
+                            Image(systemName: "cart.fill")
+                                .frame(minWidth: 44, minHeight: 32)
+                                .contentShape(Rectangle())
+                        }
+                        .accessibilityLabel("I'm going shopping")
+                        Button {
+                            showAddItem = true
+                        } label: {
+                            Image(systemName: "plus")
+                                .fontWeight(.semibold)
+                                .frame(minWidth: 44, minHeight: 32)
+                                .contentShape(Rectangle())
+                        }
+                        .accessibilityLabel("Add item")
                     }
                 }
             }
