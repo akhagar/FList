@@ -53,6 +53,31 @@ struct ShoppingTrip: Identifiable, Hashable {
     var createdAt: Date
 }
 
+struct BuyList: Hashable, Codable {
+    var memberID: String
+    var memberName: String
+    var itemIDs: [UUID]
+
+    var itemIDSet: Set<UUID> { Set(itemIDs) }
+
+    var noteJSON: String {
+        let payload = Payload(itemIDs: itemIDs.map(\.uuidString))
+        let data = (try? JSONEncoder().encode(payload)) ?? Data("{}".utf8)
+        return String(data: data, encoding: .utf8) ?? "{}"
+    }
+
+    private struct Payload: Codable {
+        var itemIDs: [String]
+    }
+
+    static func decodeItemIDs(from note: String) -> [UUID] {
+        guard let data = note.data(using: .utf8),
+              let payload = try? JSONDecoder().decode(Payload.self, from: data)
+        else { return [] }
+        return payload.itemIDs.compactMap(UUID.init(uuidString:))
+    }
+}
+
 struct ItemNotificationPrefs: Equatable, Codable {
     /// `nil` means everyone on the list receives a notification.
     var recipientIDs: [String]?
@@ -289,6 +314,8 @@ final class CloudKitService {
         var householdName: String
         var hasChanges: Bool
         var shoppingTrips: [ShoppingTrip]
+        var recipes: [Recipe]
+        var buyLists: [BuyList]
         var notificationPrefs: ItemNotificationPrefs?
     }
 
@@ -328,6 +355,8 @@ final class CloudKitService {
         let items = records.compactMap(ShortageItem.init(record:)).sorted { $0.createdAt > $1.createdAt }
         let members = assembledMembers(from: records, share: share, context: context)
         let shoppingTrips = records.compactMap(ShoppingTrip.init(record:)).sorted { $0.createdAt > $1.createdAt }
+        let recipes = records.compactMap(Recipe.init(record:))
+        let buyLists = records.compactMap(BuyList.init(record:))
         let notificationPrefs = records.compactMap(ItemNotificationPrefs.init(record:)).first
         let name = Self.title(from: share) ?? ""
         let hasChanges = needsSnapshot || !fetch.records.isEmpty || !fetch.deletedRecordIDs.isEmpty
@@ -337,6 +366,8 @@ final class CloudKitService {
             householdName: name,
             hasChanges: hasChanges,
             shoppingTrips: shoppingTrips,
+            recipes: recipes,
+            buyLists: buyLists,
             notificationPrefs: notificationPrefs
         )
     }
@@ -415,10 +446,87 @@ final class CloudKitService {
         zoneRecordCache[saved.recordID] = saved
     }
 
+    func saveBuyList(_ list: BuyList) async throws {
+        let context = try requireContext()
+        let recordID = CKRecord.ID(recordName: AppConfig.buyListRecordName(for: list.memberID), zoneID: context.zoneID)
+        var record: CKRecord
+        if let existing = zoneRecordCache[recordID] {
+            record = existing
+        } else if let existing = try? await context.database.record(for: recordID) {
+            record = existing
+        } else {
+            record = CKRecord(recordType: AppConfig.itemRecordType, recordID: recordID)
+        }
+        record["name"] = nil
+        record["quantity"] = Int64(1) as CKRecordValue
+        record["status"] = ItemStatus.needed.rawValue as CKRecordValue
+        record["note"] = list.noteJSON as CKRecordValue
+        record["addedByName"] = list.memberName as CKRecordValue
+        record["addedByRecordName"] = list.memberID as CKRecordValue
+        if record["createdAt"] == nil {
+            record["createdAt"] = Date.now as CKRecordValue
+        }
+        let saved = try await context.database.save(record)
+        zoneRecordCache[saved.recordID] = saved
+    }
+
+    /// 1.3.1 shows any ShortageItem with a `name` on the grocery list. Strip that
+    /// field from recipe and buy-list records so mixed-version households stay clean.
+    func hideMetaRecordsFromLegacyClients() async {
+        guard let context else { return }
+        let recipes = Array(zoneRecordCache.values).compactMap(Recipe.init(record:))
+        for recipe in recipes {
+            let recordID = CKRecord.ID(
+                recordName: AppConfig.recipeRecordName(for: recipe.id),
+                zoneID: context.zoneID
+            )
+            guard let record = zoneRecordCache[recordID], record["name"] != nil else { continue }
+            try? await save(recipe)
+        }
+        for (recordID, record) in zoneRecordCache {
+            guard AppConfig.isBuyListRecord(recordID.recordName), record["name"] != nil else { continue }
+            record["name"] = nil
+            if let saved = try? await context.database.save(record) {
+                zoneRecordCache[saved.recordID] = saved
+            }
+        }
+    }
+
     func delete(_ item: ShortageItem) async throws {
         let context = try requireContext()
         let recordID = CKRecord.ID(recordName: item.id.uuidString, zoneID: context.zoneID)
         _ = try await context.database.deleteRecord(withID: recordID)
+        zoneRecordCache[recordID] = nil
+    }
+
+    func save(_ recipe: Recipe) async throws {
+        let context = try requireContext()
+        let recordID = CKRecord.ID(recordName: AppConfig.recipeRecordName(for: recipe.id), zoneID: context.zoneID)
+        var record: CKRecord
+        if let existing = zoneRecordCache[recordID] {
+            record = existing
+        } else if let existing = try? await context.database.record(for: recordID) {
+            record = existing
+        } else {
+            record = CKRecord(recordType: AppConfig.itemRecordType, recordID: recordID)
+        }
+        recipe.write(to: record)
+        if let photoData = recipe.photoData {
+            let url = FileManager.default.temporaryDirectory.appendingPathComponent("recipe-\(UUID().uuidString).jpg")
+            try photoData.write(to: url, options: [.atomic])
+            record["photo"] = CKAsset(fileURL: url)
+        } else {
+            record["photo"] = nil
+        }
+        let saved = try await context.database.save(record)
+        zoneRecordCache[saved.recordID] = saved
+    }
+
+    func delete(_ recipe: Recipe) async throws {
+        let context = try requireContext()
+        let recordID = CKRecord.ID(recordName: AppConfig.recipeRecordName(for: recipe.id), zoneID: context.zoneID)
+        _ = try await context.database.deleteRecord(withID: recordID)
+        zoneRecordCache[recordID] = nil
     }
 
     func fetchMembers() async throws -> [FamilyMember] {
@@ -1247,12 +1355,71 @@ extension ShortageItem {
     }
 }
 
+extension BuyList {
+    init?(record: CKRecord) {
+        guard record.recordType == AppConfig.itemRecordType,
+              let memberID = AppConfig.buyListMemberID(from: record.recordID.recordName)
+                    ?? (record["addedByRecordName"] as? String),
+              !memberID.isEmpty
+        else { return nil }
+        self.init(
+            memberID: memberID,
+            memberName: record["addedByName"] as? String ?? L10n.string("Family"),
+            itemIDs: BuyList.decodeItemIDs(from: record["note"] as? String ?? "")
+        )
+    }
+}
+
 extension ItemNotificationPrefs {
     init?(record: CKRecord) {
         guard record.recordType == AppConfig.itemRecordType,
               AppConfig.isNotifyPrefsRecord(record.recordID.recordName)
         else { return nil }
         self = ItemNotificationPrefs.decode(from: record["note"] as? String ?? "")
+    }
+}
+
+extension Recipe {
+    init?(record: CKRecord) {
+        guard record.recordType == AppConfig.itemRecordType,
+              let id = AppConfig.recipeID(from: record.recordID.recordName)
+        else { return nil }
+        let payload = RecipeNoteCodec.decode(record["note"] as? String ?? "")
+        let title = (payload.title ?? record["name"] as? String)?
+            .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        guard !title.isEmpty else { return nil }
+        var photo: Data?
+        if let asset = record["photo"] as? CKAsset, let url = asset.fileURL {
+            photo = try? Data(contentsOf: url)
+        }
+        self.init(
+            id: id,
+            title: title,
+            detail: payload.description,
+            method: payload.method,
+            groceries: payload.groceries,
+            addedByName: record["addedByName"] as? String ?? L10n.string("Family"),
+            addedByRecordName: record["addedByRecordName"] as? String ?? "",
+            createdAt: record["createdAt"] as? Date ?? record.creationDate ?? .now,
+            photoData: photo
+        )
+    }
+
+    func write(to record: CKRecord) {
+        // 1.3.1 treats any ShortageItem with a `name` as a grocery item. Leave
+        // it empty so older builds ignore recipes.
+        record["name"] = nil
+        record["quantity"] = Int64(1) as CKRecordValue
+        record["status"] = ItemStatus.needed.rawValue as CKRecordValue
+        record["note"] = RecipeNoteCodec.encode(
+            title: title,
+            detail: detail,
+            method: method,
+            groceries: groceries
+        ) as CKRecordValue
+        record["addedByName"] = addedByName as CKRecordValue
+        record["addedByRecordName"] = addedByRecordName as CKRecordValue
+        record["createdAt"] = createdAt as CKRecordValue
     }
 }
 

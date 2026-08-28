@@ -6,23 +6,29 @@ struct LocalSnapshot: Codable {
     var householdName: String
     var items: [ShortageItem]
     var members: [FamilyMember]
+    var recipes: [Recipe]
+    var buyLists: [BuyList]
 
     init(
         hasHousehold: Bool,
         currentUserName: String,
         householdName: String = AppConfig.householdDisplayName,
         items: [ShortageItem],
-        members: [FamilyMember] = []
+        members: [FamilyMember] = [],
+        recipes: [Recipe] = [],
+        buyLists: [BuyList] = []
     ) {
         self.hasHousehold = hasHousehold
         self.currentUserName = currentUserName
         self.householdName = householdName
         self.items = items
         self.members = members
+        self.recipes = recipes
+        self.buyLists = buyLists
     }
 
     enum CodingKeys: String, CodingKey {
-        case hasHousehold, currentUserName, householdName, items, members
+        case hasHousehold, currentUserName, householdName, items, members, recipes, buyLists
     }
 
     init(from decoder: Decoder) throws {
@@ -33,6 +39,8 @@ struct LocalSnapshot: Codable {
             ?? AppConfig.householdDisplayName
         items = try container.decode([ShortageItem].self, forKey: .items)
         members = try container.decodeIfPresent([FamilyMember].self, forKey: .members) ?? []
+        recipes = try container.decodeIfPresent([Recipe].self, forKey: .recipes) ?? []
+        buyLists = try container.decodeIfPresent([BuyList].self, forKey: .buyLists) ?? []
     }
 }
 

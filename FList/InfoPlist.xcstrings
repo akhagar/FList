@@ -1,99 +1,98 @@
 {
-  "sourceLanguage": "en",
-  "strings": {
-    "CFBundleDisplayName": {
-      "comment": "Bundle display name",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "FList"
+  "sourceLanguage" : "en",
+  "strings" : {
+    "CFBundleDisplayName" : {
+      "comment" : "Bundle display name",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "WeStock"
           }
         },
-        "he": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "FList"
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "WeStock"
           }
         },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "FList"
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "WeStock"
           }
         }
       }
     },
-    "CFBundleName": {
-      "comment": "Bundle name",
-      "extractionState": "extracted_with_value",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "new",
-            "value": "FList"
+    "CFBundleName" : {
+      "comment" : "Bundle name",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "WeStock"
           }
         },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "FList"
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "WeStock"
           }
         },
-        "he": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "FList"
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "WeStock"
           }
         }
       }
     },
-    "NSCameraUsageDescription": {
-      "comment": "Privacy - Camera Usage Description",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "FList uses the camera so you can add a photo of an item or someone on the family list, and scan an invite code."
+    "NSCameraUsageDescription" : {
+      "comment" : "Privacy - Camera Usage Description",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "WeStock uses the camera so you can add a photo of an item or someone on the family list, and scan an invite code."
           }
         },
-        "he": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "FList משתמש במצלמה כדי להוסיף תמונה של פריט או של מישהו ברשימת המשפחה, ולסרוק קוד הזמנה."
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "WeStock משתמש במצלמה כדי להוסיף תמונה של פריט או של מישהו ברשימת המשפחה, ולסרוק קוד הזמנה."
           }
         },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "FList использует камеру, чтобы добавить фото товара или человека из семейного списка и чтобы сканировать код приглашения."
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "WeStock использует камеру, чтобы добавить фото товара или человека из семейного списка и чтобы сканировать код приглашения."
           }
         }
       }
     },
-    "NSPhotoLibraryUsageDescription": {
-      "comment": "Privacy - Photo Library Usage Description",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "FList uses your photo library so you can add a picture of an item or someone on the family list."
+    "NSPhotoLibraryUsageDescription" : {
+      "comment" : "Privacy - Photo Library Usage Description",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "WeStock uses your photo library so you can add a picture of an item or someone on the family list."
           }
         },
-        "he": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "FList משתמש בגלריה כדי להוסיף תמונה של פריט או של מישהו ברשימת המשפחה."
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "WeStock משתמש בגלריה כדי להוסיף תמונה של פריט או של מישהו ברשימת המשפחה."
           }
         },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "FList использует галерею, чтобы добавить фото товара или человека из семейного списка."
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "WeStock использует галерею, чтобы добавить фото товара или человека из семейного списка."
           }
         }
       }
     }
   },
-  "version": "1.1"
+  "version" : "1.1"
 }
