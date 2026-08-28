@@ -125,6 +125,7 @@ struct CameraPicker: UIViewControllerRepresentable {
         picker.cameraCaptureMode = .photo
         picker.delegate = context.coordinator
         picker.allowsEditing = true
+        picker.modalPresentationStyle = .fullScreen
         return picker
     }
 

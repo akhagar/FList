@@ -19,7 +19,7 @@ enum CloudKitServiceError: LocalizedError {
         case .missingInviteLink:
             L10n.string("The invite link could not be created. Try again.")
         case .sharedListUnavailable:
-            L10n.string("This shared list isn't available on this iPhone yet. Join with the invite code first. Both phones need the same kind of build — Xcode or TestFlight.")
+            L10n.string("This shared list isn't available on this device yet. Join with the invite code first. Both devices need the same kind of build — Xcode or TestFlight.")
         }
     }
 }
@@ -1265,7 +1265,7 @@ extension Error {
             return L10n.string("That Messages invite can't be pasted. In Settings, tap Show invite code and use that code instead.")
         }
         if isCloudKitZoneMissing {
-            return L10n.string("This shared list isn't available on this iPhone yet. Join with the invite code first. Both phones need the same kind of build — Xcode or TestFlight.")
+            return L10n.string("This shared list isn't available on this device yet. Join with the invite code first. Both devices need the same kind of build — Xcode or TestFlight.")
         }
         return localizedDescription
     }

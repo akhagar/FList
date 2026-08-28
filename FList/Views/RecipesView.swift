@@ -209,19 +209,7 @@ struct RecipeDetailView: View {
                                 .foregroundStyle(.secondary)
                         } else {
                             ForEach(recipe.namedGroceries) { grocery in
-                                VStack(alignment: .leading, spacing: 2) {
-                                    HStack {
-                                        Text(grocery.name)
-                                        Spacer()
-                                        Text("\(grocery.quantity)")
-                                            .foregroundStyle(.secondary)
-                                    }
-                                    if !grocery.note.isEmpty {
-                                        Text(grocery.note)
-                                            .font(.caption)
-                                            .foregroundStyle(.secondary)
-                                    }
-                                }
+                                RecipeGroceryLabel(grocery: grocery)
                             }
                         }
                     }
@@ -338,18 +326,7 @@ struct RecipeAddGroceriesSheet: View {
 
     private func groceryRow(_ grocery: RecipeGrocery) -> some View {
         VStack(alignment: .leading, spacing: 10) {
-            HStack(alignment: .firstTextBaseline) {
-                Text(grocery.name)
-                    .font(.headline)
-                Spacer()
-                Text("\(grocery.quantity)")
-                    .foregroundStyle(.secondary)
-            }
-            if !grocery.note.isEmpty {
-                Text(grocery.note)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
+            RecipeGroceryLabel(grocery: grocery, nameFont: .headline)
             Text(statusCaption(for: grocery))
                 .font(.caption)
                 .foregroundStyle(.tertiary)
@@ -460,15 +437,13 @@ struct RecipeEditorView: View {
                         .lineLimit(3...8)
                 }
 
-                Section("Groceries") {
+                Section {
                     ForEach($groceries) { $grocery in
                         VStack(alignment: .leading, spacing: 8) {
-                            TextField("Grocery", text: $grocery.name)
+                            TextField("Item to buy", text: $grocery.name)
                                 .textInputAutocapitalization(.sentences)
-                            Stepper(value: $grocery.quantity, in: 1...99) {
-                                Text("Quantity: \(grocery.quantity)")
-                            }
-                            TextField("Optional note for this grocery", text: $grocery.note, axis: .vertical)
+                                .font(.body.weight(.semibold))
+                            TextField("For this recipe, like one glass", text: $grocery.amount, axis: .vertical)
                                 .lineLimit(1...3)
                         }
                         .padding(.vertical, 4)
@@ -478,6 +453,10 @@ struct RecipeEditorView: View {
                     Button("Add grocery") {
                         groceries.append(RecipeGrocery())
                     }
+                } header: {
+                    Text("Groceries")
+                } footer: {
+                    Text("The name can go on the missing list. The description is only for this recipe, such as one glass.")
                 }
 
                 Section("How to prepare") {
@@ -580,6 +559,23 @@ struct RecipeEditorView: View {
         recipe.groceries = groceries
         recipe.photoData = photoData
         await store.saveRecipe(recipe)
+    }
+}
+
+private struct RecipeGroceryLabel: View {
+    let grocery: RecipeGrocery
+    var nameFont: Font = .body
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(grocery.name)
+                .font(nameFont)
+            if !grocery.amount.isEmpty {
+                Text(grocery.amount)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
+        }
     }
 }
 

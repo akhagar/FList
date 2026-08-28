@@ -62,3 +62,39 @@ enum AppAccent: String, CaseIterable, Identifiable {
         }
     }
 }
+
+extension View {
+    /// Keeps onboarding and similar screens from stretching edge-to-edge on iPad.
+    func flistReadableColumn(maxWidth: CGFloat = 560) -> some View {
+        modifier(FListReadableColumn(maxWidth: maxWidth))
+    }
+
+    /// Bottom detents on iPhone; a regular form sheet on iPad.
+    func flistSheetDetents() -> some View {
+        modifier(FListSheetDetents())
+    }
+}
+
+private struct FListReadableColumn: ViewModifier {
+    var maxWidth: CGFloat
+    @Environment(\.horizontalSizeClass) private var sizeClass
+
+    func body(content: Content) -> some View {
+        content
+            .frame(maxWidth: sizeClass == .regular ? maxWidth : .infinity)
+            .frame(maxWidth: .infinity)
+    }
+}
+
+private struct FListSheetDetents: ViewModifier {
+    @Environment(\.horizontalSizeClass) private var sizeClass
+
+    @ViewBuilder
+    func body(content: Content) -> some View {
+        if sizeClass == .regular {
+            content
+        } else {
+            content.presentationDetents([.medium, .large])
+        }
+    }
+}

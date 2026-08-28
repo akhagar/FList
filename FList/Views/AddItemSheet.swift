@@ -123,7 +123,7 @@ struct AddItemSheet: View {
                 .ignoresSafeArea()
             }
         }
-        .presentationDetents([.medium, .large])
+        .flistSheetDetents()
     }
 
     private var itemPhoto: some View {
