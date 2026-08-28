@@ -43,7 +43,7 @@ struct InviteCodeSheet: View {
             ) {
                 Button("OK", role: .cancel) { copiedMessage = nil }
             } message: {
-                Text("Send the code in a message. The other person pastes it in WeStock, or scans this QR in the app.")
+                Text("Send the code in a message. The other person pastes it in OurStock, or scans this QR in the app.")
             }
         }
     }
@@ -64,7 +64,7 @@ struct InviteCodeSheet: View {
                 .listRowBackground(Color.clear)
                 .padding(.vertical, 8)
             } footer: {
-                Text("They paste the code in WeStock, or scan this QR code in the app.")
+                Text("They paste the code in OurStock, or scan this QR code in the app.")
             }
 
             Section {

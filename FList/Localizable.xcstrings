@@ -1420,24 +1420,24 @@
         }
       }
     },
-    "WeStock" : {
+    "OurStock" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "WeStock"
+            "value" : "OurStock"
           }
         },
         "he" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "WeStock"
+            "value" : "OurStock"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "WeStock"
+            "value" : "OurStock"
           }
         }
       }
@@ -2106,25 +2106,25 @@
         }
       }
     },
-    "Join our family shortage list in WeStock" : {
+    "Join our family shortage list in OurStock" : {
       "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Join our family shortage list in WeStock"
+            "value" : "Join our family shortage list in OurStock"
           }
         },
         "he" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "הצטרפו לרשימת החוסרים המשפחתית ב‑WeStock"
+            "value" : "הצטרפו לרשימת החוסרים המשפחתית ב‑OurStock"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Присоединитесь к семейному списку недостающего в WeStock"
+            "value" : "Присоединитесь к семейному списку недостающего в OurStock"
           }
         }
       }
@@ -3497,47 +3497,47 @@
         }
       }
     },
-    "Send it in Messages. The other person should paste it in WeStock and tap Join with link." : {
+    "Send it in Messages. The other person should paste it in OurStock and tap Join with link." : {
       "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Send it in Messages. The other person should paste it in WeStock and tap Join with link."
+            "value" : "Send it in Messages. The other person should paste it in OurStock and tap Join with link."
           }
         },
         "he" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "שלחו אותו בהודעות. האדם השני צריך להדביק אותו ב‑WeStock וללחוץ על הצטרפות עם קישור."
+            "value" : "שלחו אותו בהודעות. האדם השני צריך להדביק אותו ב‑OurStock וללחוץ על הצטרפות עם קישור."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Отправьте её в Сообщениях. Другой человек должен вставить её в WeStock и нажать «Войти по ссылке»."
+            "value" : "Отправьте её в Сообщениях. Другой человек должен вставить её в OurStock и нажать «Войти по ссылке»."
           }
         }
       }
     },
-    "Send the code in a message. The other person pastes it in WeStock, or scans this QR in the app." : {
+    "Send the code in a message. The other person pastes it in OurStock, or scans this QR in the app." : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Send the code in a message. The other person pastes it in WeStock, or scans this QR in the app."
+            "value" : "Send the code in a message. The other person pastes it in OurStock, or scans this QR in the app."
           }
         },
         "he" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "שלחו את הקוד בהודעה. הצד השני מדביק אותו ב-WeStock, או סורק את ה-QR באפליקציה."
+            "value" : "שלחו את הקוד בהודעה. הצד השני מדביק אותו ב-OurStock, או סורק את ה-QR באפליקציה."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Отправьте код в сообщении. Другой человек вставит его в WeStock или отсканирует QR в приложении."
+            "value" : "Отправьте код в сообщении. Другой человек вставит его в OurStock или отсканирует QR в приложении."
           }
         }
       }
@@ -3939,47 +3939,47 @@
         }
       }
     },
-    "That doesn't look like a WeStock invite code or link." : {
+    "That doesn't look like an OurStock invite code or link." : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "That doesn't look like a WeStock invite code or link."
+            "value" : "That doesn't look like an OurStock invite code or link."
           }
         },
         "he" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "זה לא נראה כמו קוד הזמנה או קישור של WeStock."
+            "value" : "זה לא נראה כמו קוד הזמנה או קישור של OurStock."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Это не похоже на код приглашения или ссылку WeStock."
+            "value" : "Это не похоже на код приглашения или ссылку OurStock."
           }
         }
       }
     },
-    "That doesn't look like a WeStock invite link." : {
+    "That doesn't look like an OurStock invite link." : {
       "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "That doesn't look like a WeStock invite link."
+            "value" : "That doesn't look like an OurStock invite link."
           }
         },
         "he" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "זה לא נראה כמו קישור הזמנה של WeStock."
+            "value" : "זה לא נראה כמו קישור הזמנה של OurStock."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Это не похоже на ссылку-приглашение WeStock."
+            "value" : "Это не похоже на ссылку-приглашение OurStock."
           }
         }
       }
@@ -4184,24 +4184,24 @@
         }
       }
     },
-    "They paste the code in WeStock, or scan this QR code in the app." : {
+    "They paste the code in OurStock, or scan this QR code in the app." : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "They paste the code in WeStock, or scan this QR code in the app."
+            "value" : "They paste the code in OurStock, or scan this QR code in the app."
           }
         },
         "he" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "מדביקים את הקוד ב-WeStock, או סורקים את קוד ה-QR באפליקציה."
+            "value" : "מדביקים את הקוד ב-OurStock, או סורקים את קוד ה-QR באפליקציה."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Вставьте код в WeStock или отсканируйте QR в приложении."
+            "value" : "Вставьте код в OurStock или отсканируйте QR в приложении."
           }
         }
       }

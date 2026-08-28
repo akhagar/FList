@@ -7,19 +7,19 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "WeStock"
+            "value" : "OurStock"
           }
         },
         "he" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "WeStock"
+            "value" : "OurStock"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "WeStock"
+            "value" : "OurStock"
           }
         }
       }
@@ -30,19 +30,19 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "WeStock"
+            "value" : "OurStock"
           }
         },
         "he" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "WeStock"
+            "value" : "OurStock"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "WeStock"
+            "value" : "OurStock"
           }
         }
       }
@@ -53,19 +53,19 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "WeStock uses the camera so you can add a photo of an item or someone on the family list, and scan an invite code."
+            "value" : "OurStock uses the camera so you can add a photo of an item or someone on the family list, and scan an invite code."
           }
         },
         "he" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "WeStock משתמש במצלמה כדי להוסיף תמונה של פריט או של מישהו ברשימת המשפחה, ולסרוק קוד הזמנה."
+            "value" : "OurStock משתמש במצלמה כדי להוסיף תמונה של פריט או של מישהו ברשימת המשפחה, ולסרוק קוד הזמנה."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "WeStock использует камеру, чтобы добавить фото товара или человека из семейного списка и чтобы сканировать код приглашения."
+            "value" : "OurStock использует камеру, чтобы добавить фото товара или человека из семейного списка и чтобы сканировать код приглашения."
           }
         }
       }
@@ -76,19 +76,19 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "WeStock uses your photo library so you can add a picture of an item or someone on the family list."
+            "value" : "OurStock uses your photo library so you can add a picture of an item or someone on the family list."
           }
         },
         "he" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "WeStock משתמש בגלריה כדי להוסיף תמונה של פריט או של מישהו ברשימת המשפחה."
+            "value" : "OurStock משתמש בגלריה כדי להוסיף תמונה של פריט או של מישהו ברשימת המשפחה."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "WeStock использует галерею, чтобы добавить фото товара или человека из семейного списка."
+            "value" : "OurStock использует галерею, чтобы добавить фото товара или человека из семейного списка."
           }
         }
       }
