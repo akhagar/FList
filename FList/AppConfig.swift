@@ -7,6 +7,7 @@ enum AppConfig {
     static let profileRecordType = "FamilyProfile"
     static let shoppingRecordPrefix = "shop-"
     static let recipeRecordPrefix = "recipe-"
+    static let buyListRecordPrefix = "buy-"
     static let notifyPrefsRecordName = "flist-notify-prefs"
 
     static func shoppingRecordName(for id: UUID) -> String {
@@ -25,12 +26,29 @@ enum AppConfig {
         recordName.hasPrefix(recipeRecordPrefix)
     }
 
+    static func isBuyListRecord(_ recordName: String) -> Bool {
+        recordName.hasPrefix(buyListRecordPrefix)
+    }
+
     static func isNotifyPrefsRecord(_ recordName: String) -> Bool {
         recordName == notifyPrefsRecordName
     }
 
     static func isMetaItemRecord(_ recordName: String) -> Bool {
-        isShoppingRecord(recordName) || isRecipeRecord(recordName) || isNotifyPrefsRecord(recordName)
+        isShoppingRecord(recordName)
+            || isRecipeRecord(recordName)
+            || isBuyListRecord(recordName)
+            || isNotifyPrefsRecord(recordName)
+    }
+
+    static func buyListRecordName(for memberID: String) -> String {
+        buyListRecordPrefix + memberID
+    }
+
+    static func buyListMemberID(from recordName: String) -> String? {
+        guard recordName.hasPrefix(buyListRecordPrefix) else { return nil }
+        let id = String(recordName.dropFirst(buyListRecordPrefix.count))
+        return id.isEmpty ? nil : id
     }
 
     static func shoppingTripID(from recordName: String) -> UUID? {

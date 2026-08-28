@@ -83,6 +83,7 @@ struct RecipeCreatorSection: Identifiable {
 
 enum RecipeNoteCodec {
     struct Payload: Codable {
+        var title: String?
         var description: String
         var method: String
         var groceries: [RecipeGrocery]
@@ -92,13 +93,13 @@ enum RecipeNoteCodec {
         guard let data = stored.data(using: .utf8),
               let payload = try? JSONDecoder().decode(Payload.self, from: data)
         else {
-            return Payload(description: "", method: "", groceries: [])
+            return Payload(title: nil, description: "", method: "", groceries: [])
         }
         return payload
     }
 
-    static func encode(detail: String, method: String, groceries: [RecipeGrocery]) -> String {
-        let payload = Payload(description: detail, method: method, groceries: groceries)
+    static func encode(title: String, detail: String, method: String, groceries: [RecipeGrocery]) -> String {
+        let payload = Payload(title: title, description: detail, method: method, groceries: groceries)
         guard let data = try? JSONEncoder().encode(payload),
               let json = String(data: data, encoding: .utf8)
         else { return "" }

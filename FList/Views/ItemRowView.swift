@@ -5,6 +5,7 @@ struct ItemRowView: View {
     let item: ShortageItem
     var addedByDisplayName: String
     var restockFeedbackLine: String = ""
+    var buyingLine: String = ""
     var onToggle: () -> Void
     var onEdit: () -> Void
     var onViewPhoto: () -> Void
@@ -58,6 +59,11 @@ struct ItemRowView: View {
                             Text(restockFeedbackLine)
                                 .font(.subheadline)
                                 .foregroundStyle(.secondary)
+                        }
+                        if !buyingLine.isEmpty {
+                            Text(buyingLine)
+                                .font(.caption)
+                                .foregroundStyle(Color.accentColor)
                         }
                         Text(subtitle)
                             .font(.caption)

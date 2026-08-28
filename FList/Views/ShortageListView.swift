@@ -2,13 +2,22 @@ import SwiftUI
 
 struct ShortageListView: View {
     @Bindable var store: FListStore
-    @State private var selectedStatus: ItemStatus = .needed
+    @State private var selectedPane: ListPane = .needed
     @State private var showAddItem = false
+    @State private var showBuyPicker = false
     @State private var itemToEdit: ShortageItem?
     @State private var itemToView: ShortageItem?
     @State private var itemToRestock: ShortageItem?
     @State private var confirmGoingShopping = false
     @State private var searchText = ""
+
+    private enum ListPane: String, CaseIterable, Identifiable {
+        case needed
+        case buying
+        case restocked
+
+        var id: String { rawValue }
+    }
 
     var body: some View {
         NavigationStack {
@@ -50,6 +59,11 @@ struct ShortageListView: View {
             .sheet(isPresented: $showAddItem) {
                 AddItemSheet(store: store)
             }
+            .sheet(isPresented: $showBuyPicker) {
+                BuyItemsSheet(store: store) {
+                    selectedPane = .buying
+                }
+            }
             .sheet(item: $itemToEdit) { item in
                 AddItemSheet(store: store, item: item)
             }
@@ -69,12 +83,15 @@ struct ShortageListView: View {
                 isPresented: $confirmGoingShopping,
                 titleVisibility: .visible
             ) {
+                Button("Pick what I'll buy") {
+                    showBuyPicker = true
+                }
                 Button("Notify family") {
                     Task { await store.announceGoingShopping() }
                 }
                 Button("Cancel", role: .cancel) {}
             } message: {
-                Text("Everyone on this list will be asked to add anything that's missing.")
+                Text("Pick missing items for your list, or tell the family you're heading out.")
             }
             .searchable(
                 text: $searchText,
@@ -108,22 +125,32 @@ struct ShortageListView: View {
 
     private var filteredListContent: some View {
         VStack(spacing: 0) {
-            Picker("Filter", selection: $selectedStatus) {
-                Text("Needed").tag(ItemStatus.needed)
-                Text("Back in stock").tag(ItemStatus.restocked)
+            Picker("Filter", selection: $selectedPane) {
+                Text("Needed").tag(ListPane.needed)
+                Text("To buy").tag(ListPane.buying)
+                Text("Back in stock").tag(ListPane.restocked)
             }
             .pickerStyle(.segmented)
             .padding(.horizontal)
             .padding(.vertical, 12)
 
-            let visible = selectedStatus == .needed ? store.neededItems : store.restockedItems
+            let visible = itemsForSelectedPane
             if visible.isEmpty {
                 emptyState
             } else {
                 itemsList {
                     itemRows(visible)
                 }
+                .id(selectedPane)
             }
+        }
+    }
+
+    private var itemsForSelectedPane: [ShortageItem] {
+        switch selectedPane {
+        case .needed: store.neededItems
+        case .buying: store.buyListItems
+        case .restocked: store.restockedItems
         }
     }
 
@@ -166,6 +193,7 @@ struct ShortageListView: View {
                 item: item,
                 addedByDisplayName: store.displayName(for: item),
                 restockFeedbackLine: store.restockFeedback(for: item),
+                buyingLine: store.buyingLine(for: item),
                 onToggle: {
                     if item.status == .needed {
                         itemToRestock = item
@@ -191,6 +219,21 @@ struct ShortageListView: View {
                         Label("Back in stock", systemImage: "checkmark")
                     }
                     .tint(.green)
+                    if store.isBuying(item) {
+                        Button {
+                            Task { await store.removeFromBuyList(item) }
+                        } label: {
+                            Label("Remove from my list", systemImage: "cart.badge.minus")
+                        }
+                        .tint(.orange)
+                    } else {
+                        Button {
+                            Task { await store.addToBuyList(item) }
+                        } label: {
+                            Label("I'll buy this", systemImage: "cart.badge.plus")
+                        }
+                        .tint(.blue)
+                    }
                 }
             }
         }
@@ -198,21 +241,44 @@ struct ShortageListView: View {
 
     private var emptyState: some View {
         ContentUnavailableView {
-            Label(
-                selectedStatus == .needed ? "Nothing is missing" : "No restocked items yet",
-                systemImage: selectedStatus == .needed ? "checkmark.circle" : "archivebox"
-            )
+            Label(emptyTitle, systemImage: emptySymbol)
         } description: {
-            Text(selectedStatus == .needed
-                 ? "Tap + when you run out of something."
-                 : "Items you mark as back in stock will show up here.")
+            Text(emptyDescription)
         } actions: {
-            if selectedStatus == .needed {
+            if selectedPane == .needed {
                 Button("Add item") { showAddItem = true }
                     .buttonStyle(.borderedProminent)
+            } else if selectedPane == .buying {
+                Button("Pick what I'll buy") { showBuyPicker = true }
+                    .buttonStyle(.borderedProminent)
+                    .disabled(store.neededItems.isEmpty)
             }
         }
         .frame(maxHeight: .infinity)
+    }
+
+    private var emptyTitle: String {
+        switch selectedPane {
+        case .needed: L10n.string("Nothing is missing")
+        case .buying: L10n.string("Nothing to buy yet")
+        case .restocked: L10n.string("No restocked items yet")
+        }
+    }
+
+    private var emptySymbol: String {
+        switch selectedPane {
+        case .needed: "checkmark.circle"
+        case .buying: "cart"
+        case .restocked: "archivebox"
+        }
+    }
+
+    private var emptyDescription: String {
+        switch selectedPane {
+        case .needed: L10n.string("Tap + when you run out of something.")
+        case .buying: L10n.string("Pick missing items you're going to get.")
+        case .restocked: L10n.string("Items you mark as back in stock will show up here.")
+        }
     }
 
     private func shoppingBanner(for trip: ShoppingTrip) -> some View {
@@ -238,4 +304,87 @@ struct ShortageListView: View {
 
 #Preview {
     ShortageListView(store: .preview)
+}
+
+struct BuyItemsSheet: View {
+    @Bindable var store: FListStore
+    var onSaved: () -> Void = {}
+    @Environment(\.dismiss) private var dismiss
+    @State private var selected: Set<UUID>
+
+    init(store: FListStore, onSaved: @escaping () -> Void = {}) {
+        self.store = store
+        self.onSaved = onSaved
+        _selected = State(initialValue: store.myBuyingIDs)
+    }
+
+    var body: some View {
+        NavigationStack {
+            Group {
+                if store.neededItems.isEmpty {
+                    ContentUnavailableView(
+                        "Nothing is missing",
+                        systemImage: "checkmark.circle",
+                        description: Text("Tap + when you run out of something.")
+                    )
+                } else {
+                    List {
+                        Section {
+                            ForEach(store.neededItems) { item in
+                                Button {
+                                    if selected.contains(item.id) {
+                                        selected.remove(item.id)
+                                    } else {
+                                        selected.insert(item.id)
+                                    }
+                                } label: {
+                                    HStack(alignment: .top, spacing: 12) {
+                                        Image(systemName: selected.contains(item.id) ? "checkmark.circle.fill" : "circle")
+                                            .font(.title3)
+                                            .foregroundStyle(selected.contains(item.id) ? Color.accentColor : .secondary)
+                                        VStack(alignment: .leading, spacing: 4) {
+                                            Text(item.name)
+                                                .foregroundStyle(.primary)
+                                            if item.quantity > 1 {
+                                                Text("×\(item.quantity)")
+                                                    .font(.subheadline)
+                                                    .foregroundStyle(.secondary)
+                                            }
+                                            let others = store.buyingLine(for: item)
+                                            if !others.isEmpty {
+                                                Text(others)
+                                                    .font(.caption)
+                                                    .foregroundStyle(Color.accentColor)
+                                            }
+                                        }
+                                        Spacer(minLength: 0)
+                                    }
+                                }
+                            }
+                        } footer: {
+                            Text("These items stay on Needed for the family. This is only what you'll pick up.")
+                        }
+                    }
+                    .listStyle(.insetGrouped)
+                }
+            }
+            .navigationTitle("To buy")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save") {
+                        Task {
+                            await store.setBuyList(selected)
+                            onSaved()
+                            dismiss()
+                        }
+                    }
+                    .disabled(store.isBusy)
+                }
+            }
+        }
+    }
 }

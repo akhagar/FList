@@ -10,6 +10,7 @@ FList is a native iPhone app. Lists sync over iCloud with [CloudKit](https://dev
 - Add a name, quantity, optional note, and photo
 - Mark an item back in stock, with an optional note if something wasn’t as described — that note is sent to the person who added the item
 - Cart button to tell the family you’re going shopping, so they can add anything that’s missing
+- Pick missing items onto your own **To buy** list, so you know what you’ll get at the store
 - Invite others with iCloud sharing (they keep their own Apple ID)
 - Choose who gets a notification when someone adds a missing item
 - Search Needed and Back in stock together
@@ -23,7 +24,7 @@ FList is a native iPhone app. Lists sync over iCloud with [CloudKit](https://dev
 2. Create a family list, or join one you were invited to.
 3. Tap **+** when you run out of something.
 4. When it’s back, mark it **Back in stock**. You can leave a note for the person who asked for it.
-5. Tap the cart when you’re heading to the store.
+5. Tap the cart when you’re heading to the store. You can pick items for **To buy**, or notify the family.
 
 Open **Settings** (gear) to rename the list, edit people, choose who is notified about new items, and invite the rest of the family. The **Recipes** tab is for dishes the household cooks — adding groceries from a recipe uses the same merge as typing them on the list.
 
@@ -50,6 +51,8 @@ Language is not chosen inside the app. Change it in **iPhone Settings → Genera
 | Version | 1.3.1 |
 
 The CloudKit container ID in `FList/AppConfig.swift` must stay in sync with the app entitlements. Debug builds use the Development environment; Release/TestFlight uses Production. New CloudKit record types or fields need a schema deploy in CloudKit Console before they work in Production.
+
+Recipes and personal buy lists reuse the existing `ShortageItem` type and leave the `name` field empty, so phones still on 1.3.1 ignore them instead of showing them as groceries.
 
 ## Privacy
 

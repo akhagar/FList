@@ -26,6 +26,7 @@ final class FListStore {
     var availableHouseholds: [HouseholdChoice] = []
     var shoppingTrips: [ShoppingTrip] = []
     var recipes: [Recipe] = []
+    var buyLists: [BuyList] = []
     var familyAlertTitle: String?
     var familyAlertMessage: String?
     var notificationPrefs = FListStore.loadNotificationPrefs()
@@ -48,6 +49,83 @@ final class FListStore {
 
     var restockedItems: [ShortageItem] {
         items.filter { $0.status == .restocked }
+    }
+
+    var buyListItems: [ShortageItem] {
+        let ids = myBuyingIDs
+        return neededItems.filter { ids.contains($0.id) }
+    }
+
+    var myBuyingIDs: Set<UUID> {
+        Set(buyLists.filter { isMyBuyList($0) }.flatMap(\.itemIDs))
+    }
+
+    func isBuying(_ item: ShortageItem) -> Bool {
+        myBuyingIDs.contains(item.id)
+    }
+
+    func buyingLine(for item: ShortageItem) -> String {
+        guard item.status == .needed else { return "" }
+        let lists = buyLists.filter { $0.itemIDs.contains(item.id) }
+        guard !lists.isEmpty else { return "" }
+
+        var names: [String] = []
+        var includesMe = false
+        for list in lists {
+            if isMyBuyList(list) {
+                includesMe = true
+            } else {
+                let name = displayName(forRecordName: list.memberID, fallback: list.memberName)
+                if !isPlaceholderName(name) { names.append(name) }
+            }
+        }
+        if includesMe, names.isEmpty {
+            return L10n.string("On your list to buy")
+        }
+        if includesMe {
+            names.insert(L10n.string("You"), at: 0)
+        }
+        guard !names.isEmpty else { return "" }
+        return String(format: L10n.string("%@ will buy this"), ListFormatter.localizedString(byJoining: names))
+    }
+
+    func addToBuyList(_ item: ShortageItem) async {
+        guard item.status == .needed else { return }
+        var ids = myBuyingIDs
+        ids.insert(item.id)
+        await saveMyBuyList(ids)
+    }
+
+    func removeFromBuyList(_ item: ShortageItem) async {
+        var ids = myBuyingIDs
+        ids.remove(item.id)
+        await saveMyBuyList(ids)
+    }
+
+    func setBuyList(_ ids: Set<UUID>) async {
+        let needed = Set(neededItems.map(\.id))
+        await saveMyBuyList(ids.intersection(needed))
+    }
+
+    private func saveMyBuyList(_ ids: Set<UUID>) async {
+        let list = BuyList(
+            memberID: currentUserRecordName,
+            memberName: currentUserDisplayName,
+            itemIDs: ids.sorted { $0.uuidString < $1.uuidString }
+        )
+        buyLists.removeAll { isMyBuyList($0) }
+        buyLists.append(list)
+        if usesiCloud {
+            do {
+                try await cloudKit.saveBuyList(list)
+                persistLocalCache()
+            } catch {
+                errorMessage = error.flistDisplayMessage
+                await refresh()
+            }
+        } else {
+            persistLocal()
+        }
     }
 
     func itemsMatching(_ query: String) -> [ShortageItem] {
@@ -133,6 +211,7 @@ final class FListStore {
                     items = []
                     members = []
                     recipes = []
+                    buyLists = []
                     householdName = AppConfig.householdDisplayName
                 }
             }
@@ -328,6 +407,7 @@ final class FListStore {
         items = []
         members = []
         recipes = []
+        buyLists = []
         householdName = AppConfig.householdDisplayName
         persistHouseholdName()
         resetItemBaseline()
@@ -840,6 +920,27 @@ final class FListStore {
         !id.isEmpty && (id == currentUserRecordName || id == "local")
     }
 
+    private func isMyBuyList(_ list: BuyList) -> Bool {
+        list.memberID == currentUserRecordName || list.memberID == "local"
+    }
+
+    private func mergedBuyLists(_ lists: [BuyList]) -> [BuyList] {
+        var grouped: [String: BuyList] = [:]
+        for list in lists {
+            let key = isMyBuyList(list) ? currentUserRecordName : list.memberID
+            if var existing = grouped[key] {
+                existing.itemIDs = Array(Set(existing.itemIDs + list.itemIDs))
+                if existing.memberName.isEmpty { existing.memberName = list.memberName }
+                grouped[key] = existing
+            } else {
+                var copy = list
+                copy.memberID = key
+                grouped[key] = copy
+            }
+        }
+        return Array(grouped.values)
+    }
+
     private func isPlaceholderName(_ name: String) -> Bool {
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
         if trimmed.isEmpty { return true }
@@ -967,6 +1068,7 @@ final class FListStore {
         items = keepingPhotos(in: state.items, from: items)
         members = keepingPhotos(in: state.members, from: members)
         recipes = keepingPhotos(in: state.recipes, from: recipes)
+        buyLists = mergedBuyLists(state.buyLists)
         await collapseDuplicateItemNames()
         adoptCurrentUserNameFromMembers()
         if !state.householdName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
@@ -985,6 +1087,9 @@ final class FListStore {
         }
         let hadShoppingBaseline = hasShoppingBaseline
         applyShoppingTrips(state.shoppingTrips, notify: notify && hadShoppingBaseline)
+        if shouldReloadFully {
+            await cloudKit.hideMetaRecordsFromLegacyClients()
+        }
     }
 
     private func applyShoppingTrips(_ trips: [ShoppingTrip], notify: Bool) {
@@ -1182,6 +1287,7 @@ final class FListStore {
             persistKnownItems()
         }
         recipes = snapshot.recipes
+        buyLists = snapshot.buyLists
         if snapshot.members.isEmpty {
             members = [
                 FamilyMember(
@@ -1220,7 +1326,8 @@ final class FListStore {
                 householdName: householdName,
                 items: items,
                 members: members,
-                recipes: recipes
+                recipes: recipes,
+                buyLists: buyLists
             )
         )
     }
@@ -1233,7 +1340,8 @@ final class FListStore {
                 householdName: householdName,
                 items: items,
                 members: members,
-                recipes: recipes
+                recipes: recipes,
+                buyLists: buyLists
             )
         )
     }
