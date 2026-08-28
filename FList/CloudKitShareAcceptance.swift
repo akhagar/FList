@@ -55,7 +55,7 @@ enum CloudKitShareBridge {
 
     static func acceptShareAndWait(at url: URL, openIfShortToken: Bool = false) async {
         guard let shareURL = shareURL(from: url.absoluteString) else {
-            store?.errorMessage = L10n.string("That doesn't look like an FList invite code or link.")
+            store?.errorMessage = L10n.string("That doesn't look like a WeStock invite code or link.")
             return
         }
         do {

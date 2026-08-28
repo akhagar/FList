@@ -1,8 +1,8 @@
-# FList
+# WeStock
 
 A shared family list of what’s missing at home. Anyone in the household can add an item, then mark it back in stock when it’s on the shelf again.
 
-FList is a native iPhone app. Lists sync over iCloud with [CloudKit](https://developer.apple.com/icloud/cloudkit/). Without iCloud, you can still keep a list on that iPhone.
+WeStock is a native iPhone app. Lists sync over iCloud with [CloudKit](https://developer.apple.com/icloud/cloudkit/). Without iCloud, you can still keep a list on that iPhone.
 
 ## Features
 
@@ -18,7 +18,7 @@ FList is a native iPhone app. Lists sync over iCloud with [CloudKit](https://dev
 - Light, dark, or iPhone appearance, plus accent colors (this iPhone only)
 - English, Hebrew, and Russian, following the iPhone language
 
-## Using FList
+## Using WeStock
 
 1. Sign in to iCloud on the iPhone (Settings → [Your Name] → iCloud).
 2. Create a family list, or join one you were invited to.
@@ -31,12 +31,12 @@ Open **Settings** (gear) to rename the list, edit people, choose who is notified
 ### Inviting someone
 
 1. In Settings, tap **Show invite code**.
-2. Send the code in a message, or let the other person scan the QR in FList.
+2. Send the code in a message, or let the other person scan the QR in WeStock.
 3. They paste the code (or scan the QR) and tap **Join**.
 
 The code is the iCloud share token — the same as the old invite link, just shorter to type. A Messages invitation can expire and often can’t be pasted. Both phones need the same kind of build (Xcode or TestFlight). After they join, the list shows under **Shared** on their iCloud account — not as a second private copy.
 
-Language is not chosen inside the app. Change it in **iPhone Settings → General → Language & Region**, or under **Settings → FList** if you set a language just for this app.
+Language is not chosen inside the app. Change it in **iPhone Settings → General → Language & Region**, or under **Settings → WeStock** if you set a language just for this app.
 
 ## Building
 
@@ -56,4 +56,4 @@ Recipes and personal buy lists reuse the existing `ShortageItem` type and leave 
 
 ## Privacy
 
-FList does not use tracking. List data lives in your iCloud account (and on the device as a local cache). Camera and photo library access are only for optional pictures of items, recipes, or people on the list.
+WeStock does not use tracking. List data lives in your iCloud account (and on the device as a local cache). Camera and photo library access are only for optional pictures of items, recipes, or people on the list.

@@ -273,7 +273,7 @@ final class FListStore {
         errorMessage = nil
 
         guard let url = CloudKitShareBridge.shareURL(from: raw) else {
-            errorMessage = L10n.string("That doesn't look like an FList invite code or link.")
+            errorMessage = L10n.string("That doesn't look like a WeStock invite code or link.")
             return
         }
         await CloudKitShareBridge.acceptShareAndWait(at: url)

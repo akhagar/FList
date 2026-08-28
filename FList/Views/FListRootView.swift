@@ -19,13 +19,13 @@ struct FListRootView: View {
             } else if store.accountKind == .checking {
                 NavigationStack {
                     ProgressView("Checking iCloud…")
-                        .navigationTitle(L10n.string("FList"))
+                        .navigationTitle(L10n.string("WeStock"))
                         .navigationBarTitleDisplayMode(.inline)
                 }
             } else {
                 NavigationStack {
                     OnboardingView(store: store)
-                        .navigationTitle(L10n.string("FList"))
+                        .navigationTitle(L10n.string("WeStock"))
                         .navigationBarTitleDisplayMode(.inline)
                 }
             }

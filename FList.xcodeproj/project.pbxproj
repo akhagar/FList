@@ -294,10 +294,10 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = FList/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = FList;
+				INFOPLIST_KEY_CFBundleDisplayName = WeStock;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
-				INFOPLIST_KEY_NSCameraUsageDescription = "FList uses the camera so you can add a photo of an item or someone on the family list, and scan an invite code.";
-				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "FList uses your photo library so you can add a picture of an item or someone on the family list.";
+				INFOPLIST_KEY_NSCameraUsageDescription = "WeStock uses the camera so you can add a photo of an item or someone on the family list, and scan an invite code.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "WeStock uses your photo library so you can add a picture of an item or someone on the family list.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UIBackgroundModes = "remote-notification";
@@ -337,10 +337,10 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = FList/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = FList;
+				INFOPLIST_KEY_CFBundleDisplayName = WeStock;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
-				INFOPLIST_KEY_NSCameraUsageDescription = "FList uses the camera so you can add a photo of an item or someone on the family list, and scan an invite code.";
-				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "FList uses your photo library so you can add a picture of an item or someone on the family list.";
+				INFOPLIST_KEY_NSCameraUsageDescription = "WeStock uses the camera so you can add a photo of an item or someone on the family list, and scan an invite code.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "WeStock uses your photo library so you can add a picture of an item or someone on the family list.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UIBackgroundModes = "remote-notification";
