@@ -73,6 +73,57 @@ extension View {
     func flistSheetDetents() -> some View {
         modifier(FListSheetDetents())
     }
+
+    /// Aligns user-authored text by its own script, not the system language.
+    func flistNaturalDirection(for texts: [String]) -> some View {
+        modifier(FListNaturalDirection(texts: texts))
+    }
+
+    func flistNaturalDirection(for text: String) -> some View {
+        flistNaturalDirection(for: [text])
+    }
+}
+
+enum ContentTextDirection {
+    static func resolved(_ texts: [String], fallback: LayoutDirection) -> LayoutDirection {
+        var score = 0
+        for text in texts {
+            for scalar in text.unicodeScalars {
+                score += strength(scalar)
+            }
+        }
+        if score < 0 { return .rightToLeft }
+        if score > 0 { return .leftToRight }
+        return fallback
+    }
+
+    private static func strength(_ scalar: Unicode.Scalar) -> Int {
+        switch scalar.value {
+        case 0x0590...0x08FF, 0xFB1D...0xFDFF, 0xFE70...0xFEFF:
+            return -1
+        case 0x0041...0x005A, 0x0061...0x007A,
+             0x00C0...0x024F, 0x0400...0x052F,
+             0x1E00...0x1EFF:
+            return 1
+        default:
+            return 0
+        }
+    }
+}
+
+private struct FListNaturalDirection: ViewModifier {
+    var texts: [String]
+    @Environment(\.layoutDirection) private var systemDirection
+
+    func body(content: Content) -> some View {
+        let direction = ContentTextDirection.resolved(texts, fallback: systemDirection)
+        Group {
+            content
+                .multilineTextAlignment(.leading)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .environment(\.layoutDirection, direction)
+    }
 }
 
 private struct FListReadableColumn: ViewModifier {

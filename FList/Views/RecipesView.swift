@@ -6,6 +6,7 @@ struct RecipesView: View {
     @Bindable var store: FListStore
     @State private var searchText = ""
     @State private var showEditor = false
+    @State private var showPasteRecipe = false
     @State private var expandedCreators: Set<String> = ["me"]
 
     private var recipeSections: [RecipeCreatorSection] {
@@ -59,19 +60,23 @@ struct RecipesView: View {
                     if store.isRefreshing {
                         ProgressView()
                     }
-                    Button {
-                        showEditor = true
+                    Menu {
+                        Button("Add recipe") { showEditor = true }
+                        Button("Paste recipe") { showPasteRecipe = true }
                     } label: {
                         Image(systemName: "plus")
                             .fontWeight(.semibold)
                             .frame(minWidth: 44, minHeight: 32)
                             .contentShape(Rectangle())
                     }
-                    .accessibilityLabel("Add recipe")
+                    .accessibilityLabel("Add")
                 }
             }
             .sheet(isPresented: $showEditor) {
                 RecipeEditorView(store: store)
+            }
+            .sheet(isPresented: $showPasteRecipe) {
+                PasteRecipeSheet(store: store)
             }
             .refreshable {
                 await store.refresh()
@@ -118,6 +123,8 @@ struct RecipesView: View {
             } actions: {
                 Button("Add recipe") { showEditor = true }
                     .buttonStyle(.borderedProminent)
+                Button("Paste recipe") { showPasteRecipe = true }
+                    .buttonStyle(.bordered)
             }
             .frame(maxHeight: .infinity)
         } else {
@@ -140,6 +147,7 @@ private struct RecipeRowView: View {
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
             }
+            .flistNaturalDirection(for: recipe.contentTexts)
         }
         .padding(.vertical, 4)
     }
@@ -200,6 +208,7 @@ struct RecipeDetailView: View {
                     if !recipe.detail.isEmpty {
                         Section("Description") {
                             Text(recipe.detail)
+                                .flistNaturalDirection(for: recipe.contentTexts)
                         }
                     }
 
@@ -209,7 +218,7 @@ struct RecipeDetailView: View {
                                 .foregroundStyle(.secondary)
                         } else {
                             ForEach(recipe.namedGroceries) { grocery in
-                                RecipeGroceryLabel(grocery: grocery)
+                                RecipeGroceryLabel(grocery: grocery, directionTexts: recipe.contentTexts)
                             }
                         }
                     }
@@ -217,6 +226,7 @@ struct RecipeDetailView: View {
                     if !recipe.method.isEmpty {
                         Section("How to prepare") {
                             Text(recipe.method)
+                                .flistNaturalDirection(for: recipe.contentTexts)
                         }
                     }
 
@@ -326,7 +336,7 @@ struct RecipeAddGroceriesSheet: View {
 
     private func groceryRow(_ grocery: RecipeGrocery) -> some View {
         VStack(alignment: .leading, spacing: 10) {
-            RecipeGroceryLabel(grocery: grocery, nameFont: .headline)
+            RecipeGroceryLabel(grocery: grocery, nameFont: .headline, directionTexts: recipe.contentTexts)
             Text(statusCaption(for: grocery))
                 .font(.caption)
                 .foregroundStyle(.tertiary)
@@ -430,11 +440,13 @@ struct RecipeEditorView: View {
                 Section("Title") {
                     TextField("Recipe name", text: $title)
                         .textInputAutocapitalization(.sentences)
+                        .flistNaturalDirection(for: title)
                 }
 
                 Section("Description") {
                     TextField("What is this recipe?", text: $detail, axis: .vertical)
                         .lineLimit(3...8)
+                        .flistNaturalDirection(for: detail)
                 }
 
                 Section {
@@ -443,8 +455,10 @@ struct RecipeEditorView: View {
                             TextField("Item to buy", text: $grocery.name)
                                 .textInputAutocapitalization(.sentences)
                                 .font(.body.weight(.semibold))
+                                .flistNaturalDirection(for: $grocery.name.wrappedValue)
                             TextField("For this recipe, like one glass", text: $grocery.amount, axis: .vertical)
                                 .lineLimit(1...3)
+                                .flistNaturalDirection(for: $grocery.amount.wrappedValue)
                         }
                         .padding(.vertical, 4)
                     }
@@ -462,6 +476,7 @@ struct RecipeEditorView: View {
                 Section("How to prepare") {
                     TextField("Steps to cook this dish", text: $method, axis: .vertical)
                         .lineLimit(6...16)
+                        .flistNaturalDirection(for: method)
                 }
             }
             .navigationTitle(existing == nil ? "Add recipe" : "Edit recipe")
@@ -562,9 +577,10 @@ struct RecipeEditorView: View {
     }
 }
 
-private struct RecipeGroceryLabel: View {
+struct RecipeGroceryLabel: View {
     let grocery: RecipeGrocery
     var nameFont: Font = .body
+    var directionTexts: [String]? = nil
 
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
@@ -576,6 +592,7 @@ private struct RecipeGroceryLabel: View {
                     .foregroundStyle(.secondary)
             }
         }
+        .flistNaturalDirection(for: directionTexts ?? [grocery.name, grocery.amount])
     }
 }
 

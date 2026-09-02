@@ -4714,6 +4714,270 @@
           }
         }
       }
+    },
+    "Back" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Back"
+          }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "חזרה"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Назад"
+          }
+        }
+      }
+    },
+    "First line is the title. Then a short description, grocery lines like Tomatoes — 4 chopped, then how to prepare." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "First line is the title. Then a short description, grocery lines like Tomatoes — 4 chopped, then how to prepare."
+          }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "השורה הראשונה היא הכותרת. אחר כך תיאור קצר, שורות מצרכים כמו עגבניות — 4 קצוצות, ואז אופן ההכנה."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Первая строка — название. Затем короткое описание, строки продуктов вроде Помидоры — 4 нарезанных, затем способ приготовления."
+          }
+        }
+      }
+    },
+    "Items" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Items"
+          }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "פריטים"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Товары"
+          }
+        }
+      }
+    },
+    "Milk\nEggs — 6\nTomatoes, 4" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Milk\nEggs — 6\nTomatoes, 4"
+          }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "חלב\nביצים — 6\nעגבניות, 4"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Молоко\nЯйца — 6\nПомидоры, 4"
+          }
+        }
+      }
+    },
+    "No grocery lines were found. You can add them after saving." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No grocery lines were found. You can add them after saving."
+          }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "לא נמצאו שורות מצרכים. אפשר להוסיף אותן אחרי השמירה."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Строки продуктов не найдены. Их можно добавить после сохранения."
+          }
+        }
+      }
+    },
+    "One item per line. You can write Milk or Eggs — 6." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "One item per line. You can write Milk or Eggs — 6."
+          }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "פריט אחד בכל שורה. אפשר לכתוב חלב או ביצים — 6."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "По одному товару в строке. Можно написать Молоко или Яйца — 6."
+          }
+        }
+      }
+    },
+    "Paste at least one item, then tap Preview." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paste at least one item, then tap Preview."
+          }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "הדביקו לפחות פריט אחד, ואז הקישו על תצוגה מקדימה."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вставьте хотя бы один товар, затем нажмите «Просмотр»."
+          }
+        }
+      }
+    },
+    "Paste from clipboard" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paste from clipboard"
+          }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "הדבקה מהלוח"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вставить из буфера"
+          }
+        }
+      }
+    },
+    "Paste items" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paste items"
+          }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "הדבקת פריטים"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вставить товары"
+          }
+        }
+      }
+    },
+    "Paste recipe" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paste recipe"
+          }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "הדבקת מתכון"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вставить рецепт"
+          }
+        }
+      }
+    },
+    "Preview" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preview"
+          }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "תצוגה מקדימה"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Просмотр"
+          }
+        }
+      }
+    },
+    "Shakshuka\n\nEggs in tomato sauce.\n\nTomatoes — 4, chopped\nEggs — 6 large\n\nSimmer, then add the eggs." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shakshuka\n\nEggs in tomato sauce.\n\nTomatoes — 4, chopped\nEggs — 6 large\n\nSimmer, then add the eggs."
+          }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "שקשוקה\n\nביצים ברוטב עגבניות.\n\nעגבניות — 4, קצוצות\nביצים — 6 גדולות\n\nלבשל, ואז להוסיף את הביצים."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Шакшука\n\nЯйца в томатном соусе.\n\nПомидоры — 4, нарезанные\nЯйца — 6 крупных\n\nТушить, затем добавить яйца."
+          }
+        }
+      }
     }
   },
   "version" : "1.1"

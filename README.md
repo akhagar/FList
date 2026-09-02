@@ -15,6 +15,7 @@ OurStock is a native iPhone and iPad app. Lists sync over iCloud with [CloudKit]
 - Choose who gets a notification when someone adds a missing item
 - Search Needed and Back in stock together
 - Shared recipes: save a dish with groceries (what to buy, plus how this recipe uses it) and how to prepare it, then add those groceries to the missing list
+- Paste a grocery list or a recipe from Notes or Messages, preview it, then save
 - Light, dark, or system appearance, plus accent colors (this device only)
 - English, Hebrew, and Russian, following the device language
 
@@ -22,11 +23,11 @@ OurStock is a native iPhone and iPad app. Lists sync over iCloud with [CloudKit]
 
 1. Sign in to iCloud on the device (Settings → [Your Name] → iCloud).
 2. Create a family list, or join one you were invited to.
-3. Tap **+** when you run out of something.
+3. Tap **+** when you run out of something, or **Paste items** for a whole list from Notes or Messages.
 4. When it’s back, mark it **Back in stock**. You can leave a note for the person who asked for it.
 5. Tap the cart when you’re heading to the store. You can pick items for **To buy**, or notify the family.
 
-Open **Settings** (gear) to rename the list, edit people, choose who is notified about new items, and invite the rest of the family. The **Recipes** tab is for dishes the household cooks — adding groceries from a recipe uses the same merge as typing them on the list.
+Open **Settings** (gear) to rename the list, edit people, choose who is notified about new items, and invite the rest of the family. The **Recipes** tab is for dishes the household cooks — adding groceries from a recipe uses the same merge as typing them on the list. You can also **Paste recipe**: first line is the title, then a short description, grocery lines such as `Tomatoes — 4 chopped`, then how to prepare.
 
 ### Inviting someone
 
@@ -48,7 +49,7 @@ Language is not chosen inside the app. Change it in **Settings → General → L
 | --- | --- |
 | Bundle ID | `com.tocnet.FList` |
 | CloudKit container | `iCloud.com.tocnet.FList` |
-| Version | 1.4.1 |
+| Version | 1.4.2 |
 
 The CloudKit container ID in `FList/AppConfig.swift` must stay in sync with the app entitlements. Debug builds use the Development environment; Release/TestFlight uses Production. New CloudKit record types or fields need a schema deploy in CloudKit Console before they work in Production.
 
