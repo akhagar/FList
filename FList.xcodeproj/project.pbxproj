@@ -37,6 +37,8 @@
 		A30000000000000000000031 /* Recipe.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000031 /* Recipe.swift */; };
 		A30000000000000000000032 /* RecipesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000032 /* RecipesView.swift */; };
 		A30000000000000000000033 /* FListRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000033 /* FListRootView.swift */; };
+		A30000000000000000000034 /* ImportText.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000034 /* ImportText.swift */; };
+		A30000000000000000000035 /* ImportSheets.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000035 /* ImportSheets.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -74,6 +76,8 @@
 		A20000000000000000000031 /* Recipe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Recipe.swift; sourceTree = "<group>"; };
 		A20000000000000000000032 /* RecipesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipesView.swift; sourceTree = "<group>"; };
 		A20000000000000000000033 /* FListRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FListRootView.swift; sourceTree = "<group>"; };
+		A20000000000000000000034 /* ImportText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportText.swift; sourceTree = "<group>"; };
+		A20000000000000000000035 /* ImportSheets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportSheets.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -132,6 +136,7 @@
 			children = (
 				A20000000000000000000003 /* ShortageItem.swift */,
 				A20000000000000000000031 /* Recipe.swift */,
+				A20000000000000000000034 /* ImportText.swift */,
 				A20000000000000000000004 /* FamilyMember.swift */,
 			);
 			path = Models;
@@ -156,6 +161,7 @@
 				A20000000000000000000033 /* FListRootView.swift */,
 				A20000000000000000000032 /* RecipesView.swift */,
 				A20000000000000000000011 /* AddItemSheet.swift */,
+				A20000000000000000000035 /* ImportSheets.swift */,
 				A20000000000000000000028 /* RestockItemSheet.swift */,
 				A20000000000000000000029 /* InviteCodeSheet.swift */,
 				A20000000000000000000010 /* ItemRowView.swift */,
@@ -265,6 +271,8 @@
 				A30000000000000000000009 /* OnboardingView.swift in Sources */,
 				A30000000000000000000010 /* ItemRowView.swift in Sources */,
 				A30000000000000000000011 /* AddItemSheet.swift in Sources */,
+				A30000000000000000000035 /* ImportSheets.swift in Sources */,
+				A30000000000000000000034 /* ImportText.swift in Sources */,
 				A30000000000000000000028 /* RestockItemSheet.swift in Sources */,
 				A30000000000000000000029 /* InviteCodeSheet.swift in Sources */,
 				A30000000000000000000012 /* FamilyMembersView.swift in Sources */,
@@ -310,7 +318,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.4.1;
+				MARKETING_VERSION = 1.4.2;
 				MTL_ENABLE_DEBUG_INFO = "DWARF with dSYM File";
 				PRODUCT_BUNDLE_IDENTIFIER = com.tocnet.FList;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -353,7 +361,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.4.1;
+				MARKETING_VERSION = 1.4.2;
 				MTL_ENABLE_DEBUG_INFO = "DWARF with dSYM File";
 				PRODUCT_BUNDLE_IDENTIFIER = com.tocnet.FList;
 				PRODUCT_NAME = "$(TARGET_NAME)";

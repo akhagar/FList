@@ -497,7 +497,11 @@ final class FListStore {
     }
 
     func defaultRecipeAvailability(for grocery: RecipeGrocery) -> RecipeGroceryAvailability {
-        listedStatus(forName: grocery.name) == .restocked ? .alreadyHave : .missing
+        defaultRecipeAvailability(forName: grocery.name)
+    }
+
+    func defaultRecipeAvailability(forName name: String) -> RecipeGroceryAvailability {
+        listedStatus(forName: name) == .restocked ? .alreadyHave : .missing
     }
 
     func recipesMatching(_ query: String) -> [Recipe] {
@@ -637,6 +641,44 @@ final class FListStore {
             }
         }
 
+        presentListUpdateAlert(missingCount: missingCount, restockedCount: restockedCount)
+    }
+
+    func applyImportedItems(
+        _ items: [ImportedListItem],
+        availability: [UUID: RecipeGroceryAvailability]
+    ) async {
+        guard !items.isEmpty else {
+            familyAlertTitle = L10n.string("Nothing to add")
+            familyAlertMessage = L10n.string("Paste at least one item, then tap Preview.")
+            return
+        }
+
+        isBusy = true
+        defer { isBusy = false }
+
+        var missingCount = 0
+        var restockedCount = 0
+        for item in items {
+            let choice = availability[item.id] ?? .missing
+            switch choice {
+            case .missing:
+                let note = item.extra.trimmingCharacters(in: .whitespacesAndNewlines)
+                let outcome = await ensureNeeded(name: item.name, quantity: 1, note: note)
+                if errorMessage != nil { return }
+                if outcome != .ignored { missingCount += 1 }
+            case .alreadyHave:
+                if await ensureInStock(name: item.name) {
+                    restockedCount += 1
+                }
+                if errorMessage != nil { return }
+            }
+        }
+
+        presentListUpdateAlert(missingCount: missingCount, restockedCount: restockedCount)
+    }
+
+    private func presentListUpdateAlert(missingCount: Int, restockedCount: Int) {
         familyAlertTitle = L10n.string("Added to list")
         if missingCount == 0, restockedCount == 0 {
             familyAlertTitle = L10n.string("List updated")

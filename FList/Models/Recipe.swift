@@ -92,6 +92,10 @@ struct Recipe: Identifiable, Hashable, Codable {
         return hit(title) || hit(detail) || hit(method)
             || groceries.contains { hit($0.name) || hit($0.amount) }
     }
+
+    var contentTexts: [String] {
+        [title, detail, method] + groceries.flatMap { [$0.name, $0.amount] }
+    }
 }
 
 struct RecipeCreatorSection: Identifiable {

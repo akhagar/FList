@@ -5,6 +5,7 @@ struct ShortageListView: View {
     @Environment(\.horizontalSizeClass) private var sizeClass
     @State private var selectedPane: ListPane = .needed
     @State private var showAddItem = false
+    @State private var showPasteItems = false
     @State private var showBuyPicker = false
     @State private var itemToEdit: ShortageItem?
     @State private var itemToView: ShortageItem?
@@ -46,19 +47,23 @@ struct ShortageListView: View {
                             .contentShape(Rectangle())
                     }
                     .accessibilityLabel("I'm going shopping")
-                    Button {
-                        showAddItem = true
+                    Menu {
+                        Button("Add item") { showAddItem = true }
+                        Button("Paste items") { showPasteItems = true }
                     } label: {
                         Image(systemName: "plus")
                             .fontWeight(.semibold)
                             .frame(minWidth: 44, minHeight: 32)
                             .contentShape(Rectangle())
                     }
-                    .accessibilityLabel("Add item")
+                    .accessibilityLabel("Add")
                 }
             }
             .sheet(isPresented: $showAddItem) {
                 AddItemSheet(store: store)
+            }
+            .sheet(isPresented: $showPasteItems) {
+                PasteItemsSheet(store: store)
             }
             .sheet(isPresented: $showBuyPicker) {
                 BuyItemsSheet(store: store) {
@@ -249,6 +254,8 @@ struct ShortageListView: View {
             if selectedPane == .needed {
                 Button("Add item") { showAddItem = true }
                     .buttonStyle(.borderedProminent)
+                Button("Paste items") { showPasteItems = true }
+                    .buttonStyle(.bordered)
             } else if selectedPane == .buying {
                 Button("Pick what I'll buy") { showBuyPicker = true }
                     .buttonStyle(.borderedProminent)
