@@ -6,82 +6,115 @@ struct ItemRowView: View {
     var addedByDisplayName: String
     var restockFeedbackLine: String = ""
     var buyingLine: String = ""
+    var isBuying: Bool = false
     var onToggle: () -> Void
     var onEdit: () -> Void
+    var onRestockWithNote: () -> Void = {}
+    var onToggleBuy: () -> Void = {}
+    var onDelete: () -> Void = {}
     var onViewPhoto: () -> Void
 
     var body: some View {
-        HStack(alignment: .center, spacing: 12) {
-            Button(action: onToggle) {
+        Button(action: onToggle) {
+            HStack(alignment: .center, spacing: 12) {
                 Image(systemName: item.status == .restocked ? "checkmark.circle.fill" : "circle")
                     .font(.title2)
                     .foregroundStyle(item.status == .restocked ? Color.accentColor : .secondary)
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel(item.status == .restocked ? L10n.string( "Mark as needed") : L10n.string( "Mark as back in stock"))
 
-            if let photoData = item.photoData, let image = UIImage(data: photoData) {
-                Button(action: onViewPhoto) {
-                    Image(uiImage: image)
-                        .resizable()
-                        .scaledToFill()
-                        .frame(width: 56, height: 56)
-                        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
-                        .overlay {
-                            RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                .strokeBorder(.black.opacity(0.08), lineWidth: 1)
-                        }
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel(L10n.string("View photo"))
-            }
-
-            Button(action: onEdit) {
-                HStack(alignment: .center, spacing: 12) {
-                    VStack(alignment: .leading, spacing: 4) {
-                        HStack {
-                            Text(item.name)
-                                .font(.headline)
-                                .strikethrough(item.status == .restocked)
-                                .foregroundStyle(.primary)
-                            if item.quantity > 1 {
-                                Text("×\(item.quantity)")
-                                    .font(.subheadline.weight(.medium))
-                                    .foregroundStyle(.secondary)
+                if let photoData = item.photoData, let image = UIImage(data: photoData) {
+                    Button(action: onViewPhoto) {
+                        Image(uiImage: image)
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width: 56, height: 56)
+                            .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                            .overlay {
+                                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                    .strokeBorder(.black.opacity(0.08), lineWidth: 1)
                             }
-                        }
-                        if !item.note.isEmpty {
-                            Text(item.note)
-                                .font(.subheadline)
-                                .foregroundStyle(.secondary)
-                        }
-                        if item.status == .restocked, !restockFeedbackLine.isEmpty {
-                            Text(restockFeedbackLine)
-                                .font(.subheadline)
-                                .foregroundStyle(.secondary)
-                        }
-                        if !buyingLine.isEmpty {
-                            Text(buyingLine)
-                                .font(.caption)
-                                .foregroundStyle(Color.accentColor)
-                        }
-                        Text(subtitle)
-                            .font(.caption)
-                            .foregroundStyle(.tertiary)
                     }
-                    Spacer(minLength: 0)
+                    .buttonStyle(.borderless)
+                    .accessibilityLabel(L10n.string("View photo"))
+                }
+
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack {
+                        Text(item.name)
+                            .font(.headline)
+                            .strikethrough(item.status == .restocked)
+                            .foregroundStyle(.primary)
+                        if item.quantity > 1 {
+                            Text("×\(item.quantity)")
+                                .font(.subheadline.weight(.medium))
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    if !item.note.isEmpty {
+                        Text(item.note)
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
+                    if item.status == .restocked, !restockFeedbackLine.isEmpty {
+                        Text(restockFeedbackLine)
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
+                    if !buyingLine.isEmpty {
+                        Text(buyingLine)
+                            .font(.caption)
+                            .foregroundStyle(Color.accentColor)
+                    }
+                    Text(subtitle)
+                        .font(.caption)
+                        .foregroundStyle(.tertiary)
+                }
+                Spacer(minLength: 0)
+            }
+        }
+        .buttonStyle(.plain)
+        .padding(.vertical, 4)
+        .accessibilityLabel(item.name)
+        .accessibilityHint(
+            item.status == .restocked
+                ? L10n.string("Mark as needed")
+                : L10n.string("Mark as back in stock")
+        )
+        .accessibilityAction(named: Text("Edit item")) { onEdit() }
+        .contextMenu { itemMenu }
+    }
+
+    @ViewBuilder
+    private var itemMenu: some View {
+        Button(action: onEdit) {
+            Label("Edit item", systemImage: "pencil")
+        }
+        if item.status == .needed {
+            Button(action: onRestockWithNote) {
+                Label("Back in stock with a note", systemImage: "text.badge.checkmark")
+            }
+            Button(action: onToggleBuy) {
+                if isBuying {
+                    Label("Remove from my list", systemImage: "cart.badge.minus")
+                } else {
+                    Label("I'll buy this", systemImage: "cart.badge.plus")
                 }
             }
-            .buttonStyle(.plain)
-            .accessibilityLabel(L10n.string("Edit item"))
         }
-        .padding(.vertical, 4)
+        if item.photoData != nil {
+            Button(action: onViewPhoto) {
+                Label("View photo", systemImage: "photo")
+            }
+        }
+        Divider()
+        Button(role: .destructive, action: onDelete) {
+            Label("Delete", systemImage: "trash")
+        }
     }
 
     private var subtitle: String {
         if item.status == .restocked, let restockedAt = item.restockedAt {
             let date = restockedAt.formatted(date: .abbreviated, time: .omitted)
-            return L10n.string( "Back in stock · \(date)")
+            return L10n.string("Back in stock · \(date)")
         }
         return L10n.string("Added by \(addedByDisplayName)")
     }

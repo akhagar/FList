@@ -318,7 +318,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.4.2;
+				MARKETING_VERSION = 1.4.3;
 				MTL_ENABLE_DEBUG_INFO = "DWARF with dSYM File";
 				PRODUCT_BUNDLE_IDENTIFIER = com.tocnet.FList;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -361,7 +361,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.4.2;
+				MARKETING_VERSION = 1.4.3;
 				MTL_ENABLE_DEBUG_INFO = "DWARF with dSYM File";
 				PRODUCT_BUNDLE_IDENTIFIER = com.tocnet.FList;
 				PRODUCT_NAME = "$(TARGET_NAME)";
