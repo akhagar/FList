@@ -200,14 +200,28 @@ struct ShortageListView: View {
                 addedByDisplayName: store.displayName(for: item),
                 restockFeedbackLine: store.restockFeedback(for: item),
                 buyingLine: store.buyingLine(for: item),
+                isBuying: store.isBuying(item),
                 onToggle: {
-                    if item.status == .needed {
-                        itemToRestock = item
-                    } else {
-                        Task { await store.markNeeded(item) }
+                    Task {
+                        if item.status == .needed {
+                            await store.markRestocked(item)
+                        } else {
+                            await store.markNeeded(item)
+                        }
                     }
                 },
                 onEdit: { itemToEdit = item },
+                onRestockWithNote: { itemToRestock = item },
+                onToggleBuy: {
+                    Task {
+                        if store.isBuying(item) {
+                            await store.removeFromBuyList(item)
+                        } else {
+                            await store.addToBuyList(item)
+                        }
+                    }
+                },
+                onDelete: { Task { await store.delete(item) } },
                 onViewPhoto: { itemToView = item }
             )
             .swipeActions(edge: .trailing, allowsFullSwipe: true) {
@@ -220,7 +234,7 @@ struct ShortageListView: View {
             .swipeActions(edge: .leading) {
                 if item.status == .needed {
                     Button {
-                        itemToRestock = item
+                        Task { await store.markRestocked(item) }
                     } label: {
                         Label("Back in stock", systemImage: "checkmark")
                     }

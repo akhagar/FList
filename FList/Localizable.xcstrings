@@ -731,6 +731,28 @@
         }
       }
     },
+    "Back in stock with a note" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Back in stock with a note"
+          }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "חזר למלאי עם הערה"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вернуть в наличие с заметкой"
+          }
+        }
+      }
+    },
     "Blue" : {
       "localizations" : {
         "en" : {
