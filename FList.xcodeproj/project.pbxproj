@@ -39,7 +39,46 @@
 		A30000000000000000000033 /* FListRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000033 /* FListRootView.swift */; };
 		A30000000000000000000034 /* ImportText.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000034 /* ImportText.swift */; };
 		A30000000000000000000035 /* ImportSheets.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000035 /* ImportSheets.swift */; };
+		A50000000000000000000001 /* FListWatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A40000000000000000000002 /* FListWatchApp.swift */; };
+		A50000000000000000000002 /* WatchStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A40000000000000000000003 /* WatchStore.swift */; };
+		A50000000000000000000003 /* WatchRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A40000000000000000000004 /* WatchRootView.swift */; };
+		A50000000000000000000004 /* AppConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000002 /* AppConfig.swift */; };
+		A50000000000000000000005 /* L10n.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000020 /* L10n.swift */; };
+		A50000000000000000000006 /* ShortageItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000003 /* ShortageItem.swift */; };
+		A50000000000000000000007 /* FamilyMember.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000004 /* FamilyMember.swift */; };
+		A50000000000000000000008 /* Recipe.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000031 /* Recipe.swift */; };
+		A50000000000000000000009 /* CloudKitService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000006 /* CloudKitService.swift */; };
+		A50000000000000000000010 /* LocalPersistence.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000005 /* LocalPersistence.swift */; };
+		A50000000000000000000011 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A40000000000000000000005 /* Assets.xcassets */; };
+		A50000000000000000000012 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000021 /* Localizable.xcstrings */; };
+		A50000000000000000000013 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000017 /* PrivacyInfo.xcprivacy */; };
+		A50000000000000000000014 /* CloudKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A20000000000000000000018 /* CloudKit.framework */; };
+		A50000000000000000000015 /* FListWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = A40000000000000000000001 /* FListWatch.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		A60000000000000000000010 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A10000000000000000000100 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = A60000000000000000000001;
+			remoteInfo = FListWatch;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		A60000000000000000000008 /* Embed Watch Content */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
+			dstSubfolderSpec = 16;
+			files = (
+				A50000000000000000000015 /* FListWatch.app in Embed Watch Content */,
+			);
+			name = "Embed Watch Content";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		A10000000000000000000300 /* FList.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FList.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -78,6 +117,13 @@
 		A20000000000000000000033 /* FListRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FListRootView.swift; sourceTree = "<group>"; };
 		A20000000000000000000034 /* ImportText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportText.swift; sourceTree = "<group>"; };
 		A20000000000000000000035 /* ImportSheets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportSheets.swift; sourceTree = "<group>"; };
+		A40000000000000000000001 /* FListWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FListWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A40000000000000000000002 /* FListWatchApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FListWatchApp.swift; sourceTree = "<group>"; };
+		A40000000000000000000003 /* WatchStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchStore.swift; sourceTree = "<group>"; };
+		A40000000000000000000004 /* WatchRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchRootView.swift; sourceTree = "<group>"; };
+		A40000000000000000000005 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		A40000000000000000000006 /* FListWatch.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = FListWatch.entitlements; sourceTree = "<group>"; };
+		A40000000000000000000007 /* FListWatchRelease.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = FListWatchRelease.entitlements; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -89,6 +135,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		A60000000000000000000003 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A50000000000000000000014 /* CloudKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -96,6 +150,7 @@
 			isa = PBXGroup;
 			children = (
 				A10000000000000000000600 /* FList */,
+				A60000000000000000000011 /* FListWatch */,
 				A10000000000000000000500 /* Products */,
 				A10000000000000000001300 /* Frameworks */,
 			);
@@ -105,6 +160,7 @@
 			isa = PBXGroup;
 			children = (
 				A10000000000000000000300 /* FList.app */,
+				A40000000000000000000001 /* FListWatch.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -182,6 +238,19 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
+		A60000000000000000000011 /* FListWatch */ = {
+			isa = PBXGroup;
+			children = (
+				A40000000000000000000002 /* FListWatchApp.swift */,
+				A40000000000000000000003 /* WatchStore.swift */,
+				A40000000000000000000004 /* WatchRootView.swift */,
+				A40000000000000000000005 /* Assets.xcassets */,
+				A40000000000000000000006 /* FListWatch.entitlements */,
+				A40000000000000000000007 /* FListWatchRelease.entitlements */,
+			);
+			path = FListWatch;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -192,14 +261,33 @@
 				A10000000000000000000A00 /* Sources */,
 				A10000000000000000000B00 /* Frameworks */,
 				A10000000000000000000C00 /* Resources */,
+				A60000000000000000000008 /* Embed Watch Content */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				A60000000000000000000009 /* PBXTargetDependency */,
+			);
+			name = FList;
+			productName = FList;
+			productReference = A10000000000000000000300 /* FList.app */;
+			productType = "com.apple.product-type.application";
+		};
+		A60000000000000000000001 /* FListWatch */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A60000000000000000000007 /* Build configuration list for PBXNativeTarget "FListWatch" */;
+			buildPhases = (
+				A60000000000000000000002 /* Sources */,
+				A60000000000000000000003 /* Frameworks */,
+				A60000000000000000000004 /* Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
-			name = FList;
-			productName = FList;
-			productReference = A10000000000000000000300 /* FList.app */;
+			name = FListWatch;
+			productName = FListWatch;
+			productReference = A40000000000000000000001 /* FListWatch.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -210,9 +298,12 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 1600;
-				LastUpgradeCheck = 1600;
+				LastUpgradeCheck = 2700;
 				TargetAttributes = {
 					A10000000000000000000200 = {
+						CreatedOnToolsVersion = 16.0;
+					};
+					A60000000000000000000001 = {
 						CreatedOnToolsVersion = 16.0;
 					};
 				};
@@ -233,6 +324,7 @@
 			projectRoot = "";
 			targets = (
 				A10000000000000000000200 /* FList */,
+				A60000000000000000000001 /* FListWatch */,
 			);
 		};
 /* End PBXProject section */
@@ -246,6 +338,16 @@
 				A30000000000000000000017 /* PrivacyInfo.xcprivacy in Resources */,
 				A30000000000000000000021 /* Localizable.xcstrings in Resources */,
 				A30000000000000000000027 /* InfoPlist.xcstrings in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A60000000000000000000004 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A50000000000000000000011 /* Assets.xcassets in Resources */,
+				A50000000000000000000013 /* PrivacyInfo.xcprivacy in Resources */,
+				A50000000000000000000012 /* Localizable.xcstrings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -286,7 +388,32 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		A60000000000000000000002 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A50000000000000000000001 /* FListWatchApp.swift in Sources */,
+				A50000000000000000000002 /* WatchStore.swift in Sources */,
+				A50000000000000000000003 /* WatchRootView.swift in Sources */,
+				A50000000000000000000004 /* AppConfig.swift in Sources */,
+				A50000000000000000000005 /* L10n.swift in Sources */,
+				A50000000000000000000006 /* ShortageItem.swift in Sources */,
+				A50000000000000000000007 /* FamilyMember.swift in Sources */,
+				A50000000000000000000008 /* Recipe.swift in Sources */,
+				A50000000000000000000009 /* CloudKitService.swift in Sources */,
+				A50000000000000000000010 /* LocalPersistence.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		A60000000000000000000009 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = A60000000000000000000001 /* FListWatch */;
+			targetProxy = A60000000000000000000010 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		A10000000000000000000F00 /* Debug */ = {
@@ -298,7 +425,6 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = VW75X7DKA4;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = FList/Info.plist;
@@ -318,7 +444,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.4.4;
+				MARKETING_VERSION = 1.5;
 				MTL_ENABLE_DEBUG_INFO = "DWARF with dSYM File";
 				PRODUCT_BUNDLE_IDENTIFIER = com.tocnet.FList;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -329,6 +455,7 @@
 				SWIFT_STRICT_CONCURRENCY = complete;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
+				WATCHOS_DEPLOYMENT_TARGET = 26.0;
 			};
 			name = Debug;
 		};
@@ -341,7 +468,6 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = VW75X7DKA4;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = FList/Info.plist;
@@ -361,7 +487,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.4.4;
+				MARKETING_VERSION = 1.5;
 				MTL_ENABLE_DEBUG_INFO = "DWARF with dSYM File";
 				PRODUCT_BUNDLE_IDENTIFIER = com.tocnet.FList;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -372,6 +498,7 @@
 				SWIFT_STRICT_CONCURRENCY = complete;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
+				WATCHOS_DEPLOYMENT_TARGET = 26.0;
 			};
 			name = Release;
 		};
@@ -380,6 +507,7 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
@@ -410,6 +538,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = VW75X7DKA4;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
@@ -427,14 +556,16 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				WATCHOS_DEPLOYMENT_TARGET = 26.0;
 			};
 			name = Debug;
 		};
@@ -443,6 +574,7 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
@@ -473,6 +605,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dSYM";
+				DEVELOPMENT_TEAM = VW75X7DKA4;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
@@ -484,13 +617,89 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				VALIDATE_PRODUCT = YES;
+				WATCHOS_DEPLOYMENT_TARGET = 26.0;
+			};
+			name = Release;
+		};
+		A60000000000000000000005 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = FListWatch/FListWatch.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = OurStock;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.tocnet.FList;
+				INFOPLIST_KEY_WKRunsIndependentlyOfCompanionApp = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.5;
+				PRODUCT_BUNDLE_IDENTIFIER = com.tocnet.FList.watchkitapp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "watchos watchsimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 26.0;
+			};
+			name = Debug;
+		};
+		A60000000000000000000006 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = FListWatch/FListWatchRelease.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = OurStock;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.tocnet.FList;
+				INFOPLIST_KEY_WKRunsIndependentlyOfCompanionApp = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.5;
+				PRODUCT_BUNDLE_IDENTIFIER = com.tocnet.FList.watchkitapp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "watchos watchsimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 26.0;
 			};
 			name = Release;
 		};
@@ -511,6 +720,15 @@
 			buildConfigurations = (
 				A10000000000000000001100 /* Debug */,
 				A10000000000000000001200 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A60000000000000000000007 /* Build configuration list for PBXNativeTarget "FListWatch" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A60000000000000000000005 /* Debug */,
+				A60000000000000000000006 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

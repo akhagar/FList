@@ -14,6 +14,20 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
+               BlueprintIdentifier = "A60000000000000000000001"
+               BuildableName = "FListWatch.app"
+               BlueprintName = "FListWatch"
+               ReferencedContainer = "container:FList.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
                BlueprintIdentifier = "A10000000000000000000200"
                BuildableName = "FList.app"
                BlueprintName = "FList"
@@ -43,9 +57,8 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "A10000000000000000000200"
-            BuildableName = "FList.app"
-            BlueprintName = "FList"
+            BlueprintIdentifier = "A60000000000000000000001"
+            BuildableName = "FListWatch.app"
             ReferencedContainer = "container:FList.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
@@ -60,9 +73,8 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "A10000000000000000000200"
-            BuildableName = "FList.app"
-            BlueprintName = "FList"
+            BlueprintIdentifier = "A60000000000000000000001"
+            BuildableName = "FListWatch.app"
             ReferencedContainer = "container:FList.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
