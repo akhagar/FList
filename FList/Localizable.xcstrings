@@ -3117,6 +3117,28 @@
         }
       }
     },
+    "Open OurStock on iPhone to create or join a family list." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open OurStock on iPhone to create or join a family list."
+          }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "פתחו את OurStock ב‑iPhone כדי ליצור רשימת משפחה או להצטרף אליה."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Откройте OurStock на iPhone, чтобы создать семейный список или присоединиться к нему."
+          }
+        }
+      }
+    },
     "Open the invite you received in Messages instead of creating a new list. A new list stays only on this device." : {
       "extractionState" : "stale",
       "localizations" : {
@@ -4153,6 +4175,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Войдите в iCloud в Настройках, чтобы поделиться этим списком с семьёй."
+          }
+        }
+      }
+    },
+    "Sign in to iCloud on Apple Watch to use this list." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sign in to iCloud on Apple Watch to use this list."
+          }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "התחברו ל‑iCloud ב‑Apple Watch כדי להשתמש ברשימה."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Войдите в iCloud на Apple Watch, чтобы пользоваться списком."
           }
         }
       }

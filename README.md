@@ -2,7 +2,7 @@
 
 A shared family list of what’s missing at home. Anyone in the household can add an item, then mark it back in stock when it’s on the shelf again.
 
-OurStock is a native iPhone and iPad app. Lists sync over iCloud with [CloudKit](https://developer.apple.com/icloud/cloudkit/). Without iCloud, you can still keep a list on that device.
+OurStock is a native iPhone, iPad, and Apple Watch app. Lists sync over iCloud with [CloudKit](https://developer.apple.com/icloud/cloudkit/). Without iCloud, you can still keep a list on iPhone or iPad. Apple Watch talks to the same iCloud household directly — the iPhone does not need to be nearby.
 
 ## Features
 
@@ -17,6 +17,7 @@ OurStock is a native iPhone and iPad app. Lists sync over iCloud with [CloudKit]
 - Shared recipes: save a dish with groceries (what to buy, plus how this recipe uses it) and how to prepare it, then add those groceries to the missing list
 - Paste a grocery list or a recipe from Notes or Messages, preview it, then save
 - Light, dark, or system appearance, plus accent colors (this device only)
+- Apple Watch: **Needed** list, tap to mark back in stock, and add an item (dictation). Recipes, photos, invites, and settings stay on iPhone
 - English, Hebrew, and Russian, following the device language
 
 ## Using OurStock
@@ -37,6 +38,8 @@ Open **Settings** (gear) to rename the list, edit people, choose who is notified
 
 The code is the iCloud share token — the same as the old invite link, just shorter to type. A Messages invitation can expire and often can’t be pasted. Both devices need the same kind of build (Xcode or TestFlight). After they join, the list shows under **Shared** on their iCloud account — not as a second private copy.
 
+On Apple Watch, OurStock shows the same Needed list. Tap an item to mark it back in stock; use **+** to add a name. Create or join the family list on iPhone first, and sign in to the same iCloud account on the Watch.
+
 Language is not chosen inside the app. Change it in **Settings → General → Language & Region**, or under **Settings → OurStock** if you set a language just for this app.
 
 ## Building
@@ -44,12 +47,14 @@ Language is not chosen inside the app. Change it in **Settings → General → L
 1. Open `FList.xcodeproj` in Xcode.
 2. Select your development team.
 3. Run on an iPhone or iPad signed into iCloud. Sharing and live sync work more reliably on a device than in the simulator.
+4. To run the Watch app, choose the **FListWatch** scheme and a Watch destination. The Watch target is also embedded in the iPhone app, so an iPhone install includes OurStock for Watch.
 
 | | |
 | --- | --- |
 | Bundle ID | `com.tocnet.FList` |
+| Watch bundle ID | `com.tocnet.FList.watchkitapp` |
 | CloudKit container | `iCloud.com.tocnet.FList` |
-| Version | 1.4.5 |
+| Version | 1.5 |
 
 The CloudKit container ID in `FList/AppConfig.swift` must stay in sync with the app entitlements. Debug builds use the Development environment; Release/TestFlight uses Production. New CloudKit record types or fields need a schema deploy in CloudKit Console before they work in Production.
 

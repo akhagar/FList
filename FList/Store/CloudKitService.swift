@@ -441,7 +441,7 @@ final class CloudKitService {
         try await fetchHouseholdState().items
     }
 
-    func save(_ item: ShortageItem) async throws {
+    func save(_ item: ShortageItem, updatePhoto: Bool = true) async throws {
         let context = try requireContext()
         var record: CKRecord
         let recordID = CKRecord.ID(recordName: item.id.uuidString, zoneID: context.zoneID)
@@ -451,12 +451,14 @@ final class CloudKitService {
             record = CKRecord(recordType: AppConfig.itemRecordType, recordID: recordID)
         }
         item.write(to: record)
-        if let photoData = item.photoData {
-            let url = FileManager.default.temporaryDirectory.appendingPathComponent("item-\(UUID().uuidString).jpg")
-            try photoData.write(to: url, options: [.atomic])
-            record["photo"] = CKAsset(fileURL: url)
-        } else {
-            record["photo"] = nil
+        if updatePhoto {
+            if let photoData = item.photoData {
+                let url = FileManager.default.temporaryDirectory.appendingPathComponent("item-\(UUID().uuidString).jpg")
+                try photoData.write(to: url, options: [.atomic])
+                record["photo"] = CKAsset(fileURL: url)
+            } else {
+                record["photo"] = nil
+            }
         }
         let saved = try await context.database.save(record)
         zoneRecordCache[saved.recordID] = saved
