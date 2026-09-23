@@ -59,6 +59,9 @@ final class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
         _ center: UNUserNotificationCenter,
         willPresent notification: UNNotification
     ) async -> UNNotificationPresentationOptions {
-        [.banner, .sound]
+        if notification.request.trigger is UNPushNotificationTrigger {
+            return []
+        }
+        return [.banner, .sound]
     }
 }

@@ -289,23 +289,88 @@ final class CloudKitService {
         return await installContext(zoneID: zoneID, isOwner: false, userRecordID: userRecordID)
     }
 
-    func subscribeToItemChanges() async {
+    func subscribeToItemChanges(sendItemAlerts: Bool) async {
         guard let context else { return }
-        let info = CKSubscription.NotificationInfo()
-        info.shouldSendContentAvailable = true
+        let silent = CKSubscription.NotificationInfo()
+        silent.shouldSendContentAvailable = true
 
         let databaseSubscription = CKDatabaseSubscription(
             subscriptionID: context.isOwner ? "flist.private-db.changes" : "flist.shared-db.changes"
         )
-        databaseSubscription.notificationInfo = info
+        databaseSubscription.notificationInfo = silent
         await saveSubscription(databaseSubscription, on: context.database)
 
         let zoneSubscription = CKRecordZoneSubscription(
             zoneID: context.zoneID,
             subscriptionID: "flist.zone.\(context.zoneID.zoneName).changes"
         )
-        zoneSubscription.notificationInfo = info
+        zoneSubscription.notificationInfo = silent
         await saveSubscription(zoneSubscription, on: context.database)
+
+        let addedID = "flist.items.added.visible"
+        let updatedID = "flist.items.updated.visible"
+        if sendItemAlerts {
+            await saveVisibleItemSubscription(
+                id: addedID,
+                zoneID: context.zoneID,
+                options: .firesOnRecordCreation,
+                localizationKey: "%@ was added to the list",
+                on: context.database
+            )
+            await saveVisibleItemSubscription(
+                id: updatedID,
+                zoneID: context.zoneID,
+                options: .firesOnRecordUpdate,
+                localizationKey: "%@ was updated on the list",
+                on: context.database
+            )
+        } else {
+            await deleteSubscription(addedID, on: context.database)
+            await deleteSubscription(updatedID, on: context.database)
+        }
+    }
+
+    private func itemAlertSubscription(
+        id: String,
+        zoneID: CKRecordZone.ID,
+        options: CKQuerySubscription.Options,
+        localizationKey: String
+    ) -> CKQuerySubscription {
+        let subscription = CKQuerySubscription(
+            recordType: AppConfig.itemRecordType,
+            predicate: NSPredicate(format: "name != nil"),
+            subscriptionID: id,
+            options: options
+        )
+        subscription.zoneID = zoneID
+        let info = CKSubscription.NotificationInfo()
+        info.shouldSendContentAvailable = true
+        info.soundName = "default"
+        info.desiredKeys = ["name"]
+        info.alertLocalizationKey = localizationKey
+        info.alertLocalizationArgs = ["name"]
+        info.alertBody = localizationKey
+        subscription.notificationInfo = info
+        return subscription
+    }
+
+    private func saveVisibleItemSubscription(
+        id: String,
+        zoneID: CKRecordZone.ID,
+        options: CKQuerySubscription.Options,
+        localizationKey: String,
+        on database: CKDatabase
+    ) async {
+        await deleteSubscription(id, on: database)
+        await saveSubscription(
+            itemAlertSubscription(
+                id: id,
+                zoneID: zoneID,
+                options: options,
+                localizationKey: localizationKey
+            ),
+            on: database
+        )
     }
 
     struct HouseholdState {
@@ -914,6 +979,12 @@ final class CloudKitService {
         } catch {
             // Duplicate subscription or offline — live polling still keeps the list current.
         }
+    }
+
+    private func deleteSubscription(_ subscriptionID: String, on database: CKDatabase) async {
+        do {
+            _ = try await database.deleteSubscription(withID: subscriptionID)
+        } catch {}
     }
 
     private func mergedRecord(_ incoming: CKRecord, into existing: CKRecord?) -> CKRecord {

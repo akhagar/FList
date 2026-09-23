@@ -166,6 +166,7 @@ final class FListStore {
             } catch {
                 errorMessage = error.flistDisplayMessage
             }
+            await enableChangeNotifications()
         }
     }
 
@@ -350,14 +351,14 @@ final class FListStore {
 
     func handleRemoteNotification(_ userInfo: [AnyHashable: Any]) async {
         guard usesiCloud, hasHousehold, cloudKit.context != nil else { return }
-        try? await reloadFromCloud(notify: true, showProgress: false, fullReload: false)
+        try? await reloadFromCloud(notify: false, showProgress: false, fullReload: false)
     }
 
     func handleBecameActive() async {
         await retryJoinSharedListIfNeeded()
         guard usesiCloud, hasHousehold, cloudKit.context != nil else { return }
         startLiveSync()
-        try? await reloadFromCloud(notify: true, showProgress: false, fullReload: false)
+        try? await reloadFromCloud(notify: false, showProgress: false, fullReload: false)
     }
 
     func handleBecameInactive() {
@@ -1042,7 +1043,9 @@ final class FListStore {
 
     private func enableChangeNotifications() async {
         await NotificationManager.shared.requestAccessAndRegister()
-        await cloudKit.subscribeToItemChanges()
+        await cloudKit.subscribeToItemChanges(
+            sendItemAlerts: notificationPrefs.includes(currentUserRecordName)
+        )
     }
 
     private var liveSyncTask: Task<Void, Never>?
@@ -1118,14 +1121,18 @@ final class FListStore {
         knownItems = Dictionary(uniqueKeysWithValues: items.map { ($0.id, $0.status) })
         persistKnownItems()
         if let prefs = state.notificationPrefs {
+            let prefsChanged = prefs != notificationPrefs
             notificationPrefs = prefs
             persistNotificationPrefs()
+            if prefsChanged {
+                Task { await enableChangeNotifications() }
+            }
         }
         if notify, hadBaseline {
             postChangeNotifications(previous: previous, current: items)
         }
         let hadShoppingBaseline = hasShoppingBaseline
-        applyShoppingTrips(state.shoppingTrips, notify: notify && hadShoppingBaseline)
+        applyShoppingTrips(state.shoppingTrips, notify: hadShoppingBaseline)
         if shouldReloadFully {
             await cloudKit.hideMetaRecordsFromLegacyClients()
         }
