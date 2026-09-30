@@ -24,11 +24,17 @@ final class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
         )
     }
 
-    func notifyGoingShopping(name: String) {
+    func notifyGoingShopping(name: String, stores: String = "") {
+        let body: String
+        if stores.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            body = String(format: L10n.string("%@ is going shopping. Add anything that's missing."), name)
+        } else {
+            body = String(format: L10n.string("%@ is going shopping at %@. Add anything that's missing."), name, stores)
+        }
         post(
             identifier: "shop-\(UUID().uuidString)",
             title: L10n.string("Going shopping"),
-            body: String(format: L10n.string("%@ is going shopping. Add anything that's missing."), name)
+            body: body
         )
     }
 

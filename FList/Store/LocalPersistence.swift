@@ -7,6 +7,7 @@ struct LocalSnapshot: Codable {
     var items: [ShortageItem]
     var members: [FamilyMember]
     var recipes: [Recipe]
+    var shops: [Shop]
     var buyLists: [BuyList]
 
     init(
@@ -16,6 +17,7 @@ struct LocalSnapshot: Codable {
         items: [ShortageItem],
         members: [FamilyMember] = [],
         recipes: [Recipe] = [],
+        shops: [Shop] = [],
         buyLists: [BuyList] = []
     ) {
         self.hasHousehold = hasHousehold
@@ -24,11 +26,12 @@ struct LocalSnapshot: Codable {
         self.items = items
         self.members = members
         self.recipes = recipes
+        self.shops = shops
         self.buyLists = buyLists
     }
 
     enum CodingKeys: String, CodingKey {
-        case hasHousehold, currentUserName, householdName, items, members, recipes, buyLists
+        case hasHousehold, currentUserName, householdName, items, members, recipes, shops, buyLists
     }
 
     init(from decoder: Decoder) throws {
@@ -40,6 +43,7 @@ struct LocalSnapshot: Codable {
         items = try container.decode([ShortageItem].self, forKey: .items)
         members = try container.decodeIfPresent([FamilyMember].self, forKey: .members) ?? []
         recipes = try container.decodeIfPresent([Recipe].self, forKey: .recipes) ?? []
+        shops = try container.decodeIfPresent([Shop].self, forKey: .shops) ?? []
         buyLists = try container.decodeIfPresent([BuyList].self, forKey: .buyLists) ?? []
     }
 }

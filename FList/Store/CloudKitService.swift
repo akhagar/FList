@@ -51,6 +51,7 @@ struct ShoppingTrip: Identifiable, Hashable {
     var announcedByName: String
     var announcedByRecordName: String
     var createdAt: Date
+    var storeIDs: [UUID] = []
 }
 
 struct BuyList: Hashable, Codable {
@@ -381,6 +382,7 @@ final class CloudKitService {
         var shoppingTrips: [ShoppingTrip]
         var recipes: [Recipe]
         var buyLists: [BuyList]
+        var shops: [Shop]
         var notificationPrefs: ItemNotificationPrefs?
     }
 
@@ -422,6 +424,9 @@ final class CloudKitService {
         let shoppingTrips = records.compactMap(ShoppingTrip.init(record:)).sorted { $0.createdAt > $1.createdAt }
         let recipes = records.compactMap(Recipe.init(record:))
         let buyLists = records.compactMap(BuyList.init(record:))
+        let shops = records.compactMap(Shop.init(record:)).sorted {
+            $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
+        }
         let notificationPrefs = records.compactMap(ItemNotificationPrefs.init(record:)).first
         let name = Self.title(from: share) ?? ""
         let hasChanges = needsSnapshot || !fetch.records.isEmpty || !fetch.deletedRecordIDs.isEmpty
@@ -433,6 +438,7 @@ final class CloudKitService {
             shoppingTrips: shoppingTrips,
             recipes: recipes,
             buyLists: buyLists,
+            shops: shops,
             notificationPrefs: notificationPrefs
         )
     }
@@ -464,7 +470,7 @@ final class CloudKitService {
         zoneRecordCache[saved.recordID] = saved
     }
 
-    func announceShoppingTrip() async throws -> ShoppingTrip {
+    func announceShoppingTrip(storeIDs: [UUID] = []) async throws -> ShoppingTrip {
         let context = try requireContext()
         let id = UUID()
         let now = Date.now
@@ -475,7 +481,7 @@ final class CloudKitService {
         record["name"] = "Shopping" as CKRecordValue
         record["quantity"] = Int64(1) as CKRecordValue
         record["status"] = ItemStatus.needed.rawValue as CKRecordValue
-        record["note"] = "" as CKRecordValue
+        record["note"] = ShoppingTrip.noteJSON(storeIDs: storeIDs) as CKRecordValue
         record["addedByName"] = context.currentUserName as CKRecordValue
         record["addedByRecordName"] = context.currentUserRecordName as CKRecordValue
         record["createdAt"] = now as CKRecordValue
@@ -485,8 +491,32 @@ final class CloudKitService {
             id: id,
             announcedByName: context.currentUserName,
             announcedByRecordName: context.currentUserRecordName,
-            createdAt: now
+            createdAt: now,
+            storeIDs: storeIDs
         )
+    }
+
+    func save(_ shop: Shop) async throws {
+        let context = try requireContext()
+        let recordID = CKRecord.ID(recordName: AppConfig.storeRecordName(for: shop.id), zoneID: context.zoneID)
+        var record: CKRecord
+        if let existing = zoneRecordCache[recordID] {
+            record = existing
+        } else if let existing = try? await context.database.record(for: recordID) {
+            record = existing
+        } else {
+            record = CKRecord(recordType: AppConfig.itemRecordType, recordID: recordID)
+        }
+        shop.write(to: record)
+        let saved = try await context.database.save(record)
+        zoneRecordCache[saved.recordID] = saved
+    }
+
+    func delete(_ shop: Shop) async throws {
+        let context = try requireContext()
+        let recordID = CKRecord.ID(recordName: AppConfig.storeRecordName(for: shop.id), zoneID: context.zoneID)
+        _ = try await context.database.deleteRecord(withID: recordID)
+        zoneRecordCache[recordID] = nil
     }
 
     func saveNotificationPrefs(_ prefs: ItemNotificationPrefs) async throws {
@@ -537,8 +567,8 @@ final class CloudKitService {
         zoneRecordCache[saved.recordID] = saved
     }
 
-    /// 1.3.1 shows any ShortageItem with a `name` on the grocery list. Strip that
-    /// field from recipe and buy-list records so mixed-version households stay clean.
+    /// 1.4 and 1.3.1 show any ShortageItem with a `name` on the grocery list. Strip that
+    /// field from recipe, buy-list, and store records so mixed-version households stay clean.
     func hideMetaRecordsFromLegacyClients() async {
         guard let context else { return }
         let recipes = Array(zoneRecordCache.values).compactMap(Recipe.init(record:))
@@ -551,7 +581,9 @@ final class CloudKitService {
             try? await save(recipe)
         }
         for (recordID, record) in zoneRecordCache {
-            guard AppConfig.isBuyListRecord(recordID.recordName), record["name"] != nil else { continue }
+            guard AppConfig.isBuyListRecord(recordID.recordName) || AppConfig.isStoreRecord(recordID.recordName),
+                  record["name"] != nil
+            else { continue }
             record["name"] = nil
             if let saved = try? await context.database.save(record) {
                 zoneRecordCache[saved.recordID] = saved
@@ -1398,7 +1430,8 @@ extension ShortageItem {
             addedByRecordName: record["addedByRecordName"] as? String ?? "",
             createdAt: record["createdAt"] as? Date ?? record.creationDate ?? .now,
             restockedAt: record["restockedAt"] as? Date,
-            photoData: Self.photoData(from: record)
+            photoData: Self.photoData(from: record),
+            storeIDs: parsed.storeIDs
         )
     }
 
@@ -1409,7 +1442,8 @@ extension ShortageItem {
             itemNote: note,
             restockNote: restockNote,
             restockedByName: restockedByName,
-            restockedByRecordName: restockedByRecordName
+            restockedByRecordName: restockedByRecordName,
+            storeIDs: storeIDs
         ) as CKRecordValue
         record["status"] = status.rawValue as CKRecordValue
         record["addedByName"] = addedByName as CKRecordValue
@@ -1431,6 +1465,7 @@ extension ShortageItem {
 extension BuyList {
     init?(record: CKRecord) {
         guard record.recordType == AppConfig.itemRecordType,
+              AppConfig.isBuyListRecord(record.recordID.recordName),
               let memberID = AppConfig.buyListMemberID(from: record.recordID.recordName)
                     ?? (record["addedByRecordName"] as? String),
               !memberID.isEmpty
@@ -1497,6 +1532,24 @@ extension Recipe {
 }
 
 extension ShoppingTrip {
+    private struct NotePayload: Codable {
+        var storeIDs: [String]
+    }
+
+    static func noteJSON(storeIDs: [UUID]) -> String {
+        guard !storeIDs.isEmpty else { return "" }
+        let payload = NotePayload(storeIDs: storeIDs.map(\.uuidString))
+        let data = (try? JSONEncoder().encode(payload)) ?? Data()
+        return String(data: data, encoding: .utf8) ?? ""
+    }
+
+    static func storeIDs(from note: String) -> [UUID] {
+        guard let data = note.data(using: .utf8),
+              let payload = try? JSONDecoder().decode(NotePayload.self, from: data)
+        else { return [] }
+        return payload.storeIDs.compactMap(UUID.init(uuidString:))
+    }
+
     init?(record: CKRecord) {
         guard record.recordType == AppConfig.itemRecordType,
               let id = AppConfig.shoppingTripID(from: record.recordID.recordName)
@@ -1505,7 +1558,47 @@ extension ShoppingTrip {
             id: id,
             announcedByName: record["addedByName"] as? String ?? L10n.string("Family"),
             announcedByRecordName: record["addedByRecordName"] as? String ?? "",
+            createdAt: record["createdAt"] as? Date ?? record.creationDate ?? .now,
+            storeIDs: Self.storeIDs(from: record["note"] as? String ?? "")
+        )
+    }
+}
+
+extension Shop {
+    init?(record: CKRecord) {
+        guard record.recordType == AppConfig.itemRecordType,
+              let id = AppConfig.storeID(from: record.recordID.recordName)
+        else { return nil }
+        let parsed = ShopNoteCodec.decode(record["note"] as? String ?? "")
+        let name = parsed.name.isEmpty ? (record["name"] as? String ?? "") : parsed.name
+        guard !name.isEmpty else { return nil }
+        let addedByName = parsed.addedByName.isEmpty
+            ? (record["addedByName"] as? String ?? "")
+            : parsed.addedByName
+        let addedByRecordName = parsed.addedByRecordName.isEmpty
+            ? (record["addedByRecordName"] as? String ?? "")
+            : parsed.addedByRecordName
+        self.init(
+            id: id,
+            name: name,
+            location: parsed.location,
+            latitude: parsed.latitude,
+            longitude: parsed.longitude,
+            addedByName: addedByName,
+            addedByRecordName: addedByRecordName,
             createdAt: record["createdAt"] as? Date ?? record.creationDate ?? .now
         )
+    }
+
+    func write(to record: CKRecord) {
+        // 1.4 treats ShortageItem rows with a `name` as groceries, and may parse
+        // any record with addedByRecordName as a buy list. Keep both empty.
+        record["name"] = nil
+        record["quantity"] = Int64(1) as CKRecordValue
+        record["status"] = ItemStatus.needed.rawValue as CKRecordValue
+        record["note"] = ShopNoteCodec.encode(self) as CKRecordValue
+        record["addedByName"] = nil
+        record["addedByRecordName"] = nil
+        record["createdAt"] = createdAt as CKRecordValue
     }
 }
