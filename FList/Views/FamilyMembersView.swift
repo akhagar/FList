@@ -73,6 +73,16 @@ struct FamilyMembersView: View {
                 Text("Only on this device.")
             }
 
+            Section {
+                NavigationLink {
+                    StoresView(store: store)
+                } label: {
+                    Label("Stores", systemImage: "storefront")
+                }
+            } footer: {
+                Text("Name the shops you use, then tag items and say where you're going. When you're at a store, items for that shop move to the top of the list.")
+            }
+
             if !store.members.isEmpty {
                 Section {
                     ForEach(store.members) { member in

@@ -28,6 +28,7 @@ struct ShortageItem: Identifiable, Hashable, Codable {
     var createdAt: Date
     var restockedAt: Date?
     var photoData: Data?
+    var storeIDs: [UUID]
 
     init(
         id: UUID = UUID(),
@@ -42,7 +43,8 @@ struct ShortageItem: Identifiable, Hashable, Codable {
         addedByRecordName: String,
         createdAt: Date = .now,
         restockedAt: Date? = nil,
-        photoData: Data? = nil
+        photoData: Data? = nil,
+        storeIDs: [UUID] = []
     ) {
         self.id = id
         self.name = name
@@ -57,11 +59,13 @@ struct ShortageItem: Identifiable, Hashable, Codable {
         self.createdAt = createdAt
         self.restockedAt = restockedAt
         self.photoData = photoData
+        var seen = Set<UUID>()
+        self.storeIDs = storeIDs.filter { seen.insert($0).inserted }
     }
 
     enum CodingKeys: String, CodingKey {
         case id, name, quantity, note, restockNote, restockedByName, restockedByRecordName
-        case status, addedByName, addedByRecordName, createdAt, restockedAt, photoData
+        case status, addedByName, addedByRecordName, createdAt, restockedAt, photoData, storeIDs
     }
 
     init(from decoder: Decoder) throws {
@@ -84,6 +88,8 @@ struct ShortageItem: Identifiable, Hashable, Codable {
         restockNote = savedRestock.isEmpty ? parsed.restockNote : savedRestock
         restockedByName = savedBy.isEmpty ? parsed.restockedByName : savedBy
         restockedByRecordName = savedByID.isEmpty ? parsed.restockedByRecordName : savedByID
+        let savedStores = try container.decodeIfPresent([UUID].self, forKey: .storeIDs) ?? []
+        storeIDs = savedStores.isEmpty ? parsed.storeIDs : savedStores
     }
 
     func encode(to encoder: Encoder) throws {
@@ -101,6 +107,7 @@ struct ShortageItem: Identifiable, Hashable, Codable {
         try container.encode(createdAt, forKey: .createdAt)
         try container.encodeIfPresent(restockedAt, forKey: .restockedAt)
         try container.encodeIfPresent(photoData, forKey: .photoData)
+        try container.encode(storeIDs, forKey: .storeIDs)
     }
 
     var restockFeedbackLine: String {
@@ -115,14 +122,14 @@ struct ShortageItem: Identifiable, Hashable, Codable {
         return "\(by): \(trimmed)"
     }
 
-    func matches(_ query: String, addedBy: String, restockFeedback: String) -> Bool {
+    func matches(_ query: String, addedBy: String, restockFeedback: String, storeLine: String = "") -> Bool {
         let needle = query.folding(options: [.diacriticInsensitive, .caseInsensitive], locale: .current)
         guard !needle.isEmpty else { return true }
         func hit(_ value: String) -> Bool {
             value.folding(options: [.diacriticInsensitive, .caseInsensitive], locale: .current)
                 .contains(needle)
         }
-        return hit(name) || hit(note) || hit(restockNote) || hit(addedBy) || hit(restockFeedback)
+        return hit(name) || hit(note) || hit(restockNote) || hit(addedBy) || hit(restockFeedback) || hit(storeLine)
     }
 
     static func nameKey(_ name: String) -> String {
@@ -137,6 +144,9 @@ struct ShortageItem: Identifiable, Hashable, Codable {
 }
 
 enum ItemNoteCodec {
+    /// 1.4 already splits the grocery note from restock JSON at this marker and
+    /// ignores unknown JSON keys, so store IDs can live here without showing up
+    /// as item text on older phones.
     static let marker = "\u{1E}RESTOCK\u{1E}"
 
     struct Payload: Equatable {
@@ -144,17 +154,25 @@ enum ItemNoteCodec {
         var restockNote: String
         var restockedByName: String
         var restockedByRecordName: String
+        var storeIDs: [UUID]
     }
 
     private struct RestockJSON: Codable {
         var note: String
         var byName: String
         var byID: String?
+        var storeIDs: [String]?
     }
 
     static func decode(_ stored: String) -> Payload {
         guard let range = stored.range(of: marker) else {
-            return Payload(itemNote: stored, restockNote: "", restockedByName: "", restockedByRecordName: "")
+            return Payload(
+                itemNote: stored,
+                restockNote: "",
+                restockedByName: "",
+                restockedByRecordName: "",
+                storeIDs: []
+            )
         }
         let itemNote = String(stored[..<range.lowerBound])
         let rest = String(stored[range.upperBound...])
@@ -164,23 +182,36 @@ enum ItemNoteCodec {
                 itemNote: itemNote,
                 restockNote: json.note,
                 restockedByName: json.byName,
-                restockedByRecordName: json.byID ?? ""
+                restockedByRecordName: json.byID ?? "",
+                storeIDs: json.storeIDs?.compactMap(UUID.init(uuidString:)) ?? []
             )
         }
-        return Payload(itemNote: itemNote, restockNote: rest, restockedByName: "", restockedByRecordName: "")
+        return Payload(
+            itemNote: itemNote,
+            restockNote: rest,
+            restockedByName: "",
+            restockedByRecordName: "",
+            storeIDs: []
+        )
     }
 
     static func encode(
         itemNote: String,
         restockNote: String,
         restockedByName: String,
-        restockedByRecordName: String
+        restockedByRecordName: String,
+        storeIDs: [UUID] = []
     ) -> String {
         let trimmedNote = restockNote.trimmingCharacters(in: .whitespacesAndNewlines)
-        if trimmedNote.isEmpty {
+        if trimmedNote.isEmpty, storeIDs.isEmpty {
             return itemNote
         }
-        let json = RestockJSON(note: trimmedNote, byName: restockedByName, byID: restockedByRecordName)
+        let json = RestockJSON(
+            note: trimmedNote,
+            byName: restockedByName,
+            byID: restockedByRecordName,
+            storeIDs: storeIDs.isEmpty ? nil : storeIDs.map(\.uuidString)
+        )
         let payload = (try? JSONEncoder().encode(json)).flatMap { String(data: $0, encoding: .utf8) } ?? trimmedNote
         return itemNote + marker + payload
     }

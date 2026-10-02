@@ -50,17 +50,32 @@ final class WatchStore {
     func start() async {
         guard !isOpening else { return }
         isOpening = true
+        if phase == .ready {
+            Task {
+                defer { isOpening = false }
+                await connectToiCloud()
+            }
+            return
+        }
         defer { isOpening = false }
+        await connectToiCloud()
+    }
+
+    private func connectToiCloud() async {
         let status = await cloudKit.accountStatus()
         switch status {
         case .available:
             await openICloudHousehold()
         case .restricted, .temporarilyUnavailable, .noAccount, .couldNotDetermine:
-            phase = .needsICloud
-            hasNoCloudSession()
+            if phase != .ready {
+                phase = .needsICloud
+                hasNoCloudSession()
+            }
         @unknown default:
-            phase = .needsICloud
-            hasNoCloudSession()
+            if phase != .ready {
+                phase = .needsICloud
+                hasNoCloudSession()
+            }
         }
     }
 
@@ -83,12 +98,16 @@ final class WatchStore {
     }
 
     func handleBecameActive() async {
-        guard phase == .ready else {
-            await start()
+        if phase == .ready {
+            startLiveSync()
+            if cloudKit.context == nil {
+                await start()
+            } else {
+                await refresh()
+            }
             return
         }
-        startLiveSync()
-        await refresh()
+        await start()
     }
 
     func handleBecameInactive() {
@@ -139,8 +158,11 @@ final class WatchStore {
         do {
             _ = try await cloudKit.bootstrapExistingHousehold()
             try await adoptCloudHousehold()
-            return
         } catch {
+            if phase == .ready {
+                startLiveSync()
+                return
+            }
             availableHouseholds = await cloudKit.listHouseholds()
             if availableHouseholds.count == 1, let only = availableHouseholds.first {
                 await selectHousehold(only)
@@ -161,8 +183,8 @@ final class WatchStore {
         currentUserName = cloudKit.context?.currentUserName ?? L10n.string("Me")
         currentUserRecordName = cloudKit.context?.currentUserRecordName ?? "local"
         UserDefaults.standard.set(currentUserRecordName, forKey: "flist.userRecordName")
-        hasLoadedOnce = false
         phase = .ready
+        cloudKit.seedCacheIfEmpty(items: items)
         startLiveSync()
         try await reloadFromCloud()
     }
@@ -188,7 +210,7 @@ final class WatchStore {
         isSyncing = true
         defer { isSyncing = false }
         let state = try await cloudKit.fetchHouseholdState(
-            fullReload: !hasLoadedOnce,
+            fullReload: items.isEmpty,
             includingAssets: false
         )
         if hasLoadedOnce, !state.hasChanges {
@@ -196,7 +218,9 @@ final class WatchStore {
         }
         hasLoadedOnce = true
         items = state.items
-        members = state.members
+        if !state.members.isEmpty {
+            members = state.members
+        }
         if !state.householdName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             householdName = state.householdName
             UserDefaults.standard.set(householdName, forKey: "flist.householdName")
@@ -209,7 +233,7 @@ final class WatchStore {
         liveSyncTask?.cancel()
         liveSyncTask = Task { [weak self] in
             while !Task.isCancelled {
-                try? await Task.sleep(for: .seconds(8))
+                try? await Task.sleep(for: .seconds(4))
                 guard !Task.isCancelled else { break }
                 await self?.refresh()
             }
@@ -245,17 +269,28 @@ final class WatchStore {
                 : snapshot.householdName
             currentUserName = snapshot.currentUserName
             phase = .ready
+            hasLoadedOnce = true
         }
     }
 
     private func persistLocalCache() {
+        let slimItems = items.map { item -> ShortageItem in
+            var copy = item
+            copy.photoData = nil
+            return copy
+        }
+        let slimMembers = members.map { member -> FamilyMember in
+            var copy = member
+            copy.photoData = nil
+            return copy
+        }
         LocalPersistence.save(
             LocalSnapshot(
                 hasHousehold: phase == .ready,
                 currentUserName: currentUserName,
                 householdName: householdName,
-                items: items,
-                members: members
+                items: slimItems,
+                members: slimMembers
             )
         )
     }

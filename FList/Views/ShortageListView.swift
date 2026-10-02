@@ -10,7 +10,7 @@ struct ShortageListView: View {
     @State private var itemToEdit: ShortageItem?
     @State private var itemToView: ShortageItem?
     @State private var itemToRestock: ShortageItem?
-    @State private var confirmGoingShopping = false
+    @State private var showGoingShopping = false
     @State private var searchText = ""
 
     private enum ListPane: String, CaseIterable, Identifiable {
@@ -40,7 +40,7 @@ struct ShortageListView: View {
                         ProgressView()
                     }
                     Button {
-                        confirmGoingShopping = true
+                        showGoingShopping = true
                     } label: {
                         Image(systemName: "cart.fill")
                             .frame(minWidth: 44, minHeight: 32)
@@ -84,20 +84,10 @@ struct ShortageListView: View {
             .refreshable {
                 await store.refresh()
             }
-            .confirmationDialog(
-                "I'm going shopping",
-                isPresented: $confirmGoingShopping,
-                titleVisibility: .visible
-            ) {
-                Button("Pick what I'll buy") {
+            .sheet(isPresented: $showGoingShopping) {
+                GoingShoppingSheet(store: store) {
                     showBuyPicker = true
                 }
-                Button("Notify family") {
-                    Task { await store.announceGoingShopping() }
-                }
-                Button("Cancel", role: .cancel) {}
-            } message: {
-                Text("Pick missing items for your list, or tell the family you're heading out.")
             }
             .searchable(
                 text: $searchText,
@@ -111,6 +101,9 @@ struct ShortageListView: View {
         VStack(spacing: 0) {
             if let trip = store.activeShoppingTrip {
                 shoppingBanner(for: trip)
+            }
+            if let shop = store.nearbyShop {
+                nearbyStoreBanner(for: shop)
             }
 
             if showsBothLists {
@@ -162,7 +155,7 @@ struct ShortageListView: View {
 
     private var bothListsContent: some View {
         let matches = store.itemsMatching(searchText)
-        let needed = matches.filter { $0.status == .needed }
+        let needed = store.prioritizeForNearbyStore(matches.filter { $0.status == .needed })
         let restocked = matches.filter { $0.status == .restocked }
         return Group {
             if matches.isEmpty {
@@ -200,6 +193,7 @@ struct ShortageListView: View {
                 addedByDisplayName: store.displayName(for: item),
                 restockFeedbackLine: store.restockFeedback(for: item),
                 buyingLine: store.buyingLine(for: item),
+                storeLine: store.storeLine(for: item),
                 isBuying: store.isBuying(item),
                 onToggle: {
                     Task {
@@ -303,18 +297,25 @@ struct ShortageListView: View {
         }
     }
 
+    private func nearbyStoreBanner(for shop: Shop) -> some View {
+        HStack(alignment: .top, spacing: 10) {
+            Image(systemName: "location.fill")
+                .foregroundStyle(Color.accentColor)
+            Text(String(format: L10n.string("You're at %@. Items you can get here are at the top."), shop.name))
+                .font(.subheadline)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 10)
+        .background(Color.accentColor.opacity(0.12))
+    }
+
     private func shoppingBanner(for trip: ShoppingTrip) -> some View {
-        let name = store.members.first(where: { $0.id == trip.announcedByRecordName })?.name
-            ?? trip.announcedByName
         let isMine = trip.announcedByRecordName == store.currentUserRecordName
         return HStack(alignment: .top, spacing: 10) {
             Image(systemName: "cart.fill")
                 .foregroundStyle(Color.accentColor)
-            Text(
-                isMine
-                    ? L10n.string("You asked the family to update the list.")
-                    : String(format: L10n.string("%@ is going shopping. Add anything that's missing."), name)
-            )
+            Text(store.goingShoppingMessage(for: trip, isMine: isMine))
             .font(.subheadline)
             .frame(maxWidth: .infinity, alignment: .leading)
         }

@@ -70,6 +70,29 @@
         }
       }
     },
+    "NSLocationWhenInUseUsageDescription" : {
+      "comment" : "Privacy - Location When In Use Usage Description",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OurStock uses your location to recognize when you're at one of your stores and put those items at the top of the list."
+          }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OurStock משתמש במיקום כדי לזהות שאתם באחת החנויות ולהציג את הפריטים שלה בראש הרשימה."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OurStock использует геопозицию, чтобы понять, что вы в одном из магазинов, и поднять его товары вверх списка."
+          }
+        }
+      }
+    },
     "NSPhotoLibraryUsageDescription" : {
       "comment" : "Privacy - Photo Library Usage Description",
       "localizations" : {

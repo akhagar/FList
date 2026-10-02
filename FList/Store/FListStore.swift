@@ -26,12 +26,15 @@ final class FListStore {
     var availableHouseholds: [HouseholdChoice] = []
     var shoppingTrips: [ShoppingTrip] = []
     var recipes: [Recipe] = []
+    var shops: [Shop] = []
+    var nearbyShop: Shop?
     var buyLists: [BuyList] = []
     var familyAlertTitle: String?
     var familyAlertMessage: String?
     var notificationPrefs = FListStore.loadNotificationPrefs()
 
     let cloudKit = CloudKitService()
+    private let nearbyMatcher = NearbyStoreMatcher()
     private var hasItemBaseline = UserDefaults.standard.bool(forKey: "flist.itemBaselineSaved")
     private var knownItems: [UUID: ItemStatus] = FListStore.loadKnownItems()
     private var hasShoppingBaseline = UserDefaults.standard.bool(forKey: "flist.shoppingBaselineSaved")
@@ -41,10 +44,16 @@ final class FListStore {
         if restoreCache {
             restoreCachedSession()
         }
+        nearbyMatcher.onNearbyShopChange = { [weak self] shop in
+            self?.nearbyShop = shop
+        }
+        nearbyMatcher.onResolvedCoordinate = { [weak self] id, latitude, longitude in
+            Task { await self?.persistShopCoordinate(id: id, latitude: latitude, longitude: longitude) }
+        }
     }
 
     var neededItems: [ShortageItem] {
-        items.filter { $0.status == .needed }
+        prioritizeForNearbyStore(items.filter { $0.status == .needed })
     }
 
     var restockedItems: [ShortageItem] {
@@ -135,7 +144,8 @@ final class FListStore {
             item.matches(
                 trimmed,
                 addedBy: displayName(for: item),
-                restockFeedback: restockFeedback(for: item)
+                restockFeedback: restockFeedback(for: item),
+                storeLine: storeLine(for: item)
             )
         }
     }
@@ -175,7 +185,7 @@ final class FListStore {
         return shoppingTrips.first { $0.createdAt > cutoff }
     }
 
-    func announceGoingShopping() async {
+    func announceGoingShopping(storeIDs: [UUID] = []) async {
         guard hasHousehold else { return }
         guard usesiCloud else {
             errorMessage = L10n.string("Sign in to iCloud and share this list to notify family.")
@@ -184,11 +194,11 @@ final class FListStore {
         isBusy = true
         defer { isBusy = false }
         do {
-            let trip = try await cloudKit.announceShoppingTrip()
+            let trip = try await cloudKit.announceShoppingTrip(storeIDs: storeIDs)
             shoppingTrips.insert(trip, at: 0)
             rememberShoppingTrip(trip)
             familyAlertTitle = L10n.string("Family notified")
-            familyAlertMessage = L10n.string("Everyone on this list was asked to add anything that's missing.")
+            familyAlertMessage = goingShoppingMessage(for: trip, isMine: true)
         } catch {
             errorMessage = error.flistDisplayMessage
         }
@@ -212,6 +222,7 @@ final class FListStore {
                     items = []
                     members = []
                     recipes = []
+                    shops = []
                     buyLists = []
                     householdName = AppConfig.householdDisplayName
                 }
@@ -224,6 +235,7 @@ final class FListStore {
             accountKind = .localOnly
             if !cachedHousehold { loadLocal() }
         }
+        startNearbyStoreMatching()
     }
 
     func createHousehold() async {
@@ -356,6 +368,7 @@ final class FListStore {
 
     func handleBecameActive() async {
         await retryJoinSharedListIfNeeded()
+        startNearbyStoreMatching()
         guard usesiCloud, hasHousehold, cloudKit.context != nil else { return }
         startLiveSync()
         try? await reloadFromCloud(notify: false, showProgress: false, fullReload: false)
@@ -363,6 +376,7 @@ final class FListStore {
 
     func handleBecameInactive() {
         stopLiveSync()
+        stopNearbyStoreMatching()
     }
 
     func acceptShare(_ metadata: CKShare.Metadata) async {
@@ -399,15 +413,18 @@ final class FListStore {
         Task { await enableChangeNotifications() }
         Task { await cloudKit.saveCurrentUserProfileIgnoringSchemaLock() }
         try await reloadFromCloud(notify: true, showProgress: true, fullReload: true)
+        startNearbyStoreMatching()
     }
 
     private func clearHouseholdLocally() {
         stopLiveSync()
+        stopNearbyStoreMatching()
         hasHousehold = false
         isOwner = true
         items = []
         members = []
         recipes = []
+        shops = []
         buyLists = []
         householdName = AppConfig.householdDisplayName
         persistHouseholdName()
@@ -442,6 +459,7 @@ final class FListStore {
         quantity: Int,
         note: String,
         photoData: Data? = nil,
+        storeIDs: [UUID] = [],
         applyNoteToExisting: Bool = true
     ) async -> ItemAddOutcome {
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -469,6 +487,10 @@ final class FListStore {
             if let photoData {
                 updated.photoData = photoData
             }
+            if !storeIDs.isEmpty {
+                var seen = Set(updated.storeIDs)
+                updated.storeIDs.append(contentsOf: storeIDs.filter { seen.insert($0).inserted })
+            }
             await upsert(updated)
             await removeOtherItems(named: trimmed, keeping: updated.id)
             return outcome
@@ -480,7 +502,8 @@ final class FListStore {
             note: note.trimmingCharacters(in: .whitespacesAndNewlines),
             addedByName: currentUserDisplayName,
             addedByRecordName: currentUserRecordName,
-            photoData: photoData
+            photoData: photoData,
+            storeIDs: storeIDs
         )
         await upsert(item)
         return .created
@@ -849,6 +872,136 @@ final class FListStore {
         }
     }
 
+    func saveShop(_ shop: Shop) async {
+        var updated = shop
+        updated.name = shop.name.trimmingCharacters(in: .whitespacesAndNewlines)
+        updated.location = shop.location.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !updated.name.isEmpty else { return }
+        if updated.addedByName.isEmpty {
+            updated.addedByName = currentUserDisplayName
+        }
+        if updated.addedByRecordName.isEmpty {
+            updated.addedByRecordName = currentUserRecordName
+        }
+
+        if let index = shops.firstIndex(where: { $0.id == updated.id }) {
+            shops[index] = updated
+        } else {
+            shops.append(updated)
+        }
+        shops.sort { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+
+        if usesiCloud {
+            do {
+                try await cloudKit.save(updated)
+                persistLocalCache()
+            } catch {
+                errorMessage = error.flistDisplayMessage
+                await refresh()
+            }
+        } else {
+            persistLocal()
+        }
+        startNearbyStoreMatching()
+    }
+
+    func deleteShop(_ shop: Shop) async {
+        shops.removeAll { $0.id == shop.id }
+        if nearbyShop?.id == shop.id {
+            nearbyShop = nil
+        }
+        if usesiCloud {
+            do {
+                try await cloudKit.delete(shop)
+                persistLocalCache()
+            } catch {
+                errorMessage = error.flistDisplayMessage
+                await refresh()
+            }
+        } else {
+            persistLocal()
+        }
+        startNearbyStoreMatching()
+    }
+
+    func shops(for ids: [UUID]) -> [Shop] {
+        let wanted = Set(ids)
+        return shops.filter { wanted.contains($0.id) }
+    }
+
+    func joinedShopNames(_ ids: [UUID]) -> String {
+        Shop.joinedNames(shops(for: ids))
+    }
+
+    func storeLine(for item: ShortageItem) -> String {
+        joinedShopNames(item.storeIDs)
+    }
+
+    func prioritizeForNearbyStore(_ items: [ShortageItem]) -> [ShortageItem] {
+        guard let shopID = nearbyShop?.id else { return items }
+        var pinned: [ShortageItem] = []
+        var rest: [ShortageItem] = []
+        for item in items {
+            if item.storeIDs.contains(shopID) {
+                pinned.append(item)
+            } else {
+                rest.append(item)
+            }
+        }
+        return pinned + rest
+    }
+
+    func startNearbyStoreMatching() {
+        guard hasHousehold, !shops.isEmpty else {
+            stopNearbyStoreMatching()
+            return
+        }
+        nearbyMatcher.start(shops: shops)
+    }
+
+    func stopNearbyStoreMatching() {
+        nearbyMatcher.stop()
+        nearbyShop = nil
+    }
+
+    private func persistShopCoordinate(id: UUID, latitude: Double, longitude: Double) async {
+        guard let index = shops.firstIndex(where: { $0.id == id }) else { return }
+        var shop = shops[index]
+        if shop.coordinateMatches(latitude, longitude) { return }
+        shop.latitude = latitude
+        shop.longitude = longitude
+        shops[index] = shop
+        nearbyMatcher.applyResolvedShop(shop)
+        if usesiCloud {
+            try? await cloudKit.save(shop)
+            persistLocalCache()
+        } else {
+            persistLocal()
+        }
+    }
+
+    func goingShoppingPersonName(for trip: ShoppingTrip) -> String {
+        members.first(where: { $0.id == trip.announcedByRecordName })?.name
+            ?? trip.announcedByName
+    }
+
+    func goingShoppingMessage(for trip: ShoppingTrip, isMine: Bool) -> String {
+        let stores = joinedShopNames(trip.storeIDs)
+        if stores.isEmpty {
+            return isMine
+                ? L10n.string("You asked the family to update the list.")
+                : String(format: L10n.string("%@ is going shopping. Add anything that's missing."), goingShoppingPersonName(for: trip))
+        }
+        if isMine {
+            return String(format: L10n.string("You asked the family to update the list. You're going to %@."), stores)
+        }
+        return String(
+            format: L10n.string("%@ is going shopping at %@. Add anything that's missing."),
+            goingShoppingPersonName(for: trip),
+            stores
+        )
+    }
+
     func saveMember(_ member: FamilyMember) async {
         var updated = member
         updated.name = member.name.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -1110,6 +1263,7 @@ final class FListStore {
         items = keepingPhotos(in: state.items, from: items)
         members = keepingPhotos(in: state.members, from: members)
         recipes = keepingPhotos(in: state.recipes, from: recipes)
+        shops = keepingCoordinates(in: state.shops, from: shops)
         buyLists = mergedBuyLists(state.buyLists)
         await collapseDuplicateItemNames()
         adoptCurrentUserNameFromMembers()
@@ -1118,6 +1272,7 @@ final class FListStore {
             persistHouseholdName()
         }
         persistLocalCache()
+        startNearbyStoreMatching()
         knownItems = Dictionary(uniqueKeysWithValues: items.map { ($0.id, $0.status) })
         persistKnownItems()
         if let prefs = state.notificationPrefs {
@@ -1145,12 +1300,12 @@ final class FListStore {
                 guard trip.announcedByRecordName != currentUserRecordName else { continue }
                 let name = members.first(where: { $0.id == trip.announcedByRecordName })?.name
                     ?? trip.announcedByName
-                NotificationManager.shared.notifyGoingShopping(name: name)
-                familyAlertTitle = L10n.string("Going shopping")
-                familyAlertMessage = String(
-                    format: L10n.string("%@ is going shopping. Add anything that's missing."),
-                    name
+                NotificationManager.shared.notifyGoingShopping(
+                    name: name,
+                    stores: joinedShopNames(trip.storeIDs)
                 )
+                familyAlertTitle = L10n.string("Going shopping")
+                familyAlertMessage = goingShoppingMessage(for: trip, isMine: false)
             }
         }
         seenShoppingTripIDs.formUnion(trips.map(\.id))
@@ -1205,6 +1360,21 @@ final class FListStore {
         notificationPrefs = .everyone
         UserDefaults.standard.removeObject(forKey: "flist.notifyRecipientIDs")
         UserDefaults.standard.removeObject(forKey: "flist.notifyPrefsCustom")
+    }
+
+    private func keepingCoordinates(in incoming: [Shop], from existing: [Shop]) -> [Shop] {
+        let coords = existing.reduce(into: [UUID: (Double, Double)]()) { result, shop in
+            if let latitude = shop.latitude, let longitude = shop.longitude {
+                result[shop.id] = (latitude, longitude)
+            }
+        }
+        return incoming.map { shop in
+            guard !shop.hasCoordinate, let pair = coords[shop.id] else { return shop }
+            var copy = shop
+            copy.latitude = pair.0
+            copy.longitude = pair.1
+            return copy
+        }
     }
 
     private func keepingPhotos(in incoming: [ShortageItem], from existing: [ShortageItem]) -> [ShortageItem] {
@@ -1333,6 +1503,7 @@ final class FListStore {
             persistKnownItems()
         }
         recipes = snapshot.recipes
+        shops = snapshot.shops
         buyLists = snapshot.buyLists
         if snapshot.members.isEmpty {
             members = [
@@ -1373,6 +1544,7 @@ final class FListStore {
                 items: items,
                 members: members,
                 recipes: recipes,
+                shops: shops,
                 buyLists: buyLists
             )
         )
@@ -1387,6 +1559,7 @@ final class FListStore {
                 items: items,
                 members: members,
                 recipes: recipes,
+                shops: shops,
                 buyLists: buyLists
             )
         )
@@ -1400,8 +1573,19 @@ extension FListStore {
         store.hasHousehold = true
         store.currentUserName = "Alex"
         store.householdName = "Home"
+        store.shops = [
+            Shop(name: "Rami Levy", location: "Modiin", addedByName: "Alex", addedByRecordName: "local"),
+            Shop(name: "Super-Pharm", location: "Azrieli", addedByName: "Alex", addedByRecordName: "local")
+        ]
         store.items = [
-            ShortageItem(name: "Milk", quantity: 1, note: "Oat if they have it", addedByName: "Alex", addedByRecordName: "local"),
+            ShortageItem(
+                name: "Milk",
+                quantity: 1,
+                note: "Oat if they have it",
+                addedByName: "Alex",
+                addedByRecordName: "local",
+                storeIDs: store.shops.prefix(1).map(\.id)
+            ),
             ShortageItem(name: "Dish soap", quantity: 1, addedByName: "Sam", addedByRecordName: "local"),
             ShortageItem(
                 name: "Bananas",

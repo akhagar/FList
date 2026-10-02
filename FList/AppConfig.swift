@@ -8,6 +8,7 @@ enum AppConfig {
     static let shoppingRecordPrefix = "shop-"
     static let recipeRecordPrefix = "recipe-"
     static let buyListRecordPrefix = "buy-"
+    static let storeRecordPrefix = "store-"
     static let notifyPrefsRecordName = "flist-notify-prefs"
 
     static func shoppingRecordName(for id: UUID) -> String {
@@ -30,6 +31,18 @@ enum AppConfig {
         recordName.hasPrefix(buyListRecordPrefix)
     }
 
+    static func isStoreRecord(_ recordName: String) -> Bool {
+        recordName.hasPrefix(storeRecordPrefix)
+    }
+
+    static func storeRecordName(for id: UUID) -> String {
+        storeRecordPrefix + id.uuidString
+    }
+
+    static func storeID(from recordName: String) -> UUID? {
+        uuid(from: recordName, prefix: storeRecordPrefix)
+    }
+
     static func isNotifyPrefsRecord(_ recordName: String) -> Bool {
         recordName == notifyPrefsRecordName
     }
@@ -38,6 +51,7 @@ enum AppConfig {
         isShoppingRecord(recordName)
             || isRecipeRecord(recordName)
             || isBuyListRecord(recordName)
+            || isStoreRecord(recordName)
             || isNotifyPrefsRecord(recordName)
     }
 

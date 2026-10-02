@@ -12,6 +12,7 @@ struct AddItemSheet: View {
     @State private var quantity: Int
     @State private var note: String
     @State private var photoData: Data?
+    @State private var selectedStoreIDs: Set<UUID>
     @State private var pickerItem: PhotosPickerItem?
     @State private var showLibrary = false
     @State private var showCamera = false
@@ -25,6 +26,7 @@ struct AddItemSheet: View {
         _quantity = State(initialValue: item?.quantity ?? 1)
         _note = State(initialValue: item?.note ?? "")
         _photoData = State(initialValue: item?.photoData)
+        _selectedStoreIDs = State(initialValue: Set(item?.storeIDs ?? []))
     }
 
     var body: some View {
@@ -69,6 +71,10 @@ struct AddItemSheet: View {
                     }
                     TextField("Note (optional)", text: $note, axis: .vertical)
                         .lineLimit(2...4)
+                }
+
+                if !store.shops.isEmpty {
+                    ShopPickerSection(shops: store.shops, selected: $selectedStoreIDs)
                 }
             }
             .navigationTitle(existing == nil ? "Add to list" : "Edit item")
@@ -157,10 +163,17 @@ struct AddItemSheet: View {
             existing.name = name
             existing.quantity = quantity
             existing.note = note
+            existing.storeIDs = Array(selectedStoreIDs)
             existing.photoData = photoData
             await store.saveItem(existing)
         } else {
-            await store.addItem(name: name, quantity: quantity, note: note, photoData: photoData)
+            await store.addItem(
+                name: name,
+                quantity: quantity,
+                note: note,
+                photoData: photoData,
+                storeIDs: Array(selectedStoreIDs)
+            )
         }
     }
 }

@@ -7,9 +7,10 @@ OurStock is a native iPhone, iPad, and Apple Watch app. Lists sync over iCloud w
 ## Features
 
 - One shared shortage list, with **Needed** and **Back in stock**
-- Add a name, quantity, optional note, and photo
+- Add a name, quantity, optional note, photo, and which store you can buy it from
 - Tap an item to mark it back in stock. Long-press to edit, or to leave a note if something wasn’t as described — that note is sent to the person who added the item
 - Cart button to tell the family you’re going shopping, so they can add anything that’s missing
+- Shared **Stores**: name and optional location. When you go shopping you can mention one or more shops. If you’re at a store, items tagged for it move to the top of Needed
 - Pick missing items onto your own **To buy** list, so you know what you’ll get at the store
 - Invite others with iCloud sharing (they keep their own Apple ID)
 - Choose who gets a notification when someone adds a missing item
@@ -17,7 +18,7 @@ OurStock is a native iPhone, iPad, and Apple Watch app. Lists sync over iCloud w
 - Shared recipes: save a dish with groceries (what to buy, plus how this recipe uses it) and how to prepare it, then add those groceries to the missing list
 - Paste a grocery list or a recipe from Notes or Messages, preview it, then save
 - Light, dark, or system appearance, plus accent colors (this device only)
-- Apple Watch: **Needed** list, tap to mark back in stock, and add an item (dictation). Recipes, photos, invites, and settings stay on iPhone
+- Apple Watch: **Needed** list, tap to mark back in stock, and add an item (dictation). Recipes, stores, photos, invites, and settings stay on iPhone
 - English, Hebrew, and Russian, following the device language
 
 ## Using OurStock
@@ -26,9 +27,9 @@ OurStock is a native iPhone, iPad, and Apple Watch app. Lists sync over iCloud w
 2. Create a family list, or join one you were invited to.
 3. Tap **+** when you run out of something, or **Paste items** for a whole list from Notes or Messages.
 4. When it’s back, tap the item. Long-press to edit it, or to leave a note for the person who asked for it.
-5. Tap the cart when you’re heading to the store. You can pick items for **To buy**, or notify the family.
+5. Tap the cart when you’re heading to the store. You can pick items for **To buy**, or notify the family — and optionally say which shop or shops you’re going to.
 
-Open **Settings** (gear) to rename the list, edit people, choose who is notified about new items, and invite the rest of the family. The **Recipes** tab is for dishes the household cooks — adding groceries from a recipe uses the same merge as typing them on the list. You can also **Paste recipe**: first line is the title, then a short description, grocery lines such as `Tomatoes — 4 chopped`, then how to prepare.
+Open **Settings** (gear) to rename the list, manage **Stores**, edit people, choose who is notified about new items, and invite the rest of the family. The **Recipes** tab is for dishes the household cooks — adding groceries from a recipe uses the same merge as typing them on the list. You can also **Paste recipe**: first line is the title, then a short description, grocery lines such as `Tomatoes — 4 chopped`, then how to prepare.
 
 ### Inviting someone
 
@@ -54,12 +55,12 @@ Language is not chosen inside the app. Change it in **Settings → General → L
 | Bundle ID | `com.tocnet.FList` |
 | Watch bundle ID | `com.tocnet.FList.watchkitapp` |
 | CloudKit container | `iCloud.com.tocnet.FList` |
-| Version | 1.5 |
+| Version | 1.6.1 |
 
 The CloudKit container ID in `FList/AppConfig.swift` must stay in sync with the app entitlements. Debug builds use the Development environment; Release/TestFlight uses Production. New CloudKit record types or fields need a schema deploy in CloudKit Console before they work in Production.
 
-Recipes and personal buy lists reuse the existing `ShortageItem` type and leave the `name` field empty, so phones still on 1.3.1 ignore them instead of showing them as groceries.
+Recipes, personal buy lists, and stores reuse the existing `ShortageItem` type and leave the `name` field empty, so phones still on 1.4 (and 1.3.1) ignore them instead of showing them as groceries. Store tags on items are extra JSON next to the existing restock note, which 1.4 already hides from the item text.
 
 ## Privacy
 
-OurStock does not use tracking. List data lives in your iCloud account (and on the device as a local cache). Camera and photo library access are only for optional pictures of items, recipes, or people on the list.
+OurStock does not use tracking. List data lives in your iCloud account (and on the device as a local cache). Camera and photo library access are only for optional pictures of items, recipes, or people on the list. Location is used on this device only, to recognize when you’re at one of your stores and sort that shop’s items to the top.
