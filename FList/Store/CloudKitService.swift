@@ -199,6 +199,7 @@ final class CloudKitService {
         } else {
             _ = try await container.sharedCloudDatabase.deleteRecordZone(withID: context.zoneID)
         }
+        Self.saveChangeToken(nil, for: context.zoneID)
         self.context = nil
         resetZoneCache()
         Self.clearSelection()
@@ -409,6 +410,7 @@ final class CloudKitService {
             }
         }
         zoneChangeToken = fetch.serverChangeToken ?? zoneChangeToken
+        Self.saveChangeToken(zoneChangeToken, for: context.zoneID)
 
         let records = Array(zoneRecordCache.values)
         var share = records.compactMap { $0 as? CKShare }.first
@@ -834,9 +836,15 @@ final class CloudKitService {
             currentUserRecordName: userRecordID.recordName,
             currentUserName: displayName()
         )
-        resetZoneCache()
+        let sameZone = self.context?.zoneID == zoneID
+        if !sameZone {
+            resetZoneCache()
+        }
         self.context = context
         UserDefaults.standard.set(userRecordID.recordName, forKey: Self.userRecordNameKey)
+        if zoneChangeToken == nil {
+            zoneChangeToken = Self.loadChangeToken(for: zoneID)
+        }
         Self.saveSelection(
             HouseholdChoice(
                 zoneName: zoneID.zoneName,
@@ -1002,9 +1010,38 @@ final class CloudKitService {
         await shareIfPresent(database: context.database, zoneID: context.zoneID)
     }
 
+    func seedCacheIfEmpty(items: [ShortageItem]) {
+        guard let context, zoneRecordCache.isEmpty else { return }
+        for item in items {
+            let recordID = CKRecord.ID(recordName: item.id.uuidString, zoneID: context.zoneID)
+            let record = CKRecord(recordType: AppConfig.itemRecordType, recordID: recordID)
+            item.write(to: record)
+            zoneRecordCache[recordID] = record
+        }
+    }
+
     private func resetZoneCache() {
         zoneRecordCache = [:]
         zoneChangeToken = nil
+    }
+
+    private static func changeTokenKey(for zoneID: CKRecordZone.ID) -> String {
+        "flist.ckChangeToken.\(zoneID.zoneName).\(zoneID.ownerName)"
+    }
+
+    private static func saveChangeToken(_ token: CKServerChangeToken?, for zoneID: CKRecordZone.ID) {
+        let key = changeTokenKey(for: zoneID)
+        guard let token else {
+            UserDefaults.standard.removeObject(forKey: key)
+            return
+        }
+        let data = try? NSKeyedArchiver.archivedData(withRootObject: token, requiringSecureCoding: true)
+        UserDefaults.standard.set(data, forKey: key)
+    }
+
+    private static func loadChangeToken(for zoneID: CKRecordZone.ID) -> CKServerChangeToken? {
+        guard let data = UserDefaults.standard.data(forKey: changeTokenKey(for: zoneID)) else { return nil }
+        return try? NSKeyedUnarchiver.unarchivedObject(ofClass: CKServerChangeToken.self, from: data)
     }
 
     private func saveSubscription(_ subscription: CKSubscription, on database: CKDatabase) async {
@@ -1042,11 +1079,12 @@ final class CloudKitService {
             )
         } catch {
             if error.isCloudKitChangeTokenExpired, previousToken != nil {
+                Self.saveChangeToken(nil, for: context.zoneID)
                 resetZoneCache()
                 var snapshot = try await performZoneFetch(
                     in: context,
                     previousToken: nil,
-                    includingAssets: true
+                    includingAssets: includingAssets
                 )
                 snapshot.tokenReset = true
                 return snapshot
@@ -1067,7 +1105,7 @@ final class CloudKitService {
                 configuration.desiredKeys = [
                     "name", "quantity", "note", "status",
                     "addedByName", "addedByRecordName", "createdAt", "restockedAt",
-                    "memberID", "displayName", "photo",
+                    "memberID", "displayName",
                     "announcedByName", "announcedByRecordName",
                     CKShare.SystemFieldKey.title
                 ]
