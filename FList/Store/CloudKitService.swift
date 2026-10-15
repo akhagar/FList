@@ -311,47 +311,53 @@ final class CloudKitService {
 
         let addedID = "flist.items.added.visible"
         let updatedID = "flist.items.updated.visible"
-        if sendItemAlerts {
+        // Query subscriptions only work on the owner's private database. Invitees
+        // get named banners from local sync after the silent zone push.
+        if sendItemAlerts, context.isOwner {
             await saveVisibleItemSubscription(
                 id: addedID,
                 zoneID: context.zoneID,
+                exceptAddedBy: context.currentUserRecordName,
                 options: .firesOnRecordCreation,
                 localizationKey: "%@ was added to the list",
                 on: context.database
             )
-            await saveVisibleItemSubscription(
-                id: updatedID,
-                zoneID: context.zoneID,
-                options: .firesOnRecordUpdate,
-                localizationKey: "%@ was updated on the list",
-                on: context.database
-            )
         } else {
             await deleteSubscription(addedID, on: context.database)
-            await deleteSubscription(updatedID, on: context.database)
         }
+        await deleteSubscription(updatedID, on: context.database)
     }
 
     private func itemAlertSubscription(
         id: String,
         zoneID: CKRecordZone.ID,
+        exceptAddedBy: String,
         options: CKQuerySubscription.Options,
         localizationKey: String
     ) -> CKQuerySubscription {
+        let predicate: NSPredicate
+        if exceptAddedBy.isEmpty {
+            predicate = NSPredicate(format: "name != nil")
+        } else {
+            predicate = NSPredicate(
+                format: "name != nil AND addedByRecordName != %@",
+                exceptAddedBy
+            )
+        }
         let subscription = CKQuerySubscription(
             recordType: AppConfig.itemRecordType,
-            predicate: NSPredicate(format: "name != nil"),
+            predicate: predicate,
             subscriptionID: id,
             options: options
         )
         subscription.zoneID = zoneID
         let info = CKSubscription.NotificationInfo()
-        info.shouldSendContentAvailable = true
+        info.shouldBadge = false
         info.soundName = "default"
         info.desiredKeys = ["name"]
         info.alertLocalizationKey = localizationKey
         info.alertLocalizationArgs = ["name"]
-        info.alertBody = localizationKey
+        info.shouldSendContentAvailable = false
         subscription.notificationInfo = info
         return subscription
     }
@@ -359,20 +365,29 @@ final class CloudKitService {
     private func saveVisibleItemSubscription(
         id: String,
         zoneID: CKRecordZone.ID,
+        exceptAddedBy: String,
         options: CKQuerySubscription.Options,
         localizationKey: String,
         on database: CKDatabase
     ) async {
         await deleteSubscription(id, on: database)
-        await saveSubscription(
-            itemAlertSubscription(
-                id: id,
-                zoneID: zoneID,
-                options: options,
-                localizationKey: localizationKey
-            ),
-            on: database
+        let preferred = itemAlertSubscription(
+            id: id,
+            zoneID: zoneID,
+            exceptAddedBy: exceptAddedBy,
+            options: options,
+            localizationKey: localizationKey
         )
+        if await saveSubscription(preferred, on: database) { return }
+        guard !exceptAddedBy.isEmpty else { return }
+        let fallback = itemAlertSubscription(
+            id: id,
+            zoneID: zoneID,
+            exceptAddedBy: "",
+            options: options,
+            localizationKey: localizationKey
+        )
+        _ = await saveSubscription(fallback, on: database)
     }
 
     struct HouseholdState {
@@ -1044,11 +1059,14 @@ final class CloudKitService {
         return try? NSKeyedUnarchiver.unarchivedObject(ofClass: CKServerChangeToken.self, from: data)
     }
 
-    private func saveSubscription(_ subscription: CKSubscription, on database: CKDatabase) async {
+    @discardableResult
+    private func saveSubscription(_ subscription: CKSubscription, on database: CKDatabase) async -> Bool {
         do {
             _ = try await database.save(subscription)
+            return true
         } catch {
-            // Duplicate subscription or offline — live polling still keeps the list current.
+            // Duplicate subscription, unsupported query field, or offline — live polling still keeps the list current.
+            return false
         }
     }
 

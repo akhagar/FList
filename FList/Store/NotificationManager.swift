@@ -5,6 +5,7 @@ import UserNotifications
 @MainActor
 final class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
     static let shared = NotificationManager()
+    private var recentKeys: [String: Date] = [:]
 
     func configure() {
         UNUserNotificationCenter.current().delegate = self
@@ -17,14 +18,17 @@ final class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
     }
 
     func notifyNewItem(name: String, addedBy: String) {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty, remember("new:" + folded(trimmed)) else { return }
         post(
-            identifier: "new-\(name)-\(UUID().uuidString)",
+            identifier: "new-\(trimmed)-\(UUID().uuidString)",
             title: L10n.string("New shortage item"),
-            body: String(format: L10n.string("%@ added %@"), addedBy, name)
+            body: String(format: L10n.string("%@ added %@"), addedBy, trimmed)
         )
     }
 
     func notifyGoingShopping(name: String, stores: String = "") {
+        guard remember("shop:" + folded(name) + ":" + folded(stores)) else { return }
         let body: String
         if stores.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             body = String(format: L10n.string("%@ is going shopping. Add anything that's missing."), name)
@@ -39,14 +43,16 @@ final class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
     }
 
     func notifyRestocked(name: String, note: String = "") {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty, remember("stock:" + folded(trimmed)) else { return }
         let body: String
         if note.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            body = String(format: L10n.string("%@ is back in stock"), name)
+            body = String(format: L10n.string("%@ is back in stock"), trimmed)
         } else {
-            body = String(format: L10n.string("%@ is back in stock. %@"), name, note)
+            body = String(format: L10n.string("%@ is back in stock. %@"), trimmed, note)
         }
         post(
-            identifier: "stock-\(name)-\(UUID().uuidString)",
+            identifier: "stock-\(trimmed)-\(UUID().uuidString)",
             title: L10n.string("Back in stock"),
             body: body
         )
@@ -61,6 +67,18 @@ final class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
         UNUserNotificationCenter.current().add(request)
     }
 
+    private func folded(_ value: String) -> String {
+        value.folding(options: [.caseInsensitive, .diacriticInsensitive], locale: .current)
+    }
+
+    private func remember(_ key: String) -> Bool {
+        let now = Date.now
+        recentKeys = recentKeys.filter { now.timeIntervalSince($0.value) < 12 }
+        if recentKeys[key] != nil { return false }
+        recentKeys[key] = now
+        return true
+    }
+
     nonisolated func userNotificationCenter(
         _ center: UNUserNotificationCenter,
         willPresent notification: UNNotification
@@ -68,6 +86,6 @@ final class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
         if notification.request.trigger is UNPushNotificationTrigger {
             return []
         }
-        return [.banner, .sound]
+        return [.banner, .list, .sound]
     }
 }

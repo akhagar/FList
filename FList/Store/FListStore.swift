@@ -153,7 +153,8 @@ final class FListStore {
     var usesiCloud: Bool { accountKind == .iCloud }
 
     func receivesNewItemNotifications(_ member: FamilyMember) -> Bool {
-        notificationPrefs.includes(member.id)
+        if member.isCurrentUser { return currentUserReceivesNewItemAlerts() }
+        return notificationPrefs.includes(member.id)
     }
 
     func setReceivesNewItemNotifications(_ member: FamilyMember, enabled: Bool) {
@@ -363,7 +364,7 @@ final class FListStore {
 
     func handleRemoteNotification(_ userInfo: [AnyHashable: Any]) async {
         guard usesiCloud, hasHousehold, cloudKit.context != nil else { return }
-        try? await reloadFromCloud(notify: false, showProgress: false, fullReload: false)
+        try? await reloadFromCloud(notify: true, showProgress: false, fullReload: false)
     }
 
     func handleBecameActive() async {
@@ -371,7 +372,7 @@ final class FListStore {
         startNearbyStoreMatching()
         guard usesiCloud, hasHousehold, cloudKit.context != nil else { return }
         startLiveSync()
-        try? await reloadFromCloud(notify: false, showProgress: false, fullReload: false)
+        try? await reloadFromCloud(notify: true, showProgress: false, fullReload: false)
     }
 
     func handleBecameInactive() {
@@ -1197,7 +1198,7 @@ final class FListStore {
     private func enableChangeNotifications() async {
         await NotificationManager.shared.requestAccessAndRegister()
         await cloudKit.subscribeToItemChanges(
-            sendItemAlerts: notificationPrefs.includes(currentUserRecordName)
+            sendItemAlerts: currentUserReceivesNewItemAlerts()
         )
     }
 
@@ -1466,19 +1467,27 @@ final class FListStore {
         })
     }
 
+    private func currentUserReceivesNewItemAlerts() -> Bool {
+        if notificationPrefs.includes(currentUserRecordName) { return true }
+        if let me = members.first(where: \.isCurrentUser) {
+            return notificationPrefs.includes(me.id)
+        }
+        return false
+    }
+
     private func postChangeNotifications(previous: [UUID: ItemStatus], current: [ShortageItem]) {
-        let notifyNewItems = notificationPrefs.includes(currentUserRecordName)
+        let notifyNewItems = currentUserReceivesNewItemAlerts()
         for item in current {
             let oldStatus = previous[item.id]
             if notifyNewItems,
                (oldStatus == nil || oldStatus == .restocked),
                item.status == .needed,
-               item.addedByRecordName != currentUserRecordName {
+               !isCurrentUserRecordName(item.addedByRecordName) {
                 NotificationManager.shared.notifyNewItem(
                     name: item.name,
                     addedBy: displayName(for: item)
                 )
-            } else if oldStatus == .needed, item.status == .restocked, item.addedByRecordName == currentUserRecordName {
+            } else if oldStatus == .needed, item.status == .restocked, isCurrentUserRecordName(item.addedByRecordName) {
                 NotificationManager.shared.notifyRestocked(
                     name: item.name,
                     note: restockFeedback(for: item)
