@@ -42,6 +42,8 @@
 		A30000000000000000000036 /* Shop.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000036 /* Shop.swift */; };
 		A30000000000000000000037 /* StoresView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000037 /* StoresView.swift */; };
 		A30000000000000000000038 /* NearbyStoreMatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000038 /* NearbyStoreMatcher.swift */; };
+		A30000000000000000000039 /* BarcodeLookupService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000039 /* BarcodeLookupService.swift */; };
+		A30000000000000000000040 /* BarcodeScanSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000040 /* BarcodeScanSheet.swift */; };
 		A50000000000000000000001 /* FListWatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A40000000000000000000002 /* FListWatchApp.swift */; };
 		A50000000000000000000002 /* WatchStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A40000000000000000000003 /* WatchStore.swift */; };
 		A50000000000000000000003 /* WatchRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A40000000000000000000004 /* WatchRootView.swift */; };
@@ -124,6 +126,8 @@
 		A20000000000000000000036 /* Shop.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Shop.swift; sourceTree = "<group>"; };
 		A20000000000000000000037 /* StoresView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoresView.swift; sourceTree = "<group>"; };
 		A20000000000000000000038 /* NearbyStoreMatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NearbyStoreMatcher.swift; sourceTree = "<group>"; };
+		A20000000000000000000039 /* BarcodeLookupService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BarcodeLookupService.swift; sourceTree = "<group>"; };
+		A20000000000000000000040 /* BarcodeScanSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BarcodeScanSheet.swift; sourceTree = "<group>"; };
 		A40000000000000000000001 /* FListWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FListWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A40000000000000000000002 /* FListWatchApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FListWatchApp.swift; sourceTree = "<group>"; };
 		A40000000000000000000003 /* WatchStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchStore.swift; sourceTree = "<group>"; };
@@ -215,6 +219,7 @@
 				A20000000000000000000024 /* ProfileImage.swift */,
 				A20000000000000000000025 /* NotificationManager.swift */,
 				A20000000000000000000038 /* NearbyStoreMatcher.swift */,
+				A20000000000000000000039 /* BarcodeLookupService.swift */,
 			);
 			path = Store;
 			sourceTree = "<group>";
@@ -226,6 +231,7 @@
 				A20000000000000000000033 /* FListRootView.swift */,
 				A20000000000000000000032 /* RecipesView.swift */,
 				A20000000000000000000011 /* AddItemSheet.swift */,
+				A20000000000000000000040 /* BarcodeScanSheet.swift */,
 				A20000000000000000000035 /* ImportSheets.swift */,
 				A20000000000000000000028 /* RestockItemSheet.swift */,
 				A20000000000000000000029 /* InviteCodeSheet.swift */,
@@ -395,6 +401,8 @@
 				A30000000000000000000024 /* ProfileImage.swift in Sources */,
 				A30000000000000000000025 /* NotificationManager.swift in Sources */,
 				A30000000000000000000038 /* NearbyStoreMatcher.swift in Sources */,
+				A30000000000000000000039 /* BarcodeLookupService.swift in Sources */,
+				A30000000000000000000040 /* BarcodeScanSheet.swift in Sources */,
 				A30000000000000000000013 /* ShortageListView.swift in Sources */,
 				A30000000000000000000033 /* FListRootView.swift in Sources */,
 				A30000000000000000000032 /* RecipesView.swift in Sources */,
@@ -444,7 +452,7 @@
 				INFOPLIST_FILE = FList/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = OurStock;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
-				INFOPLIST_KEY_NSCameraUsageDescription = "OurStock uses the camera so you can add a photo of an item or someone on the family list, and scan an invite code.";
+				INFOPLIST_KEY_NSCameraUsageDescription = "OurStock uses the camera so you can add a photo of an item or someone on the family list, scan an invite code, or scan a product barcode.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "OurStock uses your location to recognize when you're at one of your stores and put those items at the top of the list.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "OurStock uses your photo library so you can add a picture of an item or someone on the family list.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -459,7 +467,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.6.1;
+				MARKETING_VERSION = 1.6.3;
 				MTL_ENABLE_DEBUG_INFO = "DWARF with dSYM File";
 				PRODUCT_BUNDLE_IDENTIFIER = com.tocnet.FList;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -488,7 +496,7 @@
 				INFOPLIST_FILE = FList/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = OurStock;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
-				INFOPLIST_KEY_NSCameraUsageDescription = "OurStock uses the camera so you can add a photo of an item or someone on the family list, and scan an invite code.";
+				INFOPLIST_KEY_NSCameraUsageDescription = "OurStock uses the camera so you can add a photo of an item or someone on the family list, scan an invite code, or scan a product barcode.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "OurStock uses your location to recognize when you're at one of your stores and put those items at the top of the list.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "OurStock uses your photo library so you can add a picture of an item or someone on the family list.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -503,7 +511,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.6.1;
+				MARKETING_VERSION = 1.6.3;
 				MTL_ENABLE_DEBUG_INFO = "DWARF with dSYM File";
 				PRODUCT_BUNDLE_IDENTIFIER = com.tocnet.FList;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -664,7 +672,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.6.1;
+				MARKETING_VERSION = 1.6.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.tocnet.FList.watchkitapp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -701,7 +709,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.6.1;
+				MARKETING_VERSION = 1.6.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.tocnet.FList.watchkitapp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";

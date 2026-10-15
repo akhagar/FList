@@ -53,19 +53,19 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "OurStock uses the camera so you can add a photo of an item or someone on the family list, and scan an invite code."
+            "value" : "OurStock uses the camera so you can add a photo of an item or someone on the family list, scan an invite code, or scan a product barcode."
           }
         },
         "he" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "OurStock משתמש במצלמה כדי להוסיף תמונה של פריט או של מישהו ברשימת המשפחה, ולסרוק קוד הזמנה."
+            "value" : "OurStock משתמש במצלמה כדי להוסיף תמונה של פריט או של מישהו ברשימת המשפחה, לסרוק קוד הזמנה או ברקוד של מוצר."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "OurStock использует камеру, чтобы добавить фото товара или человека из семейного списка и чтобы сканировать код приглашения."
+            "value" : "OurStock использует камеру, чтобы добавить фото товара или человека из семейного списка, сканировать код приглашения или штрихкод товара."
           }
         }
       }

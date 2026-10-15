@@ -8,6 +8,7 @@ OurStock is a native iPhone, iPad, and Apple Watch app. Lists sync over iCloud w
 
 - One shared shortage list, with **Needed** and **Back in stock**
 - Add a name, quantity, optional note, photo, and which store you can buy it from
+- Scan a product barcode to look it up in Open Food Facts, Open Beauty Facts, Open Pet Food Facts, Open Products Facts, UPC Item DB, and GS1, then add it to Needed. Barcode Lookup is used only if you add an API key in Info.plist
 - Tap an item to mark it back in stock. Long-press to edit, or to leave a note if something wasn’t as described — that note is sent to the person who added the item
 - Cart button to tell the family you’re going shopping, so they can add anything that’s missing
 - Shared **Stores**: name and optional location. When you go shopping you can mention one or more shops. If you’re at a store, items tagged for it move to the top of Needed
@@ -25,7 +26,7 @@ OurStock is a native iPhone, iPad, and Apple Watch app. Lists sync over iCloud w
 
 1. Sign in to iCloud on the device (Settings → [Your Name] → iCloud).
 2. Create a family list, or join one you were invited to.
-3. Tap **+** when you run out of something, or **Paste items** for a whole list from Notes or Messages.
+3. Tap **+** when you run out of something, **Scan barcode** to look up a package, or **Paste items** for a whole list from Notes or Messages.
 4. When it’s back, tap the item. Long-press to edit it, or to leave a note for the person who asked for it.
 5. Tap the cart when you’re heading to the store. You can pick items for **To buy**, or notify the family — and optionally say which shop or shops you’re going to.
 
@@ -55,7 +56,7 @@ Language is not chosen inside the app. Change it in **Settings → General → L
 | Bundle ID | `com.tocnet.FList` |
 | Watch bundle ID | `com.tocnet.FList.watchkitapp` |
 | CloudKit container | `iCloud.com.tocnet.FList` |
-| Version | 1.6.1 |
+| Version | 1.6.3 |
 
 The CloudKit container ID in `FList/AppConfig.swift` must stay in sync with the app entitlements. Debug builds use the Development environment; Release/TestFlight uses Production. New CloudKit record types or fields need a schema deploy in CloudKit Console before they work in Production.
 
@@ -63,4 +64,4 @@ Recipes, personal buy lists, and stores reuse the existing `ShortageItem` type a
 
 ## Privacy
 
-OurStock does not use tracking. List data lives in your iCloud account (and on the device as a local cache). Camera and photo library access are only for optional pictures of items, recipes, or people on the list. Location is used on this device only, to recognize when you’re at one of your stores and sort that shop’s items to the top.
+OurStock does not use tracking. List data lives in your iCloud account (and on the device as a local cache). Camera and photo library access are only for optional pictures of items, recipes, or people on the list, invite QR codes, and product barcodes. Scanning a barcode sends the number to Open Food Facts (which also covers Open Beauty Facts, Open Pet Food Facts, and Open Products Facts), UPC Item DB, and GS1 (and Barcode Lookup if you put a key in `BarcodeLookupAPIKey`). Location is used on this device only, to recognize when you’re at one of your stores and sort that shop’s items to the top.
