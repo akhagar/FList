@@ -70,6 +70,10 @@ struct BarcodeScanSheet: View {
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
+            Text(String(format: L10n.string("Checking %@."), BarcodeLookupService.searchedCatalogsSummary))
+                .font(.caption)
+                .foregroundStyle(.tertiary)
+                .multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding()
@@ -86,7 +90,7 @@ struct BarcodeScanSheet: View {
             } header: {
                 Text("No catalog match")
             } footer: {
-                Text(String(format: L10n.string("Nothing turned up for %@. You can still add it by name."), barcode))
+                Text(String(format: L10n.string("Nothing turned up for %@. Checked %@. You can still add it by name."), barcode, BarcodeLookupService.searchedCatalogsSummary))
             }
 
             if !store.shops.isEmpty {

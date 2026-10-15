@@ -1041,6 +1041,28 @@
         }
       }
     },
+    "Checking %@." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Checking %@."
+          }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "בודקים ב-%@."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Проверяем %@."
+          }
+        }
+      }
+    },
     "Checking iCloud…" : {
       "localizations" : {
         "en" : {
@@ -1059,6 +1081,29 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Проверяем iCloud…"
+          }
+        }
+      }
+    },
+    "Checking Open Food Facts, Open Beauty Facts, Open Pet Food Facts, Open Products Facts, UPC Item DB, and GS1." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Checking Open Food Facts, Open Beauty Facts, Open Pet Food Facts, Open Products Facts, UPC Item DB, and GS1."
+          }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "בודקים ב-Open Food Facts, Open Beauty Facts, Open Pet Food Facts, Open Products Facts, UPC Item DB ו-GS1."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Проверяем Open Food Facts, Open Beauty Facts, Open Pet Food Facts, Open Products Facts, UPC Item DB и GS1."
           }
         }
       }
@@ -3340,7 +3385,53 @@
         }
       }
     },
+    "Nothing turned up for %@. Checked %@. You can still add it by name." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nothing turned up for %@. Checked %@. You can still add it by name."
+          }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "לא נמצאה התאמה עבור %@. בדקנו ב-%@. אפשר עדיין להוסיף לפי שם."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ничего не нашлось для %@. Проверили %@. Можно добавить по названию."
+          }
+        }
+      }
+    },
+    "Nothing turned up for %@. Checked Open Food Facts, Open Beauty Facts, Open Pet Food Facts, Open Products Facts, UPC Item DB, and GS1. You can still add it by name." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nothing turned up for %@. Checked Open Food Facts, Open Beauty Facts, Open Pet Food Facts, Open Products Facts, UPC Item DB, and GS1. You can still add it by name."
+          }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "לא נמצאה התאמה עבור %@. בדקנו ב-Open Food Facts, Open Beauty Facts, Open Pet Food Facts, Open Products Facts, UPC Item DB ו-GS1. אפשר עדיין להוסיף לפי שם."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ничего не нашлось для %@. Проверили Open Food Facts, Open Beauty Facts, Open Pet Food Facts, Open Products Facts, UPC Item DB и GS1. Можно добавить по названию."
+          }
+        }
+      }
+    },
     "Nothing turned up for %@. You can still add it by name." : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {

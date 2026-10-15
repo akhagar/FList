@@ -29,7 +29,14 @@ struct BarcodeLookupResult: Sendable {
     }
 
     private func score(_ hit: BarcodeHit) -> Int {
-        (hit.imageURL == nil ? 0 : 4)
+        let locale = Locale.current
+        var localCatalog = 0
+        if hit.sourceKey == "savemycart" {
+            if locale.language.languageCode?.identifier == "he" { localCatalog += 8 }
+            if locale.region?.identifier == "IL" { localCatalog += 4 }
+        }
+        return localCatalog
+            + (hit.imageURL == nil ? 0 : 4)
             + (hit.brand.isEmpty ? 0 : 2)
             + min(hit.name.count, 40) / 10
     }
@@ -39,14 +46,19 @@ enum BarcodeLookupService {
     private static let userAgent = "OurStock/1.6.3 (https://github.com/akhagar/FList)"
     private static let session: URLSession = {
         let config = URLSessionConfiguration.ephemeral
-        config.timeoutIntervalForRequest = 10
-        config.timeoutIntervalForResource = 12
-        config.httpAdditionalHeaders = [
-            "User-Agent": userAgent,
-            "Accept": "application/json"
-        ]
+        config.timeoutIntervalForRequest = 15
+        config.timeoutIntervalForResource = 20
+        config.urlCache = nil
+        config.httpAdditionalHeaders = ["User-Agent": userAgent]
         return URLSession(configuration: config)
     }()
+
+    private static let openFactsCatalogs: [(host: String, sourceName: String, sourceKey: String)] = [
+        ("world.openfoodfacts.org", "Open Food Facts", "off"),
+        ("world.openbeautyfacts.org", "Open Beauty Facts", "obf"),
+        ("world.openpetfoodfacts.org", "Open Pet Food Facts", "opff"),
+        ("world.openproductsfacts.org", "Open Products Facts", "opf")
+    ]
 
     static func normalizedBarcode(_ raw: String) -> String {
         let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -68,19 +80,65 @@ enum BarcodeLookupService {
         return (8...14).contains(digits.count) ? digits : nil
     }
 
+    static func lookupCodes(from raw: String) -> [String] {
+        let barcode = normalizedBarcode(raw)
+        var codes: [String] = []
+        func add(_ value: String) {
+            let digits = value.filter(\.isNumber)
+            guard (8...14).contains(digits.count), !codes.contains(digits) else { return }
+            codes.append(digits)
+        }
+        add(barcode)
+        if barcode.count == 8, let upcA = expandUPCE(barcode) {
+            add(upcA)
+            add("0" + upcA)
+        }
+        switch barcode.count {
+        case 8:
+            add(String(repeating: "0", count: 5) + barcode)
+            add(String(repeating: "0", count: 6) + barcode)
+        case 12:
+            add("0" + barcode)
+            add("00" + barcode)
+        case 13:
+            if barcode.hasPrefix("0") { add(String(barcode.dropFirst())) }
+            add("0" + barcode)
+        case 14:
+            add(String(barcode.dropFirst()))
+            if barcode.hasPrefix("00") { add(String(barcode.dropFirst(2))) }
+        default:
+            break
+        }
+        return codes
+    }
+
     static func lookup(barcode raw: String) async -> BarcodeLookupResult {
         let barcode = normalizedBarcode(raw)
-        guard barcode.count >= 8 else {
+        let codes = lookupCodes(from: barcode)
+        guard let primary = codes.first else {
             return BarcodeLookupResult(barcode: barcode, hits: [])
         }
 
-        async let facts = openFacts(barcode: barcode)
-        async let upc = upcItemDB(barcode: barcode)
-        async let gs1 = gs1Resolver(barcode: barcode)
-        async let lookup = barcodeLookup(barcode: barcode)
+        var hits = await withTaskGroup(of: BarcodeHit?.self, returning: [BarcodeHit].self) { group in
+            for catalog in openFactsCatalogs {
+                group.addTask {
+                    await openFacts(host: catalog.host, sourceName: catalog.sourceName, sourceKey: catalog.sourceKey, codes: codes)
+                }
+            }
+            group.addTask { await upcItemDB(codes: codes) }
+            group.addTask { await gs1Resolver(codes: codes) }
+            group.addTask { await barcodeLookup(codes: codes) }
+            var collected: [BarcodeHit] = []
+            for await hit in group {
+                if let hit { collected.append(hit) }
+            }
+            return collected
+        }
 
-        let (factsHit, upcHit, gs1Hit, lookupHit) = await (facts, upc, gs1, lookup)
-        let hits = [factsHit, upcHit, gs1Hit, lookupHit].compactMap { $0 }
+        if hits.isEmpty, let local = await saveMyCart(codes: codes) {
+            hits.append(local)
+        }
+
         var unique: [BarcodeHit] = []
         var seen = Set<String>()
         for hit in hits {
@@ -89,7 +147,27 @@ enum BarcodeLookupService {
                 unique.append(hit)
             }
         }
-        return BarcodeLookupResult(barcode: barcode, hits: unique)
+        return BarcodeLookupResult(barcode: primary, hits: unique)
+    }
+
+    static var searchedCatalogsSummary: String {
+        ListFormatter.localizedString(byJoining: searchedCatalogNames)
+    }
+
+    private static var searchedCatalogNames: [String] {
+        var names = openFactsCatalogs.map(\.sourceName) + ["UPC Item DB", "GS1"]
+        if !infoPlistString("SaveMyCartAPIKey").isEmpty {
+            names.append("SaveMyCart")
+        }
+        if !infoPlistString("BarcodeLookupAPIKey").isEmpty {
+            names.append("Barcode Lookup")
+        }
+        return names
+    }
+
+    private static func infoPlistString(_ key: String) -> String {
+        (Bundle.main.object(forInfoDictionaryKey: key) as? String)?
+            .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
     }
 
     static func imageData(from url: URL?) async -> Data? {
@@ -104,30 +182,57 @@ enum BarcodeLookupService {
         return data
     }
 
-    private static func openFacts(barcode: String) async -> BarcodeHit? {
+    private static func openFacts(
+        host: String,
+        sourceName: String,
+        sourceKey: String,
+        codes: [String]
+    ) async -> BarcodeHit? {
+        for code in codes {
+            if let hit = await openFacts(host: host, sourceName: sourceName, sourceKey: sourceKey, barcode: code) {
+                return hit
+            }
+        }
+        return nil
+    }
+
+    private static func openFacts(
+        host: String,
+        sourceName: String,
+        sourceKey: String,
+        barcode: String
+    ) async -> BarcodeHit? {
         let language = Locale.current.language.languageCode?.identifier ?? "en"
-        var components = URLComponents(string: "https://world.openfoodfacts.org/api/v3/product/\(barcode)")
+        var components = URLComponents(string: "https://\(host)/api/v3/product/\(barcode)")
         components?.queryItems = [
-            URLQueryItem(name: "product_type", value: "all"),
             URLQueryItem(name: "lc", value: language),
             URLQueryItem(
                 name: "fields",
                 value: "code,product_name,product_name_\(language),product_name_en,generic_name,abbreviated_product_name,brands,image_front_small_url,image_small_url,image_url,quantity,product_type"
             )
         ]
-        guard let url = components?.url,
-              let json = await jsonObject(url: url)
-        else { return nil }
-        let status = (json["status"] as? String ?? "").lowercased()
-        guard status == "success" || status == "success_with_warnings",
-              let product = json["product"] as? [String: Any]
-        else { return nil }
+        guard let url = components?.url else { return nil }
+        let json: [String: Any]?
+        if let v3 = await jsonObject(url: url) {
+            json = v3
+        } else {
+            json = await openFactsV2(host: host, barcode: barcode)
+        }
+        guard let json else { return nil }
+        let statusString = (json["status"] as? String ?? "").lowercased()
+        let statusOK = statusString == "success"
+            || statusString == "success_with_warnings"
+            || json["status"] as? Int == 1
+        guard statusOK, let product = json["product"] as? [String: Any] else { return nil }
+        let brand = firstNonEmpty([product["brands"] as? String]).components(separatedBy: ",").first?
+            .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         let name = firstNonEmpty([
             product["product_name_\(language)"] as? String,
             product["product_name"] as? String,
             product["product_name_en"] as? String,
             product["generic_name"] as? String,
-            product["abbreviated_product_name"] as? String
+            product["abbreviated_product_name"] as? String,
+            brand
         ])
         guard !name.isEmpty else { return nil }
         let image = firstNonEmpty([
@@ -135,11 +240,9 @@ enum BarcodeLookupService {
             product["image_small_url"] as? String,
             product["image_url"] as? String
         ])
-        let (sourceName, sourceKey) = openFactsSource(product["product_type"] as? String)
         return BarcodeHit(
             name: name,
-            brand: firstNonEmpty([product["brands"] as? String]).components(separatedBy: ",").first?
-                .trimmingCharacters(in: .whitespacesAndNewlines) ?? "",
+            brand: brand,
             barcode: barcode,
             imageURL: URL(string: image),
             sourceName: sourceName,
@@ -147,13 +250,16 @@ enum BarcodeLookupService {
         )
     }
 
-    private static func openFactsSource(_ productType: String?) -> (String, String) {
-        switch (productType ?? "food").lowercased() {
-        case "beauty": return ("Open Beauty Facts", "obf")
-        case "petfood": return ("Open Pet Food Facts", "opff")
-        case "product": return ("Open Products Facts", "opf")
-        default: return ("Open Food Facts", "off")
+    private static func openFactsV2(host: String, barcode: String) async -> [String: Any]? {
+        guard let url = URL(string: "https://\(host)/api/v2/product/\(barcode).json") else { return nil }
+        return await jsonObject(url: url)
+    }
+
+    private static func upcItemDB(codes: [String]) async -> BarcodeHit? {
+        for code in codes {
+            if let hit = await upcItemDB(barcode: code) { return hit }
         }
+        return nil
     }
 
     private static func upcItemDB(barcode: String) async -> BarcodeHit? {
@@ -180,10 +286,16 @@ enum BarcodeLookupService {
         )
     }
 
-    private static func barcodeLookup(barcode: String) async -> BarcodeHit? {
-        let key = (Bundle.main.object(forInfoDictionaryKey: "BarcodeLookupAPIKey") as? String)?
-            .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+    private static func barcodeLookup(codes: [String]) async -> BarcodeHit? {
+        let key = infoPlistString("BarcodeLookupAPIKey")
         guard !key.isEmpty else { return nil }
+        for code in codes {
+            if let hit = await barcodeLookup(barcode: code, key: key) { return hit }
+        }
+        return nil
+    }
+
+    private static func barcodeLookup(barcode: String, key: String) async -> BarcodeHit? {
         var components = URLComponents(string: "https://api.barcodelookup.com/v3/products")
         components?.queryItems = [
             URLQueryItem(name: "barcode", value: barcode),
@@ -211,11 +323,122 @@ enum BarcodeLookupService {
         )
     }
 
-    private static func gs1Resolver(barcode: String) async -> BarcodeHit? {
-        let candidates = Array(Set([barcode, gtin14(barcode)].compactMap { $0 }))
+    private static func saveMyCart(codes: [String]) async -> BarcodeHit? {
+        let key = infoPlistString("SaveMyCartAPIKey")
+        guard !key.isEmpty else { return nil }
+        var base = infoPlistString("SaveMyCartAPIBaseURL")
+        if base.isEmpty { base = "https://savemycart.net" }
+        if base.hasSuffix("/") { base.removeLast() }
+        for code in codes {
+            switch await saveMyCart(base: base, barcode: code, key: key) {
+            case .hit(let hit):
+                return hit
+            case .unauthorized, .quota:
+                return nil
+            case .miss:
+                continue
+            }
+        }
+        return nil
+    }
+
+    private enum SaveMyCartOutcome {
+        case hit(BarcodeHit)
+        case miss
+        case unauthorized
+        case quota
+    }
+
+    private static func saveMyCart(base: String, barcode: String, key: String) async -> SaveMyCartOutcome {
+        var components = URLComponents(string: "\(base)/api/v1/prices/")
+        components?.queryItems = [URLQueryItem(name: "barcode", value: barcode)]
+        guard let url = components?.url else { return .miss }
+        var request = URLRequest(url: url)
+        request.cachePolicy = .reloadIgnoringLocalCacheData
+        request.setValue(key, forHTTPHeaderField: "X-API-Key")
+        request.setValue(userAgent, forHTTPHeaderField: "User-Agent")
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
+        let (status, json) = await jsonResponse(request: request)
+        if status == 401 { return .unauthorized }
+        if status == 403 { return .quota }
+        guard (200..<300).contains(status), let json else { return .miss }
+        let data = json["data"] as? [String: Any] ?? json
+        let productName = cleanedProductName(
+            firstNonEmpty([
+                data["name"] as? String,
+                data["product_name"] as? String,
+                data["item_name"] as? String,
+                data["title"] as? String
+            ])
+        )
+        let supplier = cleanedProductName(
+            firstNonEmpty([
+                data["manufacturer"] as? String,
+                data["brand"] as? String,
+                data["supplier"] as? String
+            ])
+        )
+        guard !productName.isEmpty, !isPlaceholderCatalogValue(productName) else { return .miss }
+        if !supplier.isEmpty, !isPlaceholderCatalogValue(supplier),
+           productName.compare(supplier, options: [.caseInsensitive, .diacriticInsensitive]) == .orderedSame {
+            return .miss
+        }
+        let chainNames = ((data["prices"] as? [[String: Any]]) ?? []).compactMap {
+            cleanedProductName($0["chain_name"] as? String)
+        }
+        if chainNames.contains(where: {
+            productName.compare($0, options: [.caseInsensitive, .diacriticInsensitive]) == .orderedSame
+        }) {
+            return .miss
+        }
+        let image = firstNonEmpty([
+            data["image"] as? String,
+            data["image_url"] as? String,
+            data["imageUrl"] as? String
+        ])
+        let brand = (!supplier.isEmpty
+                     && !isPlaceholderCatalogValue(supplier)
+                     && productName.localizedCaseInsensitiveContains(supplier))
+            ? supplier : ""
+        return .hit(
+            BarcodeHit(
+                name: productName,
+                brand: brand,
+                barcode: firstNonEmpty([data["barcode"] as? String, barcode]),
+                imageURL: URL(string: image),
+                sourceName: "SaveMyCart",
+                sourceKey: "savemycart"
+            )
+        )
+    }
+
+    private static func cleanedProductName(_ value: String?) -> String {
+        value?
+            .replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
+            .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+    }
+
+    private static func isPlaceholderCatalogValue(_ value: String) -> Bool {
+        let folded = value.folding(options: [.caseInsensitive, .diacriticInsensitive], locale: .current)
+        let compact = folded.filter(\.isLetter)
+        let placeholders: Set<String> = [
+            "unknown", "none", "null", "n/a", "na", "unspecified",
+            "manufacturer", "supplier", "brand",
+            "לא ידוע", "לאידוע", "כללי", "ספק", "יצרן"
+        ]
+        return placeholders.contains(folded) || placeholders.contains(compact)
+    }
+
+    private static func gs1Resolver(codes: [String]) async -> BarcodeHit? {
+        var candidates: [String] = []
+        for code in codes {
+            if !candidates.contains(code) { candidates.append(code) }
+            if let gtin = gtin14(code), !candidates.contains(gtin) { candidates.append(gtin) }
+        }
         for code in candidates {
             guard let url = URL(string: "https://id.gs1.org/01/\(code)") else { continue }
             var request = URLRequest(url: url)
+            request.cachePolicy = .reloadIgnoringLocalCacheData
             request.setValue(
                 "application/ld+json, application/json, application/linkset+json;q=0.8",
                 forHTTPHeaderField: "Accept"
@@ -236,13 +459,52 @@ enum BarcodeLookupService {
             return BarcodeHit(
                 name: name,
                 brand: brand,
-                barcode: barcode,
+                barcode: code,
                 imageURL: URL(string: image),
                 sourceName: "GS1",
                 sourceKey: "gs1"
             )
         }
         return nil
+    }
+
+    private static func expandUPCE(_ barcode: String) -> String? {
+        let digits = barcode.filter(\.isNumber)
+        let body: String
+        switch digits.count {
+        case 6: body = "0" + digits
+        case 7: body = digits
+        case 8: body = String(digits.dropLast())
+        default: return nil
+        }
+        guard body.count == 7, body.hasPrefix("0") || body.hasPrefix("1") else { return nil }
+        let ns = body[body.startIndex]
+        let d = body.dropFirst().map { $0 }
+        guard d.count == 6 else { return nil }
+        let manufacturerAndProduct: String
+        switch d[5] {
+        case "0", "1", "2":
+            manufacturerAndProduct = "\(d[0])\(d[1])\(d[5])0000\(d[2])\(d[3])\(d[4])"
+        case "3":
+            manufacturerAndProduct = "\(d[0])\(d[1])\(d[2])00000\(d[3])\(d[4])"
+        case "4":
+            manufacturerAndProduct = "\(d[0])\(d[1])\(d[2])\(d[3])00000\(d[4])"
+        default:
+            manufacturerAndProduct = "\(d[0])\(d[1])\(d[2])\(d[3])\(d[4])0000\(d[5])"
+        }
+        let withoutCheck = "\(ns)" + manufacturerAndProduct
+        guard withoutCheck.count == 11 else { return nil }
+        let check = gtinCheckDigit(withoutCheck)
+        if digits.count == 8, digits.last?.wholeNumberValue != check { return nil }
+        return withoutCheck + String(check)
+    }
+
+    private static func gtinCheckDigit(_ digits: String) -> Int {
+        let numbers = digits.compactMap { $0.wholeNumberValue }
+        let sum = numbers.reversed().enumerated().reduce(0) { partial, item in
+            partial + item.element * (item.offset % 2 == 0 ? 3 : 1)
+        }
+        return (10 - (sum % 10)) % 10
     }
 
     private static func gtin14(_ barcode: String) -> String? {
@@ -252,20 +514,27 @@ enum BarcodeLookupService {
 
     private static func jsonObject(url: URL, accept: String? = nil) async -> [String: Any]? {
         var request = URLRequest(url: url)
-        if let accept {
-            request.setValue(accept, forHTTPHeaderField: "Accept")
-        }
+        request.cachePolicy = .reloadIgnoringLocalCacheData
+        request.setValue(accept ?? "application/json", forHTTPHeaderField: "Accept")
         request.setValue(userAgent, forHTTPHeaderField: "User-Agent")
         return await jsonObject(request: request)
     }
 
     private static func jsonObject(request: URLRequest) async -> [String: Any]? {
-        guard let (data, response) = try? await session.data(for: request),
-              let http = response as? HTTPURLResponse,
-              (200..<400).contains(http.statusCode),
-              !data.isEmpty
-        else { return nil }
-        return (try? JSONSerialization.jsonObject(with: data)) as? [String: Any]
+        let (status, json) = await jsonResponse(request: request)
+        guard (200..<300).contains(status) else { return nil }
+        return json
+    }
+
+    private static func jsonResponse(request: URLRequest) async -> (Int, [String: Any]?) {
+        do {
+            let (data, response) = try await session.data(for: request)
+            let status = (response as? HTTPURLResponse)?.statusCode ?? 0
+            let json = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any]
+            return (status, json)
+        } catch {
+            return (0, nil)
+        }
     }
 
     private static func firstNonEmpty(_ values: [String?]) -> String {
