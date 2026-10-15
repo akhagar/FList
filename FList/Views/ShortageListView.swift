@@ -11,6 +11,7 @@ struct ShortageListView: View {
     @State private var itemToView: ShortageItem?
     @State private var itemToRestock: ShortageItem?
     @State private var showGoingShopping = false
+    @State private var showBarcodeScan = false
     @State private var searchText = ""
 
     private enum ListPane: String, CaseIterable, Identifiable {
@@ -49,6 +50,7 @@ struct ShortageListView: View {
                     .accessibilityLabel("I'm going shopping")
                     Menu {
                         Button("Add item") { showAddItem = true }
+                        Button("Scan barcode") { showBarcodeScan = true }
                         Button("Paste items") { showPasteItems = true }
                     } label: {
                         Image(systemName: "plus")
@@ -64,6 +66,10 @@ struct ShortageListView: View {
             }
             .sheet(isPresented: $showPasteItems) {
                 PasteItemsSheet(store: store)
+            }
+            .sheet(isPresented: $showBarcodeScan) {
+                BarcodeScanSheet(store: store)
+                    .presentationDetents([.large])
             }
             .sheet(isPresented: $showBuyPicker) {
                 BuyItemsSheet(store: store) {

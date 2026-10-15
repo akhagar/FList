@@ -755,6 +755,28 @@
         }
       }
     },
+    "Already on Needed. Adding again increases the quantity." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Already on Needed. Adding again increases the quantity."
+          }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "כבר מופיע בחסר. הוספה שוב מגדילה את הכמות."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Уже в списке «Нужно». Повторное добавление увеличит количество."
+          }
+        }
+      }
+    },
     "Appearance" : {
       "localizations" : {
         "en" : {
@@ -909,6 +931,28 @@
         }
       }
     },
+    "Barcode" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Barcode"
+          }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ברקוד"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Штрихкод"
+          }
+        }
+      }
+    },
     "Blue" : {
       "localizations" : {
         "en" : {
@@ -949,6 +993,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Отмена"
+          }
+        }
+      }
+    },
+    "Catalog match" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Catalog match"
+          }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "התאמה בקטלוג"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Совпадение в каталоге"
           }
         }
       }
@@ -1483,6 +1549,50 @@
         }
       }
     },
+    "Enter a different barcode" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enter a different barcode"
+          }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "הזנת ברקוד אחר"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ввести другой штрихкод"
+          }
+        }
+      }
+    },
+    "Enter barcode" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enter barcode"
+          }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "הזנת ברקוד"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ввести штрихкод"
+          }
+        }
+      }
+    },
     "Everyone on this list was asked to add anything that's missing." : {
       "extractionState" : "stale",
       "localizations" : {
@@ -1679,6 +1789,50 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Для этого рецепта, например один стакан"
+          }
+        }
+      }
+    },
+    "Found in %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Found in %@"
+          }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "נמצא ב-%@"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Найдено в %@"
+          }
+        }
+      }
+    },
+    "Found item" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Found item"
+          }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "הפריט שנמצא"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Найден товар"
           }
         }
       }
@@ -2592,6 +2746,72 @@
         }
       }
     },
+    "Look up" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Look up"
+          }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "חיפוש"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Найти"
+          }
+        }
+      }
+    },
+    "Looking up %@…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Looking up %@…"
+          }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "מחפש את %@…"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ищем %@…"
+          }
+        }
+      }
+    },
+    "Looking up barcode" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Looking up barcode"
+          }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "מחפש ברקוד"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Поиск штрихкода"
+          }
+        }
+      }
+    },
     "Mark all" : {
       "localizations" : {
         "en" : {
@@ -2878,6 +3098,28 @@
         }
       }
     },
+    "No catalog match" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No catalog match"
+          }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "אין התאמה בקטלוג"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нет совпадения в каталоге"
+          }
+        }
+      }
+    },
     "No grocery lines were found. You can add them after saving." : {
       "localizations" : {
         "en" : {
@@ -2896,6 +3138,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Строки продуктов не найдены. Их можно добавить после сохранения."
+          }
+        }
+      }
+    },
+    "No match" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No match"
+          }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "אין התאמה"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нет совпадения"
           }
         }
       }
@@ -3072,6 +3336,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Пока нечего покупать"
+          }
+        }
+      }
+    },
+    "Nothing turned up for %@. You can still add it by name." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nothing turned up for %@. You can still add it by name."
+          }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "לא נמצאה התאמה עבור %@. אפשר עדיין להוסיף לפי שם."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ничего не нашлось для %@. Можно добавить по названию."
           }
         }
       }
@@ -3806,6 +4092,28 @@
         }
       }
     },
+    "Point the camera at an EAN or UPC, or type the numbers from the package." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Point the camera at an EAN or UPC, or type the numbers from the package."
+          }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "כוונו את המצלמה לברקוד EAN או UPC, או הקלידו את המספרים מהאריזה."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Наведите камеру на штрихкод EAN или UPC либо введите цифры с упаковки."
+          }
+        }
+      }
+    },
     "Preview" : {
       "localizations" : {
         "en" : {
@@ -4044,6 +4352,72 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Сохраните блюдо, чтобы добавить его продукты в список."
+          }
+        }
+      }
+    },
+    "Scan" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scan"
+          }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "סריקה"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сканировать"
+          }
+        }
+      }
+    },
+    "Scan again" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scan again"
+          }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "סריקה מחדש"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сканировать снова"
+          }
+        }
+      }
+    },
+    "Scan barcode" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scan barcode"
+          }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "סריקת ברקוד"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сканировать штрихкод"
           }
         }
       }
@@ -4644,6 +5018,28 @@
         }
       }
     },
+    "That barcode is too short." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "That barcode is too short."
+          }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "הברקוד קצר מדי."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Этот штрихкод слишком короткий."
+          }
+        }
+      }
+    },
     "That doesn't look like an OurStock invite code or link." : {
       "localizations" : {
         "en" : {
@@ -4929,6 +5325,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Вставьте код в OurStock или отсканируйте QR в приложении."
+          }
+        }
+      }
+    },
+    "This is on Back in stock. Adding marks it as needed." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This is on Back in stock. Adding marks it as needed."
+          }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "הפריט ברשימת חזר למלאי. הוספה תסמן אותו כנחוץ."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Этот товар в «Снова в наличии». Добавление отметит его как нужный."
           }
         }
       }
