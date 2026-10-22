@@ -1285,6 +1285,28 @@
         }
       }
     },
+    "Could not set up notifications. Check your connection and tap Retry." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Could not set up notifications. Check your connection and tap Retry."
+          }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "לא ניתן להגדיר התראות. בדקו את החיבור והקישו על ניסיון חוזר."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не удалось настроить уведомления. Проверьте подключение и нажмите «Повторить»."
+          }
+        }
+      }
+    },
     "Couldn't join that shared list. In Settings, tap Show invite code and paste that code here. Both devices need the same kind of build — Xcode or TestFlight." : {
       "localizations" : {
         "en" : {
@@ -1900,6 +1922,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Из рецепта %@"
+          }
+        }
+      }
+    },
+    "General list update alerts" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "General list update alerts"
+          }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "התראות כלליות על עדכוני רשימות"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Общие уведомления об изменениях списков"
           }
         }
       }
@@ -3453,6 +3497,28 @@
         }
       }
     },
+    "Notifications are disabled in iPhone Settings." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notifications are disabled in iPhone Settings."
+          }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ההתראות כבויות בהגדרות ה-iPhone."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Уведомления отключены в настройках iPhone."
+          }
+        }
+      }
+    },
     "Notify family" : {
       "localizations" : {
         "en" : {
@@ -4403,6 +4469,9 @@
         }
       }
     },
+    "Retry" : {
+
+    },
     "Save" : {
       "localizations" : {
         "en" : {
@@ -4797,6 +4866,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Сведения о доступе"
+          }
+        }
+      }
+    },
+    "Show a general alert when your iCloud lists change, even before the app syncs. Includes recipes and settings changes, regardless of the item recipients below. Applies to your devices using this iCloud account." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show a general alert when your iCloud lists change, even before the app syncs. Includes recipes and settings changes, regardless of the item recipients below. Applies to your devices using this iCloud account."
+          }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "הצגת התראה כללית כשיש שינוי ברשימות iCloud, גם לפני סנכרון היישום. כולל שינויים במתכונים ובהגדרות, ללא תלות בנמעני ההתראות על פריטים שנבחרו למטה. חל על המכשירים המחוברים לחשבון iCloud זה."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показывать общее уведомление об изменениях списков iCloud до синхронизации приложения. Включает изменения рецептов и настроек независимо от выбранных ниже получателей уведомлений о товарах. Применяется к вашим устройствам с этой учётной записью iCloud."
           }
         }
       }
@@ -5881,6 +5972,29 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Вы не вошли в iCloud, поэтому список остаётся на этом устройстве. Войдите в Настройках, чтобы им поделиться."
+          }
+        }
+      }
+    },
+    "Your family list was updated. Open OurStock to see what changed." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your family list was updated. Open OurStock to see what changed."
+          }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "הרשימה המשפחתית עודכנה. פתחו את OurStock כדי לראות מה השתנה."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Семейный список обновлён. Откройте OurStock, чтобы посмотреть изменения."
           }
         }
       }

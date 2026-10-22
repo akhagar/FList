@@ -1,5 +1,6 @@
 import CloudKit
 import Foundation
+import OSLog
 
 enum CloudKitServiceError: LocalizedError {
     case iCloudUnavailable
@@ -113,6 +114,22 @@ final class CloudKitService {
     private(set) var context: CloudKitContext?
     private var zoneRecordCache: [CKRecord.ID: CKRecord] = [:]
     private var zoneChangeToken: CKServerChangeToken?
+    private let notificationLog = Logger(subsystem: "com.tocnet.FList", category: "CloudKitNotifications")
+
+    var notificationScope: String? {
+        guard let context else { return nil }
+        return NotificationScope.key(userID: context.currentUserRecordName,
+                                     zoneName: context.zoneID.zoneName,
+                                     ownerName: context.zoneID.ownerName)
+    }
+
+    func hasVisibleCreationAlert(since date: Date, itemName: String) -> Bool {
+        guard itemName != "Shopping", itemName != "NotifyPrefs",
+              context?.isOwner == true, let scope = notificationScope,
+              let start = UserDefaults.standard.object(forKey: "flist.visibleCreation.\(scope)") as? Date
+        else { return false }
+        return date >= start
+    }
 
     init(container: CKContainer = CKContainer(identifier: AppConfig.cloudKitContainerID)) {
         self.container = container
@@ -291,103 +308,81 @@ final class CloudKitService {
         return await installContext(zoneID: zoneID, isOwner: false, userRecordID: userRecordID)
     }
 
-    func subscribeToItemChanges(sendItemAlerts: Bool) async {
-        guard let context else { return }
+    /// Also used by watchOS. Database subscriptions work in both private and
+    /// shared databases; record-zone subscriptions do not work for invitees.
+    func subscribeToDatabaseChanges(generalAlerts: Bool? = nil) async throws {
+        let context = try requireContext()
+        let subscriptionID = context.isOwner ? "flist.private-db.changes" : "flist.shared-db.changes"
+        // Subscriptions belong to the account. Watch setup must not overwrite
+        // the alert preference configured on the iPhone.
+        if generalAlerts == nil,
+           try await context.database.allSubscriptions().contains(where: { $0.subscriptionID == subscriptionID }) {
+            return
+        }
         let silent = CKSubscription.NotificationInfo()
         silent.shouldSendContentAvailable = true
-
+        if generalAlerts == true {
+            silent.alertLocalizationKey = "Your family list was updated. Open OurStock to see what changed."
+            silent.soundName = "default"
+        }
         let databaseSubscription = CKDatabaseSubscription(
-            subscriptionID: context.isOwner ? "flist.private-db.changes" : "flist.shared-db.changes"
+            subscriptionID: subscriptionID
         )
         databaseSubscription.notificationInfo = silent
-        await saveSubscription(databaseSubscription, on: context.database)
-
-        let zoneSubscription = CKRecordZoneSubscription(
-            zoneID: context.zoneID,
-            subscriptionID: "flist.zone.\(context.zoneID.zoneName).changes"
-        )
-        zoneSubscription.notificationInfo = silent
-        await saveSubscription(zoneSubscription, on: context.database)
-
-        let addedID = "flist.items.added.visible"
-        let updatedID = "flist.items.updated.visible"
-        // Query subscriptions only work on the owner's private database. Invitees
-        // get named banners from local sync after the silent zone push.
-        if sendItemAlerts, context.isOwner {
-            await saveVisibleItemSubscription(
-                id: addedID,
-                zoneID: context.zoneID,
-                exceptAddedBy: context.currentUserRecordName,
-                options: .firesOnRecordCreation,
-                localizationKey: "%@ was added to the list",
-                on: context.database
-            )
-        } else {
-            await deleteSubscription(addedID, on: context.database)
-        }
-        await deleteSubscription(updatedID, on: context.database)
+        try await saveSubscription(databaseSubscription, on: context.database)
     }
 
-    private func itemAlertSubscription(
-        id: String,
-        zoneID: CKRecordZone.ID,
-        exceptAddedBy: String,
-        options: CKQuerySubscription.Options,
-        localizationKey: String
-    ) -> CKQuerySubscription {
-        let predicate: NSPredicate
-        if exceptAddedBy.isEmpty {
-            predicate = NSPredicate(format: "name != nil")
-        } else {
-            predicate = NSPredicate(
-                format: "name != nil AND addedByRecordName != %@",
-                exceptAddedBy
-            )
+    @discardableResult
+    func subscribeToItemChanges(sendItemAlerts: Bool, generalAlerts requestedGeneralAlerts: Bool?) async throws -> Bool {
+        let context = try requireContext()
+        guard let scope = notificationScope else { return false }
+        let existing = try await context.database.allSubscriptions()
+        let databaseID = context.isOwner ? "flist.private-db.changes" : "flist.shared-db.changes"
+        let databaseSubscription = existing.first { $0.subscriptionID == databaseID }
+        let serverGeneralAlerts = databaseSubscription?.notificationInfo?.alertLocalizationKey != nil
+        let generalAlerts = requestedGeneralAlerts ?? serverGeneralAlerts
+        if databaseSubscription == nil || generalAlerts != serverGeneralAlerts {
+            try await subscribeToDatabaseChanges(generalAlerts: generalAlerts)
         }
-        let subscription = CKQuerySubscription(
-            recordType: AppConfig.itemRecordType,
-            predicate: predicate,
-            subscriptionID: id,
-            options: options
-        )
-        subscription.zoneID = zoneID
-        let info = CKSubscription.NotificationInfo()
-        info.shouldBadge = false
-        info.soundName = "default"
-        info.desiredKeys = ["name"]
-        info.alertLocalizationKey = localizationKey
-        info.alertLocalizationArgs = ["name"]
-        info.shouldSendContentAvailable = false
-        subscription.notificationInfo = info
-        return subscription
-    }
-
-    private func saveVisibleItemSubscription(
-        id: String,
-        zoneID: CKRecordZone.ID,
-        exceptAddedBy: String,
-        options: CKQuerySubscription.Options,
-        localizationKey: String,
-        on database: CKDatabase
-    ) async {
-        await deleteSubscription(id, on: database)
-        let preferred = itemAlertSubscription(
-            id: id,
-            zoneID: zoneID,
-            exceptAddedBy: exceptAddedBy,
-            options: options,
-            localizationKey: localizationKey
-        )
-        if await saveSubscription(preferred, on: database) { return }
-        guard !exceptAddedBy.isEmpty else { return }
-        let fallback = itemAlertSubscription(
-            id: id,
-            zoneID: zoneID,
-            exceptAddedBy: "",
-            options: options,
-            localizationKey: localizationKey
-        )
-        _ = await saveSubscription(fallback, on: database)
+        let ids = Set(existing.map(\.subscriptionID))
+        let addedID = "flist.v2.items.added.\(scope)"
+        let coverageKey = "flist.visibleCreation.\(scope)"
+        if sendItemAlerts, context.isOwner, !generalAlerts {
+            if !ids.contains(addedID) {
+                let subscription = CKQuerySubscription(
+                    recordType: AppConfig.itemRecordType,
+                    predicate: NSPredicate(
+                        format: "name != nil AND name != %@ AND name != %@ AND status == %@ AND addedByRecordName != %@",
+                        "Shopping", "NotifyPrefs", ItemStatus.needed.rawValue, context.currentUserRecordName
+                    ),
+                    subscriptionID: addedID,
+                    options: .firesOnRecordCreation
+                )
+                subscription.zoneID = context.zoneID
+                let info = CKSubscription.NotificationInfo()
+                info.soundName = "default"
+                info.desiredKeys = ["name"]
+                info.alertLocalizationKey = "%@ was added to the list"
+                info.alertLocalizationArgs = ["name"]
+                subscription.notificationInfo = info
+                // Install the replacement BEFORE removing the old subscription.
+                // Never broaden the predicate when an index or network is missing.
+                try await saveSubscription(subscription, on: context.database)
+                UserDefaults.standard.set(Date.now, forKey: coverageKey)
+            } else if UserDefaults.standard.object(forKey: coverageKey) == nil {
+                UserDefaults.standard.set(Date.now, forKey: coverageKey)
+            }
+        } else {
+            if ids.contains(addedID) {
+                try await deleteSubscription(addedID, on: context.database)
+            }
+            UserDefaults.standard.removeObject(forKey: coverageKey)
+        }
+        for id in ["flist.items.added.visible", "flist.items.updated.visible",
+                   "flist.zone.\(context.zoneID.zoneName).changes"] where ids.contains(id) {
+            try await deleteSubscription(id, on: context.database)
+        }
+        return generalAlerts
     }
 
     struct HouseholdState {
@@ -400,6 +395,8 @@ final class CloudKitService {
         var buyLists: [BuyList]
         var shops: [Shop]
         var notificationPrefs: ItemNotificationPrefs?
+        var notificationEvents: [ItemNotificationEvent]
+        var itemVersions: [UUID: String]
     }
 
     func fetchHouseholdState(fullReload: Bool = true, includingAssets: Bool = true) async throws -> HouseholdState {
@@ -456,7 +453,13 @@ final class CloudKitService {
             recipes: recipes,
             buyLists: buyLists,
             shops: shops,
-            notificationPrefs: notificationPrefs
+            notificationPrefs: notificationPrefs,
+            notificationEvents: records.compactMap(ItemNotificationEvent.init(record:))
+                .sorted { $0.createdAt < $1.createdAt },
+            itemVersions: Dictionary(uniqueKeysWithValues: records.compactMap { record in
+                guard let id = UUID(uuidString: record.recordID.recordName), let version = record.recordChangeTag else { return nil }
+                return (id, version)
+            })
         )
     }
 
@@ -464,16 +467,36 @@ final class CloudKitService {
         try await fetchHouseholdState().items
     }
 
-    func save(_ item: ShortageItem, updatePhoto: Bool = true) async throws {
+    func save(_ item: ShortageItem, updatePhoto: Bool = true, actorName: String? = nil) async throws {
         let context = try requireContext()
         var record: CKRecord
         let recordID = CKRecord.ID(recordName: item.id.uuidString, zoneID: context.zoneID)
-        if let existing = try? await context.database.record(for: recordID) {
-            record = existing
-        } else {
+        do {
+            record = try await context.database.record(for: recordID)
+        } catch let error as CKError where error.code == .unknownItem {
             record = CKRecord(recordType: AppConfig.itemRecordType, recordID: recordID)
         }
-        item.write(to: record)
+        let previousStatus = (record["status"] as? String).flatMap(ItemStatus.init(rawValue:))
+        let isCreation = record.creationDate == nil
+        var updated = item
+        var event: ItemNotificationEvent?
+        if previousStatus != item.status {
+            let action = ItemNotificationEvent(
+                id: UUID(), itemID: item.id, itemName: item.name, status: item.status,
+                actorID: context.currentUserRecordName, actorName: actorName ?? displayName(),
+                authorID: item.addedByRecordName, note: item.restockNote,
+                createdAt: .now, isCreation: isCreation && item.status == .needed
+            )
+            updated.notificationEventID = action.id
+            if item.status == .restocked {
+                updated.restockedByRecordName = action.actorID
+                updated.restockedByName = action.actorName
+            }
+            event = action
+        } else {
+            updated.notificationEventID = ItemNoteCodec.decode(record["note"] as? String ?? "").notificationEventID
+        }
+        updated.write(to: record)
         if updatePhoto {
             if let photoData = item.photoData {
                 let url = FileManager.default.temporaryDirectory.appendingPathComponent("item-\(UUID().uuidString).jpg")
@@ -483,8 +506,17 @@ final class CloudKitService {
                 record["photo"] = nil
             }
         }
-        let saved = try await context.database.save(record)
-        zoneRecordCache[saved.recordID] = saved
+        var records = [record]
+        if let event { records.append(try event.cloudRecord(zoneID: context.zoneID)) }
+        // The action and the item commit together, so a failed item save never
+        // emits an event and intermediate status changes survive later edits.
+        let result = try await context.database.modifyRecords(
+            saving: records, deleting: [], savePolicy: .ifServerRecordUnchanged, atomically: true
+        )
+        for result in result.saveResults.values {
+            let saved = try result.get()
+            zoneRecordCache[saved.recordID] = saved
+        }
     }
 
     func announceShoppingTrip(storeIDs: [UUID] = []) async throws -> ShoppingTrip {
@@ -971,6 +1003,8 @@ final class CloudKitService {
         try await withCheckedThrowingContinuation { continuation in
             let operation = CKFetchDatabaseChangesOperation(previousServerChangeToken: nil)
             operation.fetchAllChanges = true
+            operation.configuration.timeoutIntervalForRequest = 12
+            operation.configuration.timeoutIntervalForResource = 20
             operation.qualityOfService = .userInitiated
             let box = ZoneIDCollector()
             operation.recordZoneWithIDChangedBlock = { box.append($0) }
@@ -1059,21 +1093,32 @@ final class CloudKitService {
         return try? NSKeyedUnarchiver.unarchivedObject(ofClass: CKServerChangeToken.self, from: data)
     }
 
-    @discardableResult
-    private func saveSubscription(_ subscription: CKSubscription, on database: CKDatabase) async -> Bool {
-        do {
-            _ = try await database.save(subscription)
-            return true
-        } catch {
-            // Duplicate subscription, unsupported query field, or offline — live polling still keeps the list current.
-            return false
+    private func saveSubscription(_ subscription: CKSubscription, on database: CKDatabase) async throws {
+        for attempt in 0..<3 {
+            do {
+                _ = try await database.save(subscription)
+                return
+            } catch {
+                notificationLog.error("Subscription save failed: \(subscription.subscriptionID, privacy: .public): \(String(describing: error), privacy: .private)")
+                let ckError = error as? CKError
+                let retryable: Set<CKError.Code> = [.networkFailure, .networkUnavailable, .serviceUnavailable, .requestRateLimited, .zoneBusy]
+                let transient = ckError.map { retryable.contains($0.code) } ?? false
+                let delay = ckError?.retryAfterSeconds ?? Double(attempt + 1)
+                guard attempt < 2, transient, delay <= 5 else { throw error }
+                try await Task.sleep(for: .seconds(max(1, delay)))
+            }
         }
     }
 
-    private func deleteSubscription(_ subscriptionID: String, on database: CKDatabase) async {
+    private func deleteSubscription(_ subscriptionID: String, on database: CKDatabase) async throws {
         do {
             _ = try await database.deleteSubscription(withID: subscriptionID)
-        } catch {}
+        } catch let error as CKError where error.code == .unknownItem {
+            return
+        } catch {
+            notificationLog.error("Subscription removal failed: \(subscriptionID, privacy: .public): \(String(describing: error), privacy: .private)")
+            throw error
+        }
     }
 
     private func mergedRecord(_ incoming: CKRecord, into existing: CKRecord?) -> CKRecord {
@@ -1137,8 +1182,9 @@ final class CloudKitService {
             let box = RecordCollector()
 
             operation.recordWasChangedBlock = { _, result in
-                if case .success(let record) = result {
-                    box.append(record)
+                switch result {
+                case .success(let record): box.append(record)
+                case .failure(let error): box.fail(error)
                 }
             }
             operation.recordWithIDWasDeletedBlock = { recordID, _ in
@@ -1487,7 +1533,8 @@ extension ShortageItem {
             createdAt: record["createdAt"] as? Date ?? record.creationDate ?? .now,
             restockedAt: record["restockedAt"] as? Date,
             photoData: Self.photoData(from: record),
-            storeIDs: parsed.storeIDs
+            storeIDs: parsed.storeIDs,
+            notificationEventID: parsed.notificationEventID
         )
     }
 
@@ -1499,7 +1546,8 @@ extension ShortageItem {
             restockNote: restockNote,
             restockedByName: restockedByName,
             restockedByRecordName: restockedByRecordName,
-            storeIDs: storeIDs
+            storeIDs: storeIDs,
+            notificationEventID: notificationEventID
         ) as CKRecordValue
         record["status"] = status.rawValue as CKRecordValue
         record["addedByName"] = addedByName as CKRecordValue
@@ -1515,6 +1563,54 @@ extension ShortageItem {
     fileprivate static func photoData(from record: CKRecord) -> Data? {
         guard let asset = record["photo"] as? CKAsset, let url = asset.fileURL else { return nil }
         return try? Data(contentsOf: url)
+    }
+}
+
+extension CloudNotificationPayload {
+    init?(_ userInfo: [AnyHashable: Any]) {
+        guard let notification = CKNotification(fromRemoteNotificationDictionary: userInfo),
+              notification.containerIdentifier == AppConfig.cloudKitContainerID else { return nil }
+        if let query = notification as? CKQueryNotification {
+            databaseScope = query.databaseScope.rawValue
+            zoneName = query.recordID?.zoneID.zoneName
+            ownerName = query.databaseScope == .private ? CKCurrentUserDefaultName : query.recordID?.zoneID.ownerName
+            itemID = query.recordID.flatMap { UUID(uuidString: $0.recordName) }
+            isVisibleCreation = itemID != nil && query.queryNotificationReason == .recordCreated
+                && (query.subscriptionID?.hasPrefix("flist.v2.items.added.") == true
+                    || query.subscriptionID == "flist.items.added.visible")
+        } else if let database = notification as? CKDatabaseNotification {
+            databaseScope = database.databaseScope.rawValue
+            isVisibleCreation = false
+            isDatabaseChange = true
+            hasVisibleAlert = (userInfo["aps"] as? [String: Any])?["alert"] != nil
+        } else if let zone = notification as? CKRecordZoneNotification {
+            databaseScope = zone.databaseScope.rawValue
+            zoneName = zone.recordZoneID?.zoneName
+            ownerName = zone.databaseScope == .private ? CKCurrentUserDefaultName : zone.recordZoneID?.ownerName
+            isVisibleCreation = false
+        } else { return nil }
+    }
+}
+
+extension ItemNotificationEvent {
+    init?(record: CKRecord) {
+        guard record.recordType == AppConfig.itemRecordType,
+              record.recordID.recordName.hasPrefix(AppConfig.notificationEventPrefix),
+              let note = record["note"] as? String, let data = note.data(using: .utf8),
+              let event = try? JSONDecoder().decode(Self.self, from: data)
+        else { return nil }
+        self = event
+    }
+
+    func cloudRecord(zoneID: CKRecordZone.ID) throws -> CKRecord {
+        let record = CKRecord(recordType: AppConfig.itemRecordType,
+                              recordID: CKRecord.ID(recordName: AppConfig.notificationEventPrefix + id.uuidString,
+                                                    zoneID: zoneID))
+        record["note"] = String(decoding: try JSONEncoder().encode(self), as: UTF8.self) as CKRecordValue
+        record["createdAt"] = createdAt as CKRecordValue
+        // No name or addedByRecordName: 1.4+ clients must not mistake this
+        // for either a grocery item or a personal buy list.
+        return record
     }
 }
 

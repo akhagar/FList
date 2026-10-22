@@ -1,6 +1,8 @@
 import CloudKit
 import Foundation
 import Observation
+import WatchKit
+import OSLog
 
 @MainActor
 @Observable
@@ -94,7 +96,7 @@ final class WatchStore {
 
     func refresh() async {
         guard phase == .ready, cloudKit.context != nil else { return }
-        try? await reloadFromCloud()
+        _ = try? await reloadFromCloud()
     }
 
     func handleBecameActive() async {
@@ -114,13 +116,37 @@ final class WatchStore {
         stopLiveSync()
     }
 
+    func handleRemoteNotification(_ push: CloudNotificationPayload) async -> WKBackgroundFetchResult {
+        do {
+            while isOpening { try await Task.sleep(for: .milliseconds(50)) }
+            if cloudKit.context == nil {
+                _ = try await cloudKit.bootstrapExistingHousehold()
+                currentUserName = cloudKit.context?.currentUserName ?? currentUserName
+                currentUserRecordName = cloudKit.context?.currentUserRecordName ?? currentUserRecordName
+                cloudKit.seedCacheIfEmpty(items: items)
+            }
+            guard let context = cloudKit.context,
+                  push.databaseScope == context.database.databaseScope.rawValue,
+                  push.zoneName == nil || (push.zoneName == context.zoneID.zoneName && push.ownerName == context.zoneID.ownerName)
+            else { return .noData }
+            try Task.checkCancellation()
+            phase = .ready
+            let changed = try await reloadFromCloud()
+            return changed ? .newData : .noData
+        } catch {
+            Logger(subsystem: "com.tocnet.FList", category: "WatchNotifications")
+                .error("Watch background sync failed: \(String(describing: error), privacy: .private)")
+            return .failed
+        }
+    }
+
     func markRestocked(_ item: ShortageItem) async {
         var updated = item
         updated.status = .restocked
         updated.restockedAt = .now
         updated.restockNote = ""
-        updated.restockedByName = ""
-        updated.restockedByRecordName = ""
+        updated.restockedByName = currentUserDisplayName
+        updated.restockedByRecordName = currentUserRecordName
         restockPulse += 1
         await upsert(updated)
     }
@@ -187,6 +213,13 @@ final class WatchStore {
         cloudKit.seedCacheIfEmpty(items: items)
         startLiveSync()
         try await reloadFromCloud()
+        Task {
+            do { try await cloudKit.subscribeToDatabaseChanges() }
+            catch {
+                Logger(subsystem: "com.tocnet.FList", category: "WatchNotifications")
+                    .error("Watch subscription setup failed: \(String(describing: error), privacy: .private)")
+            }
+        }
     }
 
     private func upsert(_ item: ShortageItem) async {
@@ -198,15 +231,16 @@ final class WatchStore {
         persistLocalCache()
 
         do {
-            try await cloudKit.save(item, updatePhoto: false)
+            try await cloudKit.save(item, updatePhoto: false, actorName: currentUserDisplayName)
         } catch {
             errorMessage = error.flistDisplayMessage
             await refresh()
         }
     }
 
-    private func reloadFromCloud() async throws {
-        guard !isSyncing else { return }
+    @discardableResult
+    private func reloadFromCloud() async throws -> Bool {
+        while isSyncing { try await Task.sleep(for: .milliseconds(50)) }
         isSyncing = true
         defer { isSyncing = false }
         let state = try await cloudKit.fetchHouseholdState(
@@ -214,7 +248,7 @@ final class WatchStore {
             includingAssets: false
         )
         if hasLoadedOnce, !state.hasChanges {
-            return
+            return false
         }
         hasLoadedOnce = true
         items = state.items
@@ -226,10 +260,12 @@ final class WatchStore {
             UserDefaults.standard.set(householdName, forKey: "flist.householdName")
         }
         persistLocalCache()
+        return state.hasChanges
     }
 
     private func startLiveSync() {
-        guard phase == .ready, cloudKit.context != nil else { return }
+        guard WKApplication.shared().applicationState == .active,
+              phase == .ready, cloudKit.context != nil else { return }
         liveSyncTask?.cancel()
         liveSyncTask = Task { [weak self] in
             while !Task.isCancelled {

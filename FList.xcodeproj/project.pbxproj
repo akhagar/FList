@@ -60,6 +60,8 @@
 		A50000000000000000000014 /* CloudKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A20000000000000000000018 /* CloudKit.framework */; };
 		A50000000000000000000015 /* FListWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = A40000000000000000000001 /* FListWatch.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		A50000000000000000000016 /* Shop.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000036 /* Shop.swift */; };
+		B10000000000000000000001 /* ItemNotificationEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000003 /* ItemNotificationEvent.swift */; };
+		B10000000000000000000002 /* ItemNotificationEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000003 /* ItemNotificationEvent.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -135,6 +137,7 @@
 		A40000000000000000000005 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A40000000000000000000006 /* FListWatch.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = FListWatch.entitlements; sourceTree = "<group>"; };
 		A40000000000000000000007 /* FListWatchRelease.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = FListWatchRelease.entitlements; sourceTree = "<group>"; };
+		B10000000000000000000003 /* ItemNotificationEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemNotificationEvent.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -202,6 +205,7 @@
 			isa = PBXGroup;
 			children = (
 				A20000000000000000000003 /* ShortageItem.swift */,
+				B10000000000000000000003 /* ItemNotificationEvent.swift */,
 				A20000000000000000000036 /* Shop.swift */,
 				A20000000000000000000031 /* Recipe.swift */,
 				A20000000000000000000034 /* ImportText.swift */,
@@ -381,6 +385,7 @@
 				A30000000000000000000030 /* AppTheme.swift in Sources */,
 				A30000000000000000000031 /* Recipe.swift in Sources */,
 				A30000000000000000000003 /* ShortageItem.swift in Sources */,
+				B10000000000000000000001 /* ItemNotificationEvent.swift in Sources */,
 				A30000000000000000000004 /* FamilyMember.swift in Sources */,
 				A30000000000000000000036 /* Shop.swift in Sources */,
 				A30000000000000000000005 /* LocalPersistence.swift in Sources */,
@@ -419,6 +424,7 @@
 				A50000000000000000000004 /* AppConfig.swift in Sources */,
 				A50000000000000000000005 /* L10n.swift in Sources */,
 				A50000000000000000000006 /* ShortageItem.swift in Sources */,
+				B10000000000000000000002 /* ItemNotificationEvent.swift in Sources */,
 				A50000000000000000000007 /* FamilyMember.swift in Sources */,
 				A50000000000000000000016 /* Shop.swift in Sources */,
 				A50000000000000000000008 /* Recipe.swift in Sources */,
@@ -446,7 +452,7 @@
 				CODE_SIGN_ENTITLEMENTS = FList/FList.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = FList/Info.plist;
@@ -467,7 +473,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.6.4;
+				MARKETING_VERSION = 1.6.5;
 				MTL_ENABLE_DEBUG_INFO = "DWARF with dSYM File";
 				PRODUCT_BUNDLE_IDENTIFIER = com.tocnet.FList;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -490,7 +496,7 @@
 				CODE_SIGN_ENTITLEMENTS = FList/FListRelease.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = FList/Info.plist;
@@ -511,7 +517,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.6.4;
+				MARKETING_VERSION = 1.6.5;
 				MTL_ENABLE_DEBUG_INFO = "DWARF with dSYM File";
 				PRODUCT_BUNDLE_IDENTIFIER = com.tocnet.FList;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -664,6 +670,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = FListWatch/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = OurStock;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.tocnet.FList;
@@ -672,7 +679,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.6.4;
+				MARKETING_VERSION = 1.6.5;
 				PRODUCT_BUNDLE_IDENTIFIER = com.tocnet.FList.watchkitapp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -701,6 +708,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = FListWatch/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = OurStock;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.tocnet.FList;
@@ -709,7 +717,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.6.4;
+				MARKETING_VERSION = 1.6.5;
 				PRODUCT_BUNDLE_IDENTIFIER = com.tocnet.FList.watchkitapp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";

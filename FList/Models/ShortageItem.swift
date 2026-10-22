@@ -29,6 +29,7 @@ struct ShortageItem: Identifiable, Hashable, Codable {
     var restockedAt: Date?
     var photoData: Data?
     var storeIDs: [UUID]
+    var notificationEventID: UUID?
 
     init(
         id: UUID = UUID(),
@@ -44,7 +45,8 @@ struct ShortageItem: Identifiable, Hashable, Codable {
         createdAt: Date = .now,
         restockedAt: Date? = nil,
         photoData: Data? = nil,
-        storeIDs: [UUID] = []
+        storeIDs: [UUID] = [],
+        notificationEventID: UUID? = nil
     ) {
         self.id = id
         self.name = name
@@ -61,11 +63,13 @@ struct ShortageItem: Identifiable, Hashable, Codable {
         self.photoData = photoData
         var seen = Set<UUID>()
         self.storeIDs = storeIDs.filter { seen.insert($0).inserted }
+        self.notificationEventID = notificationEventID
     }
 
     enum CodingKeys: String, CodingKey {
         case id, name, quantity, note, restockNote, restockedByName, restockedByRecordName
         case status, addedByName, addedByRecordName, createdAt, restockedAt, photoData, storeIDs
+        case notificationEventID
     }
 
     init(from decoder: Decoder) throws {
@@ -90,6 +94,8 @@ struct ShortageItem: Identifiable, Hashable, Codable {
         restockedByRecordName = savedByID.isEmpty ? parsed.restockedByRecordName : savedByID
         let savedStores = try container.decodeIfPresent([UUID].self, forKey: .storeIDs) ?? []
         storeIDs = savedStores.isEmpty ? parsed.storeIDs : savedStores
+        notificationEventID = try container.decodeIfPresent(UUID.self, forKey: .notificationEventID)
+            ?? parsed.notificationEventID
     }
 
     func encode(to encoder: Encoder) throws {
@@ -108,6 +114,7 @@ struct ShortageItem: Identifiable, Hashable, Codable {
         try container.encodeIfPresent(restockedAt, forKey: .restockedAt)
         try container.encodeIfPresent(photoData, forKey: .photoData)
         try container.encode(storeIDs, forKey: .storeIDs)
+        try container.encodeIfPresent(notificationEventID, forKey: .notificationEventID)
     }
 
     var restockFeedbackLine: String {
@@ -155,6 +162,7 @@ enum ItemNoteCodec {
         var restockedByName: String
         var restockedByRecordName: String
         var storeIDs: [UUID]
+        var notificationEventID: UUID? = nil
     }
 
     private struct RestockJSON: Codable {
@@ -162,6 +170,7 @@ enum ItemNoteCodec {
         var byName: String
         var byID: String?
         var storeIDs: [String]?
+        var notificationEventID: UUID?
     }
 
     static func decode(_ stored: String) -> Payload {
@@ -183,7 +192,8 @@ enum ItemNoteCodec {
                 restockNote: json.note,
                 restockedByName: json.byName,
                 restockedByRecordName: json.byID ?? "",
-                storeIDs: json.storeIDs?.compactMap(UUID.init(uuidString:)) ?? []
+                storeIDs: json.storeIDs?.compactMap(UUID.init(uuidString:)) ?? [],
+                notificationEventID: json.notificationEventID
             )
         }
         return Payload(
@@ -200,17 +210,20 @@ enum ItemNoteCodec {
         restockNote: String,
         restockedByName: String,
         restockedByRecordName: String,
-        storeIDs: [UUID] = []
+        storeIDs: [UUID] = [],
+        notificationEventID: UUID? = nil
     ) -> String {
         let trimmedNote = restockNote.trimmingCharacters(in: .whitespacesAndNewlines)
-        if trimmedNote.isEmpty, storeIDs.isEmpty {
+        if trimmedNote.isEmpty, storeIDs.isEmpty, restockedByRecordName.isEmpty,
+           restockedByName.isEmpty, notificationEventID == nil {
             return itemNote
         }
         let json = RestockJSON(
             note: trimmedNote,
             byName: restockedByName,
             byID: restockedByRecordName,
-            storeIDs: storeIDs.isEmpty ? nil : storeIDs.map(\.uuidString)
+            storeIDs: storeIDs.isEmpty ? nil : storeIDs.map(\.uuidString),
+            notificationEventID: notificationEventID
         )
         let payload = (try? JSONEncoder().encode(json)).flatMap { String(data: $0, encoding: .utf8) } ?? trimmedNote
         return itemNote + marker + payload
