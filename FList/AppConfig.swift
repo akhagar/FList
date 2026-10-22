@@ -11,6 +11,7 @@ enum AppConfig {
     static let storeRecordPrefix = "store-"
     static let notificationEventPrefix = "event-"
     static let notifyPrefsRecordName = "flist-notify-prefs"
+    static let barcodeLookupConfigurationRecordName = "flist-barcode-lookup"
 
     static func shoppingRecordName(for id: UUID) -> String {
         shoppingRecordPrefix + id.uuidString
@@ -48,12 +49,17 @@ enum AppConfig {
         recordName == notifyPrefsRecordName
     }
 
+    static func isBarcodeLookupConfigurationRecord(_ recordName: String) -> Bool {
+        recordName == barcodeLookupConfigurationRecordName
+    }
+
     static func isMetaItemRecord(_ recordName: String) -> Bool {
         isShoppingRecord(recordName)
             || isRecipeRecord(recordName)
             || isBuyListRecord(recordName)
             || isStoreRecord(recordName)
             || isNotifyPrefsRecord(recordName)
+            || isBarcodeLookupConfigurationRecord(recordName)
             || recordName.hasPrefix(notificationEventPrefix)
     }
 

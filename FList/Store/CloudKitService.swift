@@ -395,6 +395,7 @@ final class CloudKitService {
         var buyLists: [BuyList]
         var shops: [Shop]
         var notificationPrefs: ItemNotificationPrefs?
+        var saveMyCartAPIKey: String
         var notificationEvents: [ItemNotificationEvent]
         var itemVersions: [UUID: String]
     }
@@ -442,6 +443,9 @@ final class CloudKitService {
             $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
         }
         let notificationPrefs = records.compactMap(ItemNotificationPrefs.init(record:)).first
+        let saveMyCartAPIKey = records.first {
+            AppConfig.isBarcodeLookupConfigurationRecord($0.recordID.recordName)
+        }?["note"] as? String ?? ""
         let name = Self.title(from: share) ?? ""
         let hasChanges = needsSnapshot || !fetch.records.isEmpty || !fetch.deletedRecordIDs.isEmpty
         return HouseholdState(
@@ -454,6 +458,7 @@ final class CloudKitService {
             buyLists: buyLists,
             shops: shops,
             notificationPrefs: notificationPrefs,
+            saveMyCartAPIKey: saveMyCartAPIKey,
             notificationEvents: records.compactMap(ItemNotificationEvent.init(record:))
                 .sorted { $0.createdAt < $1.createdAt },
             itemVersions: Dictionary(uniqueKeysWithValues: records.compactMap { record in
@@ -583,6 +588,35 @@ final class CloudKitService {
         record["quantity"] = Int64(1) as CKRecordValue
         record["status"] = ItemStatus.needed.rawValue as CKRecordValue
         record["note"] = prefs.noteJSON as CKRecordValue
+        record["addedByName"] = context.currentUserName as CKRecordValue
+        record["addedByRecordName"] = context.currentUserRecordName as CKRecordValue
+        if record["createdAt"] == nil {
+            record["createdAt"] = Date.now as CKRecordValue
+        }
+        let saved = try await context.database.save(record)
+        zoneRecordCache[saved.recordID] = saved
+    }
+
+    func saveSaveMyCartAPIKey(_ key: String) async throws {
+        let context = try requireContext()
+        guard context.isOwner else { return }
+
+        let recordID = CKRecord.ID(
+            recordName: AppConfig.barcodeLookupConfigurationRecordName,
+            zoneID: context.zoneID
+        )
+        var record: CKRecord
+        if let existing = zoneRecordCache[recordID] {
+            record = existing
+        } else if let existing = try? await context.database.record(for: recordID) {
+            record = existing
+        } else {
+            record = CKRecord(recordType: AppConfig.itemRecordType, recordID: recordID)
+        }
+        record["name"] = nil
+        record["quantity"] = Int64(1) as CKRecordValue
+        record["status"] = ItemStatus.needed.rawValue as CKRecordValue
+        record["note"] = key.trimmingCharacters(in: .whitespacesAndNewlines) as CKRecordValue
         record["addedByName"] = context.currentUserName as CKRecordValue
         record["addedByRecordName"] = context.currentUserRecordName as CKRecordValue
         if record["createdAt"] == nil {

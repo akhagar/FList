@@ -1,5 +1,35 @@
 import Foundation
 
+enum BarcodeKeyValidationError: LocalizedError, Equatable {
+    case invalidKey
+    case accessDenied
+    case rateLimited
+    case unavailable
+
+    var errorDescription: String? {
+        switch self {
+        case .invalidKey:
+            L10n.string("The SaveMyCart key is invalid. Check the key and try again. Your saved key has not changed.")
+        case .accessDenied:
+            L10n.string("SaveMyCart rejected this key or restricted its access. Check your key and account limits. Your saved key has not changed.")
+        case .rateLimited:
+            L10n.string("SaveMyCart's request limit was reached. Try again later or check your quota. Your saved key has not changed.")
+        case .unavailable:
+            L10n.string("Couldn't verify the SaveMyCart key. Check your connection and try again. Your saved key has not changed.")
+        }
+    }
+}
+
+/// Never forward the API key to a redirect destination, or accept a login page as validation.
+private final class SaveMyCartValidationDelegate: NSObject, URLSessionTaskDelegate {
+    func urlSession(_ session: URLSession, task: URLSessionTask,
+                    willPerformHTTPRedirection response: HTTPURLResponse,
+                    newRequest request: URLRequest,
+                    completionHandler: @escaping (URLRequest?) -> Void) {
+        completionHandler(nil)
+    }
+}
+
 struct BarcodeHit: Identifiable, Hashable, Sendable {
     var id: String { sourceKey + "|" + barcode + "|" + name }
     var name: String
@@ -112,7 +142,11 @@ enum BarcodeLookupService {
         return codes
     }
 
-    static func lookup(barcode raw: String) async -> BarcodeLookupResult {
+    static func lookup(
+        barcode raw: String,
+        configuration: BarcodeLookupConfiguration = .empty
+    ) async -> BarcodeLookupResult {
+        let configuration = configuration.normalized
         let barcode = normalizedBarcode(raw)
         let codes = lookupCodes(from: barcode)
         guard let primary = codes.first else {
@@ -127,7 +161,6 @@ enum BarcodeLookupService {
             }
             group.addTask { await upcItemDB(codes: codes) }
             group.addTask { await gs1Resolver(codes: codes) }
-            group.addTask { await barcodeLookup(codes: codes) }
             var collected: [BarcodeHit] = []
             for await hit in group {
                 if let hit { collected.append(hit) }
@@ -135,7 +168,7 @@ enum BarcodeLookupService {
             return collected
         }
 
-        if hits.isEmpty, let local = await saveMyCart(codes: codes) {
+        if hits.isEmpty, let local = await saveMyCart(codes: codes, key: configuration.saveMyCartAPIKey) {
             hits.append(local)
         }
 
@@ -150,24 +183,72 @@ enum BarcodeLookupService {
         return BarcodeLookupResult(barcode: primary, hits: unique)
     }
 
-    static var searchedCatalogsSummary: String {
-        ListFormatter.localizedString(byJoining: searchedCatalogNames)
-    }
-
-    private static var searchedCatalogNames: [String] {
+    static func searchedCatalogsSummary(configuration: BarcodeLookupConfiguration = .empty) -> String {
+        let configuration = configuration.normalized
         var names = openFactsCatalogs.map(\.sourceName) + ["UPC Item DB", "GS1"]
-        if !infoPlistString("SaveMyCartAPIKey").isEmpty {
+        if !configuration.saveMyCartAPIKey.isEmpty {
             names.append("SaveMyCart")
         }
-        if !infoPlistString("BarcodeLookupAPIKey").isEmpty {
-            names.append("Barcode Lookup")
-        }
-        return names
+        return ListFormatter.localizedString(byJoining: names)
     }
 
     private static func infoPlistString(_ key: String) -> String {
         (Bundle.main.object(forInfoDictionaryKey: key) as? String)?
             .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+    }
+
+    /// Test an authenticated, free-tier endpoint. Empty search results still prove
+    /// the key works; a missing product must not make a valid key look invalid.
+    static func validateSaveMyCartAPIKey(_ rawKey: String, session validationSession: URLSession? = nil) async throws {
+        let key = rawKey.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !key.isEmpty, key.unicodeScalars.allSatisfy({ (33...126).contains($0.value) }) else {
+            throw BarcodeKeyValidationError.invalidKey
+        }
+        let configuredBase = infoPlistString("SaveMyCartAPIBaseURL")
+        let base = configuredBase.isEmpty ? "https://savemycart.net" : configuredBase
+        guard let baseURL = URL(string: base), baseURL.scheme?.lowercased() == "https",
+              baseURL.host != nil, baseURL.user == nil, baseURL.password == nil,
+              var components = URLComponents(url: baseURL.appendingPathComponent("api/v1/product-search/"),
+                                             resolvingAgainstBaseURL: false) else {
+            throw BarcodeKeyValidationError.unavailable
+        }
+        components.queryItems = [URLQueryItem(name: "q", value: "חלב")]
+        guard let url = components.url else { throw BarcodeKeyValidationError.unavailable }
+        var request = URLRequest(url: url, cachePolicy: .reloadIgnoringLocalAndRemoteCacheData, timeoutInterval: 15)
+        request.setValue(key, forHTTPHeaderField: "X-API-Key")
+        request.setValue(userAgent, forHTTPHeaderField: "User-Agent")
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
+        request.httpShouldHandleCookies = false
+
+        let data: Data
+        let response: URLResponse
+        do {
+            try Task.checkCancellation()
+            (data, response) = try await (validationSession ?? session).data(
+                for: request, delegate: SaveMyCartValidationDelegate()
+            )
+            try Task.checkCancellation()
+        } catch is CancellationError {
+            throw CancellationError()
+        } catch let error as URLError where error.code == .cancelled {
+            throw CancellationError()
+        } catch {
+            // Never expose a response body or request containing the secret key.
+            throw BarcodeKeyValidationError.unavailable
+        }
+        guard let http = response as? HTTPURLResponse else { throw BarcodeKeyValidationError.unavailable }
+        switch http.statusCode {
+        case 401: throw BarcodeKeyValidationError.invalidKey
+        case 403: throw BarcodeKeyValidationError.accessDenied
+        case 429: throw BarcodeKeyValidationError.rateLimited
+        case 200:
+            guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                  json["error"] == nil, json["errors"] == nil,
+                  json["data"] is [[String: Any]] else {
+                throw BarcodeKeyValidationError.unavailable
+            }
+        default: throw BarcodeKeyValidationError.unavailable
+        }
     }
 
     static func imageData(from url: URL?) async -> Data? {
@@ -286,45 +367,8 @@ enum BarcodeLookupService {
         )
     }
 
-    private static func barcodeLookup(codes: [String]) async -> BarcodeHit? {
-        let key = infoPlistString("BarcodeLookupAPIKey")
-        guard !key.isEmpty else { return nil }
-        for code in codes {
-            if let hit = await barcodeLookup(barcode: code, key: key) { return hit }
-        }
-        return nil
-    }
 
-    private static func barcodeLookup(barcode: String, key: String) async -> BarcodeHit? {
-        var components = URLComponents(string: "https://api.barcodelookup.com/v3/products")
-        components?.queryItems = [
-            URLQueryItem(name: "barcode", value: barcode),
-            URLQueryItem(name: "formatted", value: "y"),
-            URLQueryItem(name: "key", value: key)
-        ]
-        guard let url = components?.url,
-              let json = await jsonObject(url: url),
-              let products = json["products"] as? [[String: Any]],
-              let product = products.first
-        else { return nil }
-        let name = firstNonEmpty([
-            product["product_name"] as? String,
-            product["title"] as? String
-        ])
-        guard !name.isEmpty else { return nil }
-        let images = product["images"] as? [String]
-        return BarcodeHit(
-            name: name,
-            brand: firstNonEmpty([product["brand"] as? String, product["manufacturer"] as? String]),
-            barcode: barcode,
-            imageURL: images?.first.flatMap(URL.init(string:)),
-            sourceName: "Barcode Lookup",
-            sourceKey: "barcodelookup"
-        )
-    }
-
-    private static func saveMyCart(codes: [String]) async -> BarcodeHit? {
-        let key = infoPlistString("SaveMyCartAPIKey")
+    private static func saveMyCart(codes: [String], key: String) async -> BarcodeHit? {
         guard !key.isEmpty else { return nil }
         var base = infoPlistString("SaveMyCartAPIBaseURL")
         if base.isEmpty { base = "https://savemycart.net" }

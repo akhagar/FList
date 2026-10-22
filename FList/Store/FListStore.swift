@@ -36,6 +36,7 @@ final class FListStore {
     var notificationPrefs = FListStore.loadNotificationPrefs()
     var notificationIssue: String?
     var generalListAlerts = false
+    var saveMyCartAPIKey = ""
     private var activeNotificationScope: String?
     private var legacyBaselineScope: String?
     private var suppressGeneralCatchup = true
@@ -175,6 +176,41 @@ final class FListStore {
     }
 
     var usesiCloud: Bool { accountKind == .iCloud }
+
+    var canConfigureBarcodeLookup: Bool {
+        !usesiCloud || isOwner
+    }
+
+    var barcodeLookupConfiguration: BarcodeLookupConfiguration {
+        if usesiCloud {
+            return BarcodeLookupConfiguration(saveMyCartAPIKey: saveMyCartAPIKey)
+        }
+        return BarcodeLookupCredentials.load(for: "local")
+    }
+
+    func saveBarcodeLookupConfiguration(_ configuration: BarcodeLookupConfiguration) async throws {
+        guard canConfigureBarcodeLookup else {
+            throw CloudKitServiceError.notHouseholdOwner
+        }
+
+        let originalAccount = accountKind
+        let originalScope = cloudKit.notificationScope
+        let normalized = try await configuration.validated()
+        // Validation awaits a network request. Never apply its result to a
+        // different household if the selection/account changed in the meantime.
+        guard accountKind == originalAccount, cloudKit.notificationScope == originalScope,
+              canConfigureBarcodeLookup else {
+            throw CloudKitServiceError.sharedListUnavailable
+        }
+        if usesiCloud {
+            try await cloudKit.saveSaveMyCartAPIKey(normalized.saveMyCartAPIKey)
+            if accountKind == originalAccount, cloudKit.notificationScope == originalScope {
+                saveMyCartAPIKey = normalized.saveMyCartAPIKey
+            }
+        } else {
+            try BarcodeLookupCredentials.save(normalized, for: "local")
+        }
+    }
 
     func receivesNewItemNotifications(_ member: FamilyMember) -> Bool {
         if member.isCurrentUser { return currentUserReceivesNewItemAlerts() }
@@ -499,6 +535,7 @@ final class FListStore {
         recipes = []
         shops = []
         buyLists = []
+        saveMyCartAPIKey = ""
         householdName = AppConfig.householdDisplayName
         persistHouseholdName()
         resetItemBaseline()
@@ -1399,6 +1436,7 @@ final class FListStore {
         recipes = keepingPhotos(in: state.recipes, from: recipes)
         shops = keepingCoordinates(in: state.shops, from: shops)
         buyLists = mergedBuyLists(state.buyLists)
+        saveMyCartAPIKey = state.saveMyCartAPIKey.trimmingCharacters(in: .whitespacesAndNewlines)
         if UIApplication.shared.applicationState == .active { await collapseDuplicateItemNames() }
         adoptCurrentUserNameFromMembers()
         if !state.householdName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {

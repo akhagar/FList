@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		797B7C613035D18D00B833BA /* CloudKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A20000000000000000000018 /* CloudKit.framework */; };
+		79F144CC308A2026008B0390 /* BarcodeLookupCredentials.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79F144CB308A2026008B0390 /* BarcodeLookupCredentials.swift */; };
+		79F144CE308A206D008B0390 /* BarcodeLookupSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79F144CD308A206D008B0390 /* BarcodeLookupSettingsView.swift */; };
 		A30000000000000000000001 /* FListApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000001 /* FListApp.swift */; };
 		A30000000000000000000002 /* AppConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000002 /* AppConfig.swift */; };
 		A30000000000000000000003 /* ShortageItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000003 /* ShortageItem.swift */; };
@@ -89,6 +91,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		79F144CB308A2026008B0390 /* BarcodeLookupCredentials.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BarcodeLookupCredentials.swift; sourceTree = "<group>"; };
+		79F144CD308A206D008B0390 /* BarcodeLookupSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BarcodeLookupSettingsView.swift; sourceTree = "<group>"; };
 		A10000000000000000000300 /* FList.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FList.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A20000000000000000000001 /* FListApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FListApp.swift; sourceTree = "<group>"; };
 		A20000000000000000000002 /* AppConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfig.swift; sourceTree = "<group>"; };
@@ -224,6 +228,7 @@
 				A20000000000000000000025 /* NotificationManager.swift */,
 				A20000000000000000000038 /* NearbyStoreMatcher.swift */,
 				A20000000000000000000039 /* BarcodeLookupService.swift */,
+				79F144CB308A2026008B0390 /* BarcodeLookupCredentials.swift */,
 			);
 			path = Store;
 			sourceTree = "<group>";
@@ -246,6 +251,7 @@
 				A20000000000000000000023 /* MemberAvatar.swift */,
 				A20000000000000000000009 /* OnboardingView.swift */,
 				A20000000000000000000008 /* FamilySharingController.swift */,
+				79F144CD308A206D008B0390 /* BarcodeLookupSettingsView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -380,6 +386,7 @@
 			files = (
 				A30000000000000000000001 /* FListApp.swift in Sources */,
 				A30000000000000000000019 /* CloudKitShareAcceptance.swift in Sources */,
+				79F144CE308A206D008B0390 /* BarcodeLookupSettingsView.swift in Sources */,
 				A30000000000000000000002 /* AppConfig.swift in Sources */,
 				A30000000000000000000020 /* L10n.swift in Sources */,
 				A30000000000000000000030 /* AppTheme.swift in Sources */,
@@ -407,6 +414,7 @@
 				A30000000000000000000025 /* NotificationManager.swift in Sources */,
 				A30000000000000000000038 /* NearbyStoreMatcher.swift in Sources */,
 				A30000000000000000000039 /* BarcodeLookupService.swift in Sources */,
+				79F144CC308A2026008B0390 /* BarcodeLookupCredentials.swift in Sources */,
 				A30000000000000000000040 /* BarcodeScanSheet.swift in Sources */,
 				A30000000000000000000013 /* ShortageListView.swift in Sources */,
 				A30000000000000000000033 /* FListRootView.swift in Sources */,
