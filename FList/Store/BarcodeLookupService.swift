@@ -73,7 +73,7 @@ struct BarcodeLookupResult: Sendable {
 }
 
 enum BarcodeLookupService {
-    private static let userAgent = "OurStock/1.6.4 (https://github.com/akhagar/FList)"
+    private static let userAgent = "OurStock/1.6.6 (https://github.com/akhagar/FList)"
     private static let session: URLSession = {
         let config = URLSessionConfiguration.ephemeral
         config.timeoutIntervalForRequest = 15
@@ -83,11 +83,12 @@ enum BarcodeLookupService {
         return URLSession(configuration: config)
     }()
 
-    private static let openFactsCatalogs: [(host: String, sourceName: String, sourceKey: String)] = [
-        ("world.openfoodfacts.org", "Open Food Facts", "off"),
-        ("world.openbeautyfacts.org", "Open Beauty Facts", "obf"),
-        ("world.openpetfoodfacts.org", "Open Pet Food Facts", "opff"),
-        ("world.openproductsfacts.org", "Open Products Facts", "opf")
+    static let openFactsCatalogs: [(host: String, sourceName: String, sourceKey: String, language: String?)] = [
+        ("world.openfoodfacts.org", "Open Food Facts", "off", nil),
+        ("il.openfoodfacts.org", L10n.string("Open Food Facts Israel"), "off-il", "he"),
+        ("world.openbeautyfacts.org", "Open Beauty Facts", "obf", nil),
+        ("world.openpetfoodfacts.org", "Open Pet Food Facts", "opff", nil),
+        ("world.openproductsfacts.org", "Open Products Facts", "opf", nil)
     ]
 
     static func normalizedBarcode(_ raw: String) -> String {
@@ -156,7 +157,8 @@ enum BarcodeLookupService {
         var hits = await withTaskGroup(of: BarcodeHit?.self, returning: [BarcodeHit].self) { group in
             for catalog in openFactsCatalogs {
                 group.addTask {
-                    await openFacts(host: catalog.host, sourceName: catalog.sourceName, sourceKey: catalog.sourceKey, codes: codes)
+                    await openFacts(host: catalog.host, sourceName: catalog.sourceName, sourceKey: catalog.sourceKey,
+                                    codes: codes, language: catalog.language)
                 }
             }
             group.addTask { await upcItemDB(codes: codes) }
@@ -172,6 +174,10 @@ enum BarcodeLookupService {
             hits.append(local)
         }
 
+        return BarcodeLookupResult(barcode: primary, hits: uniqueHits(hits))
+    }
+
+    static func uniqueHits(_ hits: [BarcodeHit]) -> [BarcodeHit] {
         var unique: [BarcodeHit] = []
         var seen = Set<String>()
         for hit in hits {
@@ -180,7 +186,7 @@ enum BarcodeLookupService {
                 unique.append(hit)
             }
         }
-        return BarcodeLookupResult(barcode: primary, hits: unique)
+        return unique
     }
 
     static func searchedCatalogsSummary(configuration: BarcodeLookupConfiguration = .empty) -> String {
@@ -267,23 +273,29 @@ enum BarcodeLookupService {
         host: String,
         sourceName: String,
         sourceKey: String,
-        codes: [String]
+        codes: [String],
+        language: String?
     ) async -> BarcodeHit? {
         for code in codes {
-            if let hit = await openFacts(host: host, sourceName: sourceName, sourceKey: sourceKey, barcode: code) {
+            if let hit = await openFacts(host: host, sourceName: sourceName, sourceKey: sourceKey,
+                                         barcode: code, language: language) {
                 return hit
             }
         }
         return nil
     }
 
-    private static func openFacts(
+    static func openFacts(
         host: String,
         sourceName: String,
         sourceKey: String,
-        barcode: String
+        barcode: String,
+        language preferredLanguage: String? = nil,
+        session lookupSession: URLSession? = nil
     ) async -> BarcodeHit? {
-        let language = Locale.current.language.languageCode?.identifier ?? "en"
+        // Israel is another view of the same database. Request its Hebrew
+        // product details explicitly, while the worldwide lookup keeps the app language.
+        let language = preferredLanguage ?? Locale.current.language.languageCode?.identifier ?? "en"
         var components = URLComponents(string: "https://\(host)/api/v3/product/\(barcode)")
         components?.queryItems = [
             URLQueryItem(name: "lc", value: language),
@@ -294,10 +306,13 @@ enum BarcodeLookupService {
         ]
         guard let url = components?.url else { return nil }
         let json: [String: Any]?
-        if let v3 = await jsonObject(url: url) {
+        if let v3 = await jsonObject(url: url, session: lookupSession) {
             json = v3
         } else {
-            json = await openFactsV2(host: host, barcode: barcode)
+            // Preserve the requested language and fields on the legacy endpoint too.
+            components?.path = "/api/v2/product/\(barcode).json"
+            guard let legacyURL = components?.url else { return nil }
+            json = await jsonObject(url: legacyURL, session: lookupSession)
         }
         guard let json else { return nil }
         let statusString = (json["status"] as? String ?? "").lowercased()
@@ -329,11 +344,6 @@ enum BarcodeLookupService {
             sourceName: sourceName,
             sourceKey: sourceKey
         )
-    }
-
-    private static func openFactsV2(host: String, barcode: String) async -> [String: Any]? {
-        guard let url = URL(string: "https://\(host)/api/v2/product/\(barcode).json") else { return nil }
-        return await jsonObject(url: url)
     }
 
     private static func upcItemDB(codes: [String]) async -> BarcodeHit? {
@@ -556,23 +566,23 @@ enum BarcodeLookupService {
         return String(repeating: "0", count: 14 - barcode.count) + barcode
     }
 
-    private static func jsonObject(url: URL, accept: String? = nil) async -> [String: Any]? {
+    private static func jsonObject(url: URL, accept: String? = nil, session lookupSession: URLSession? = nil) async -> [String: Any]? {
         var request = URLRequest(url: url)
         request.cachePolicy = .reloadIgnoringLocalCacheData
         request.setValue(accept ?? "application/json", forHTTPHeaderField: "Accept")
         request.setValue(userAgent, forHTTPHeaderField: "User-Agent")
-        return await jsonObject(request: request)
+        return await jsonObject(request: request, session: lookupSession)
     }
 
-    private static func jsonObject(request: URLRequest) async -> [String: Any]? {
-        let (status, json) = await jsonResponse(request: request)
+    private static func jsonObject(request: URLRequest, session lookupSession: URLSession? = nil) async -> [String: Any]? {
+        let (status, json) = await jsonResponse(request: request, session: lookupSession)
         guard (200..<300).contains(status) else { return nil }
         return json
     }
 
-    private static func jsonResponse(request: URLRequest) async -> (Int, [String: Any]?) {
+    private static func jsonResponse(request: URLRequest, session lookupSession: URLSession? = nil) async -> (Int, [String: Any]?) {
         do {
-            let (data, response) = try await session.data(for: request)
+            let (data, response) = try await (lookupSession ?? session).data(for: request)
             let status = (response as? HTTPURLResponse)?.statusCode ?? 0
             let json = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any]
             return (status, json)

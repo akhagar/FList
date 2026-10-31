@@ -18,6 +18,7 @@ struct AddItemSheet: View {
     @State private var showCamera = false
     @State private var showPhotoOptions = false
     @State private var showPhotoViewer = false
+    @FocusState private var isNameFocused: Bool
 
     init(store: FListStore, item: ShortageItem? = nil) {
         self.store = store
@@ -62,15 +63,27 @@ struct AddItemSheet: View {
                     }
                 }
 
-                Section("Item") {
+                Section {
                     TextField("What are you out of?", text: $name)
                         .textInputAutocapitalization(.sentences)
                         .submitLabel(.done)
+                        .focused($isNameFocused)
+                        .onSubmit { isNameFocused = false }
+                        .accessibilityIdentifier("addItemName")
+                    nameSuggestions
                     Stepper(value: $quantity, in: 1...99) {
                         Text("Quantity: \(quantity)")
                     }
                     TextField("Note (optional)", text: $note, axis: .vertical)
                         .lineLimit(2...4)
+                } header: {
+                    Text("Item")
+                } footer: {
+                    if existing == nil, let status = store.listedStatus(forName: name) {
+                        Text(status == .restocked
+                             ? "This is on Back in stock. Adding marks it as needed."
+                             : "Already on Needed. Adding again increases the quantity.")
+                    }
                 }
 
                 if !store.shops.isEmpty {
@@ -130,6 +143,42 @@ struct AddItemSheet: View {
             }
         }
         .flistSheetDetents()
+    }
+
+    @ViewBuilder
+    private var nameSuggestions: some View {
+        if existing == nil, isNameFocused {
+            let suggestions = store.itemNameSuggestions(matching: name)
+            if !suggestions.isEmpty {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Suggestions from Back in stock")
+                        .font(.subheadline.weight(.semibold))
+                    Text("Your items are shown first. Tap a suggestion to fill in the name.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                ForEach(suggestions) { item in
+                    Button {
+                        name = item.name.trimmingCharacters(in: .whitespacesAndNewlines)
+                        isNameFocused = false
+                    } label: {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(item.name)
+                                .foregroundStyle(.primary)
+                                .multilineTextAlignment(.leading)
+                            Text(String(format: L10n.string("Added by %@"), store.displayName(for: item)))
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                        .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.borderless)
+                    .accessibilityHint("Use this item name")
+                    .accessibilityIdentifier("itemNameSuggestion.\(item.id.uuidString)")
+                }
+            }
+        }
     }
 
     private var itemPhoto: some View {

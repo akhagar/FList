@@ -627,6 +627,14 @@ final class FListStore {
         items.filter { ShortageItem.namesMatch($0.name, name) }
     }
 
+    func itemNameSuggestions(matching query: String) -> [ShortageItem] {
+        var authorIDs: Set<String> = [currentUserRecordName]
+        // Locally created records can retain this legacy ID after the owner
+        // enables iCloud. Invitees must not treat the owner's old items as theirs.
+        if !usesiCloud || isOwner { authorIDs.insert("local") }
+        return ShortageItem.restockedSuggestions(in: items, matching: query, preferredAuthorIDs: authorIDs)
+    }
+
     func listedStatus(forName name: String) -> ItemStatus? {
         let matches = itemsNamed(name)
         if matches.contains(where: { $0.status == .needed }) { return .needed }

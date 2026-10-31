@@ -148,6 +148,49 @@ struct ShortageItem: Identifiable, Hashable, Codable {
         let left = nameKey(a)
         return !left.isEmpty && left == nameKey(b)
     }
+
+    /// Local autocomplete only: no records are changed until the user taps Add.
+    static func restockedSuggestions(
+        in items: [ShortageItem],
+        matching query: String,
+        preferredAuthorIDs: Set<String>,
+        limit: Int = 5
+    ) -> [ShortageItem] {
+        func searchKey(_ value: String) -> String {
+            // Foundation's diacritic folding does not strip Hebrew niqqud.
+            // Normalize only for suggestions; preserve the saved name and merge rules.
+            let scalars = nameKey(value).unicodeScalars.filter { !CharacterSet.nonBaseCharacters.contains($0) }
+            return String(String.UnicodeScalarView(scalars))
+        }
+        let needle = searchKey(query)
+        guard !needle.isEmpty, limit > 0 else { return [] }
+        let neededNames = Set(items.filter { $0.status == .needed }.map { searchKey($0.name) })
+        let candidates = items.compactMap { item -> (item: ShortageItem, key: String, mine: Bool, rank: Int)? in
+            guard item.status == .restocked else { return nil }
+            let key = searchKey(item.name)
+            guard !key.isEmpty, key.contains(needle), !neededNames.contains(key) else { return nil }
+            let mine = !item.addedByRecordName.isEmpty && preferredAuthorIDs.contains(item.addedByRecordName)
+            let rank = key == needle ? 0 : key.hasPrefix(needle) ? 1 : 2
+            return (item, key, mine, rank)
+        }
+        let sorted = candidates.sorted { lhs, rhs in
+            if lhs.mine != rhs.mine { return lhs.mine }
+            if lhs.rank != rhs.rank { return lhs.rank < rhs.rank }
+            let leftDate = lhs.item.restockedAt ?? lhs.item.createdAt
+            let rightDate = rhs.item.restockedAt ?? rhs.item.createdAt
+            if leftDate != rightDate { return leftDate > rightDate }
+            let nameOrder = lhs.key.localizedStandardCompare(rhs.key)
+            if nameOrder != .orderedSame { return nameOrder == .orderedAscending }
+            return lhs.item.id.uuidString < rhs.item.id.uuidString
+        }
+        var seen = Set<String>()
+        var suggestions: [ShortageItem] = []
+        for candidate in sorted where seen.insert(candidate.key).inserted {
+            suggestions.append(candidate.item)
+            if suggestions.count == limit { break }
+        }
+        return suggestions
+    }
 }
 
 enum ItemNoteCodec {

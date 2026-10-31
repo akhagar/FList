@@ -8,7 +8,8 @@ OurStock is a native iPhone, iPad, and Apple Watch app. Lists sync over iCloud w
 
 - One shared shortage list, with **Needed** and **Back in stock**
 - Add a name, quantity, optional note, photo, and which store you can buy it from
-- Scan a product barcode to look it up in Open Food Facts, Open Beauty Facts, Open Pet Food Facts, Open Products Facts, UPC Item DB, and GS1, then add it to Needed. SaveMyCart is used only if none of those catalogs have the barcode. SaveMyCart and Barcode Lookup run only if you add API keys in Info.plist
+- As you type an item name on iPhone or iPad, get up to five matching suggestions from Back in stock, with items you originally added first. Tap a suggestion to fill the name, then tap Add to mark the existing item as Needed. Suggestions work offline and do not change your quantity, note, photo, or store selections.
+- Scan a product barcode to look it up in Open Food Facts (worldwide and Israel), Open Beauty Facts, Open Pet Food Facts, Open Products Facts, UPC Item DB, and GS1, then add it to Needed. The Israel lookup requests Hebrew product details alongside the worldwide lookup in the app's language; both use the same Open Food Facts database and need no API key. SaveMyCart is used only if none of those catalogs have the barcode and a key has been added in Settings → Barcode lookup keys.
 - Tap an item to mark it back in stock. Long-press to edit, or to leave a note if something wasn’t as described — that note is sent to the person who added the item
 - Cart button to tell the family you’re going shopping, so they can add anything that’s missing
 - Shared **Stores**: name and optional location. When you go shopping you can mention one or more shops. If you’re at a store, items tagged for it move to the top of Needed
@@ -86,7 +87,7 @@ Before shipping, test with two Apple IDs on physical devices: owner and invitee,
 | Bundle ID | `com.tocnet.FList` |
 | Watch bundle ID | `com.tocnet.FList.watchkitapp` |
 | CloudKit container | `iCloud.com.tocnet.FList` |
-| Version | 1.6.4 |
+| Version | 1.6.6 |
 
 The CloudKit container ID in `FList/AppConfig.swift` must stay in sync with the app entitlements. Debug builds use the Development environment; Release/TestFlight uses Production. New CloudKit record types or fields need a schema deploy in CloudKit Console before they work in Production.
 
@@ -94,4 +95,4 @@ Recipes, personal buy lists, and stores reuse the existing `ShortageItem` type a
 
 ## Privacy
 
-OurStock does not use tracking. List data lives in your iCloud account (and on the device as a local cache). Camera and photo library access are only for optional pictures of items, recipes, or people on the list, invite QR codes, and product barcodes. Scanning a barcode sends the number to Open Food Facts (food, beauty, pet food, and household catalogs), UPC Item DB, and GS1. If none of those have the product, it is sent to SaveMyCart. SaveMyCart needs `SaveMyCartAPIKey` (free key from [savemycart.net/developers](https://savemycart.net/developers); `X-API-Key`). Optional `SaveMyCartAPIBaseURL` defaults to `https://savemycart.net`. Barcode Lookup needs `BarcodeLookupAPIKey`. Location is used on this device only, to recognize when you’re at one of your stores and sort that shop’s items to the top.
+OurStock does not use tracking. List data lives in your iCloud account (and on the device as a local cache). Camera and photo library access are only for optional pictures of items, recipes, or people on the list, invite QR codes, and product barcodes. Scanning a barcode sends the number to Open Food Facts (worldwide and Israel food catalogs, beauty, pet food, and household catalogs), UPC Item DB, and GS1. If none of those have the product and a SaveMyCart key is configured, it is sent to SaveMyCart. Add the key in Settings → Barcode lookup keys ([SaveMyCart developer portal](https://savemycart.net/developers)); it is shared with the iCloud list or stored in this device's Keychain for local-only lists. Optional `SaveMyCartAPIBaseURL` defaults to `https://savemycart.net`. Location is used on this device only, to recognize when you’re at one of your stores and sort that shop’s items to the top.

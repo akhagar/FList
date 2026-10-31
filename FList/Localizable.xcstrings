@@ -1,6 +1,34 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Suggestions from Back in stock" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Suggestions from Back in stock" } },
+        "he" : { "stringUnit" : { "state" : "translated", "value" : "הצעות מפריטים שחזרו למלאי" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Подсказки из списка пополненных товаров" } }
+      }
+    },
+    "Your items are shown first. Tap a suggestion to fill in the name." : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Your items are shown first. Tap a suggestion to fill in the name." } },
+        "he" : { "stringUnit" : { "state" : "translated", "value" : "פריטים שהוספתם בעבר מוצגים ראשונים. לחצו על הצעה כדי למלא את השם." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Сначала показаны товары, добавленные вами. Нажмите на подсказку, чтобы заполнить название." } }
+      }
+    },
+    "Use this item name" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Use this item name" } },
+        "he" : { "stringUnit" : { "state" : "translated", "value" : "השתמשו בשם הפריט הזה" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Использовать это название товара" } }
+      }
+    },
+    "Open Food Facts Israel" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Open Food Facts Israel" } },
+        "he" : { "stringUnit" : { "state" : "translated", "value" : "Open Food Facts ישראל" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Open Food Facts Израиль" } }
+      }
+    },
     "About the SaveMyCart key" : {
       "localizations" : {
         "en" : { "stringUnit" : { "state" : "translated", "value" : "About the SaveMyCart key" } },
