@@ -70,7 +70,7 @@ struct BarcodeScanSheet: View {
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
-            Text(String(format: L10n.string("Checking %@."), BarcodeLookupService.searchedCatalogsSummary))
+            Text(String(format: L10n.string("Checking %@."), BarcodeLookupService.searchedCatalogsSummary(configuration: store.barcodeLookupConfiguration)))
                 .font(.caption)
                 .foregroundStyle(.tertiary)
                 .multilineTextAlignment(.center)
@@ -90,7 +90,7 @@ struct BarcodeScanSheet: View {
             } header: {
                 Text("No catalog match")
             } footer: {
-                Text(String(format: L10n.string("Nothing turned up for %@. Checked %@. You can still add it by name."), barcode, BarcodeLookupService.searchedCatalogsSummary))
+                Text(String(format: L10n.string("Nothing turned up for %@. Checked %@. You can still add it by name."), barcode, BarcodeLookupService.searchedCatalogsSummary(configuration: store.barcodeLookupConfiguration)))
             }
 
             if !store.shops.isEmpty {
@@ -243,7 +243,10 @@ struct BarcodeScanSheet: View {
         selected = nil
         result = nil
         photoData = nil
-        let lookedUp = await BarcodeLookupService.lookup(barcode: code)
+        let lookedUp = await BarcodeLookupService.lookup(
+            barcode: code,
+            configuration: store.barcodeLookupConfiguration
+        )
         result = lookedUp
         isLookingUp = false
         if let hit = lookedUp.best {

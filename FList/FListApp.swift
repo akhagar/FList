@@ -4,7 +4,7 @@ import SwiftUI
 struct FListApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @Environment(\.scenePhase) private var scenePhase
-    @State private var store = FListStore()
+    @State private var store = CloudKitShareBridge.sharedStore
     @AppStorage(AppAppearance.storageKey) private var appearanceRaw = AppAppearance.system.rawValue
     @AppStorage(AppAccent.storageKey) private var accentRaw = AppAccent.green.rawValue
 
@@ -22,8 +22,6 @@ struct FListApp: App {
                 .tint(accent.color)
                 .preferredColorScheme(appearance.colorScheme)
                 .task {
-                    CloudKitShareBridge.bind(store)
-                    await CloudKitShareBridge.flushPending()
                     await store.start()
                     await CloudKitShareBridge.flushPending()
                 }

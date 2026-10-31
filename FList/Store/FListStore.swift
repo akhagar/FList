@@ -1,6 +1,8 @@
 import CloudKit
 import Foundation
 import Observation
+import OSLog
+import UIKit
 
 enum AccountKind: Equatable {
     case checking
@@ -32,6 +34,25 @@ final class FListStore {
     var familyAlertTitle: String?
     var familyAlertMessage: String?
     var notificationPrefs = FListStore.loadNotificationPrefs()
+    var notificationIssue: String?
+    var generalListAlerts = false
+    var saveMyCartAPIKey = ""
+    private var activeNotificationScope: String?
+    private var legacyBaselineScope: String?
+    private var suppressGeneralCatchup = true
+    private var startTask: Task<Void, Never>?
+    private var isConfiguringNotifications = false
+    private var requestedGeneralAlerts: Bool?
+    private var activeGeneralAlerts = false
+    private let notificationLog = Logger(subsystem: "com.tocnet.FList", category: "NotificationSync")
+
+    private struct NotificationBaseline: Codable {
+        var items: [UUID: ItemStatus]
+        var hasItems: Bool
+        var trips: Set<UUID>
+        var hasTrips: Bool
+        var preferences: ItemNotificationPrefs
+    }
 
     let cloudKit = CloudKitService()
     private let nearbyMatcher = NearbyStoreMatcher()
@@ -43,6 +64,10 @@ final class FListStore {
     init(restoreCache: Bool = true) {
         if restoreCache {
             restoreCachedSession()
+        }
+        if let zone = UserDefaults.standard.string(forKey: "flist.selectedZoneName"),
+           let owner = UserDefaults.standard.string(forKey: "flist.selectedZoneOwner") {
+            legacyBaselineScope = NotificationScope.key(userID: currentUserRecordName, zoneName: zone, ownerName: owner)
         }
         nearbyMatcher.onNearbyShopChange = { [weak self] shop in
             self?.nearbyShop = shop
@@ -152,6 +177,41 @@ final class FListStore {
 
     var usesiCloud: Bool { accountKind == .iCloud }
 
+    var canConfigureBarcodeLookup: Bool {
+        !usesiCloud || isOwner
+    }
+
+    var barcodeLookupConfiguration: BarcodeLookupConfiguration {
+        if usesiCloud {
+            return BarcodeLookupConfiguration(saveMyCartAPIKey: saveMyCartAPIKey)
+        }
+        return BarcodeLookupCredentials.load(for: "local")
+    }
+
+    func saveBarcodeLookupConfiguration(_ configuration: BarcodeLookupConfiguration) async throws {
+        guard canConfigureBarcodeLookup else {
+            throw CloudKitServiceError.notHouseholdOwner
+        }
+
+        let originalAccount = accountKind
+        let originalScope = cloudKit.notificationScope
+        let normalized = try await configuration.validated()
+        // Validation awaits a network request. Never apply its result to a
+        // different household if the selection/account changed in the meantime.
+        guard accountKind == originalAccount, cloudKit.notificationScope == originalScope,
+              canConfigureBarcodeLookup else {
+            throw CloudKitServiceError.sharedListUnavailable
+        }
+        if usesiCloud {
+            try await cloudKit.saveSaveMyCartAPIKey(normalized.saveMyCartAPIKey)
+            if accountKind == originalAccount, cloudKit.notificationScope == originalScope {
+                saveMyCartAPIKey = normalized.saveMyCartAPIKey
+            }
+        } else {
+            try BarcodeLookupCredentials.save(normalized, for: "local")
+        }
+    }
+
     func receivesNewItemNotifications(_ member: FamilyMember) -> Bool {
         if member.isCurrentUser { return currentUserReceivesNewItemAlerts() }
         return notificationPrefs.includes(member.id)
@@ -206,6 +266,17 @@ final class FListStore {
     }
 
     func start() async {
+        if let startTask {
+            await startTask.value
+            return
+        }
+        let task = Task { await startSession() }
+        startTask = task
+        await task.value
+        startTask = nil
+    }
+
+    private func startSession() async {
         let cachedHousehold = hasHousehold
         if !cachedHousehold {
             accountKind = .checking
@@ -315,7 +386,8 @@ final class FListStore {
         isBusy = true
         defer { isBusy = false }
         do {
-            resetItemBaseline()
+            while isSyncing { try await Task.sleep(for: .milliseconds(50)) }
+            persistNotificationBaseline()
             _ = try await cloudKit.openHousehold(choice)
             try await adoptCloudHousehold()
             await refreshAvailableHouseholds()
@@ -356,34 +428,66 @@ final class FListStore {
     func refresh() async {
         guard hasHousehold else { return }
         if usesiCloud {
-            try? await reloadFromCloud(notify: true, showProgress: true, fullReload: true)
+            _ = try? await reloadFromCloud(notify: true, showProgress: true, fullReload: true)
         } else {
             loadLocal()
         }
     }
 
-    func handleRemoteNotification(_ userInfo: [AnyHashable: Any]) async {
-        guard usesiCloud, hasHousehold, cloudKit.context != nil else { return }
-        try? await reloadFromCloud(notify: true, showProgress: false, fullReload: false)
+    @discardableResult
+    func handleRemoteNotification(_ push: CloudNotificationPayload) async -> UIBackgroundFetchResult {
+        let revisionBeforeFetch = syncRevision
+        let selectedDatabase = isOwner ? CKDatabase.Scope.private : .shared
+        if push.isDatabaseChange, push.databaseScope == selectedDatabase.rawValue {
+            // Another device can change this account-wide CloudKit preference.
+            // Apply the incoming mode before a cold-start fetch can emit alerts.
+            activeGeneralAlerts = push.hasVisibleAlert
+            UserDefaults.standard.set(push.hasVisibleAlert, forKey: generalAlertsKey)
+            if requestedGeneralAlerts == nil { generalListAlerts = push.hasVisibleAlert }
+        }
+        if push.isVisibleCreation, UIApplication.shared.applicationState != .active {
+            NotificationManager.shared.recordVisibleCreation(push)
+        }
+        if cloudKit.context == nil { await start() }
+        guard usesiCloud, hasHousehold, let context = cloudKit.context else {
+            return hasHousehold ? .failed : .noData
+        }
+        guard push.databaseScope == context.database.databaseScope.rawValue,
+              push.zoneName == nil || (push.zoneName == context.zoneID.zoneName && push.ownerName == context.zoneID.ownerName)
+        else { return .noData }
+        do {
+            try Task.checkCancellation()
+            try await reloadFromCloud(notify: true, showProgress: false, fullReload: false)
+            return syncRevision != revisionBeforeFetch ? .newData : .noData
+        } catch {
+            notificationLog.error("Background sync failed: \(String(describing: error), privacy: .private)")
+            return .failed
+        }
     }
 
     func handleBecameActive() async {
+        await NotificationManager.shared.reconcileDeliveredAlerts()
+        await NotificationManager.shared.retryPending()
+        if cloudKit.context == nil { await start() }
         await retryJoinSharedListIfNeeded()
         startNearbyStoreMatching()
         guard usesiCloud, hasHousehold, cloudKit.context != nil else { return }
+        Task { await enableChangeNotifications() }
         startLiveSync()
-        try? await reloadFromCloud(notify: true, showProgress: false, fullReload: false)
+        _ = try? await reloadFromCloud(notify: true, showProgress: false, fullReload: false)
     }
 
     func handleBecameInactive() {
+        suppressGeneralCatchup = true
         stopLiveSync()
         stopNearbyStoreMatching()
     }
 
     func acceptShare(_ metadata: CKShare.Metadata) async {
         do {
+            while isSyncing { try await Task.sleep(for: .milliseconds(50)) }
             accountKind = .iCloud
-            resetItemBaseline()
+            persistNotificationBaseline()
             _ = try await cloudKit.acceptShare(metadata)
             try await adoptCloudHousehold()
             await refreshAvailableHouseholds()
@@ -394,8 +498,9 @@ final class FListStore {
 
     func openAcceptedSharedList() async {
         do {
+            while isSyncing { try await Task.sleep(for: .milliseconds(50)) }
             accountKind = .iCloud
-            resetItemBaseline()
+            persistNotificationBaseline()
             _ = try await cloudKit.openAcceptedSharedList()
             try await adoptCloudHousehold()
             await refreshAvailableHouseholds()
@@ -409,10 +514,13 @@ final class FListStore {
         currentUserName = cloudKit.context?.currentUserName ?? L10n.string("Me")
         currentUserRecordName = cloudKit.context?.currentUserRecordName ?? "local"
         UserDefaults.standard.set(currentUserRecordName, forKey: "flist.userRecordName")
+        activateNotificationScope()
         hasHousehold = true
-        startLiveSync()
-        Task { await enableChangeNotifications() }
-        Task { await cloudKit.saveCurrentUserProfileIgnoringSchemaLock() }
+        if UIApplication.shared.applicationState == .active {
+            startLiveSync()
+            Task { await enableChangeNotifications() }
+            Task { await cloudKit.saveCurrentUserProfileIgnoringSchemaLock() }
+        }
         try await reloadFromCloud(notify: true, showProgress: true, fullReload: true)
         startNearbyStoreMatching()
     }
@@ -427,11 +535,16 @@ final class FListStore {
         recipes = []
         shops = []
         buyLists = []
+        saveMyCartAPIKey = ""
         householdName = AppConfig.householdDisplayName
         persistHouseholdName()
         resetItemBaseline()
         resetShoppingBaseline()
         resetNotificationPrefs()
+        if let scope = activeNotificationScope {
+            UserDefaults.standard.removeObject(forKey: "flist.baseline.\(scope)")
+        }
+        activeNotificationScope = nil
         LocalPersistence.clear()
         CloudKitService.clearSelection()
     }
@@ -512,6 +625,14 @@ final class FListStore {
 
     func itemsNamed(_ name: String) -> [ShortageItem] {
         items.filter { ShortageItem.namesMatch($0.name, name) }
+    }
+
+    func itemNameSuggestions(matching query: String) -> [ShortageItem] {
+        var authorIDs: Set<String> = [currentUserRecordName]
+        // Locally created records can retain this legacy ID after the owner
+        // enables iCloud. Invitees must not treat the owner's old items as theirs.
+        if !usesiCloud || isOwner { authorIDs.insert("local") }
+        return ShortageItem.restockedSuggestions(in: items, matching: query, preferredAuthorIDs: authorIDs)
     }
 
     func listedStatus(forName name: String) -> ItemStatus? {
@@ -834,13 +955,8 @@ final class FListStore {
         updated.status = .restocked
         updated.restockedAt = .now
         updated.restockNote = note.trimmingCharacters(in: .whitespacesAndNewlines)
-        if updated.restockNote.isEmpty {
-            updated.restockedByName = ""
-            updated.restockedByRecordName = ""
-        } else {
-            updated.restockedByName = currentUserDisplayName
-            updated.restockedByRecordName = currentUserRecordName
-        }
+        updated.restockedByName = currentUserDisplayName
+        updated.restockedByRecordName = currentUserRecordName
         await upsert(updated)
         await removeOtherItems(named: updated.name, keeping: updated.id)
     }
@@ -953,7 +1069,7 @@ final class FListStore {
     }
 
     func startNearbyStoreMatching() {
-        guard hasHousehold, !shops.isEmpty else {
+        guard UIApplication.shared.applicationState == .active, hasHousehold, !shops.isEmpty else {
             stopNearbyStoreMatching()
             return
         }
@@ -1182,7 +1298,7 @@ final class FListStore {
 
         if usesiCloud {
             do {
-                try await cloudKit.save(item)
+                try await cloudKit.save(item, actorName: currentUserDisplayName)
                 remember(item)
                 persistLocalCache()
             } catch {
@@ -1196,18 +1312,85 @@ final class FListStore {
     }
 
     private func enableChangeNotifications() async {
-        await NotificationManager.shared.requestAccessAndRegister()
-        await cloudKit.subscribeToItemChanges(
-            sendItemAlerts: currentUserReceivesNewItemAlerts()
-        )
+        // Serialize preference changes; a newer request must run after an older
+        // setup rather than silently losing the user's latest selection.
+        while isConfiguringNotifications {
+            do { try await Task.sleep(for: .milliseconds(50)) } catch { return }
+        }
+        isConfiguringNotifications = true
+        defer { isConfiguringNotifications = false }
+        let scope = cloudKit.notificationScope
+        let requested = requestedGeneralAlerts
+        do {
+            let allowed = try await NotificationManager.shared.requestAccessAndRegister()
+            let actual = try await cloudKit.subscribeToItemChanges(
+                sendItemAlerts: currentUserReceivesNewItemAlerts(), generalAlerts: requested
+            )
+            guard scope == cloudKit.notificationScope else { return }
+            activeGeneralAlerts = actual
+            UserDefaults.standard.set(actual, forKey: generalAlertsKey)
+            if requestedGeneralAlerts == requested {
+                generalListAlerts = actual
+                requestedGeneralAlerts = nil
+            }
+            notificationIssue = allowed ? nil : L10n.string("Notifications are disabled in iPhone Settings.")
+        } catch {
+            notificationIssue = L10n.string("Could not set up notifications. Check your connection and tap Retry.")
+            notificationLog.error("Notification setup failed: \(String(describing: error), privacy: .private)")
+        }
+    }
+
+    func retryNotificationSetup() async { await enableChangeNotifications() }
+
+    func setGeneralListAlerts(_ enabled: Bool) {
+        generalListAlerts = enabled
+        requestedGeneralAlerts = enabled
+        Task { await enableChangeNotifications() }
+    }
+
+    private var generalAlertsKey: String { "flist.generalAlerts.\(currentUserRecordName).\(isOwner)" }
+
+    private func activateNotificationScope() {
+        guard let scope = cloudKit.notificationScope, scope != activeNotificationScope else { return }
+        persistNotificationBaseline()
+        let defaults = UserDefaults.standard
+        if let data = defaults.data(forKey: "flist.baseline.\(scope)"),
+           let saved = try? JSONDecoder().decode(NotificationBaseline.self, from: data) {
+            knownItems = saved.items
+            hasItemBaseline = saved.hasItems
+            seenShoppingTripIDs = saved.trips
+            hasShoppingBaseline = saved.hasTrips
+            notificationPrefs = saved.preferences
+        } else if defaults.string(forKey: "flist.notification.activeScope") != nil || scope != legacyBaselineScope {
+            knownItems = [:]
+            hasItemBaseline = false
+            seenShoppingTripIDs = []
+            hasShoppingBaseline = false
+            notificationPrefs = .everyone
+        }
+        activeNotificationScope = scope
+        requestedGeneralAlerts = nil
+        defaults.set(scope, forKey: "flist.notification.activeScope")
+        generalListAlerts = defaults.bool(forKey: generalAlertsKey)
+        activeGeneralAlerts = generalListAlerts
+        persistNotificationBaseline()
+    }
+
+    private func persistNotificationBaseline() {
+        guard let scope = activeNotificationScope else { return }
+        let saved = NotificationBaseline(items: knownItems, hasItems: hasItemBaseline,
+                                         trips: seenShoppingTripIDs, hasTrips: hasShoppingBaseline,
+                                         preferences: notificationPrefs)
+        UserDefaults.standard.set(try? JSONEncoder().encode(saved), forKey: "flist.baseline.\(scope)")
     }
 
     private var liveSyncTask: Task<Void, Never>?
     private var isSyncing = false
-    private var queuedFullReload = false
+    private var syncRevision: UInt = 0
 
     private func startLiveSync() {
-        guard usesiCloud, hasHousehold, cloudKit.context != nil else { return }
+        guard UIApplication.shared.applicationState == .active,
+              usesiCloud, hasHousehold, cloudKit.context != nil else { return }
         liveSyncTask?.cancel()
         liveSyncTask = Task { [weak self] in
             while !Task.isCancelled {
@@ -1225,23 +1408,17 @@ final class FListStore {
 
     private func syncWhileActive() async {
         guard usesiCloud, hasHousehold, cloudKit.context != nil else { return }
-        try? await reloadFromCloud(notify: true, showProgress: false, fullReload: false)
+        _ = try? await reloadFromCloud(notify: true, showProgress: false, fullReload: false)
     }
 
-    private func reloadFromCloud(notify: Bool, showProgress: Bool, fullReload: Bool) async throws {
-        if isSyncing {
-            if fullReload { queuedFullReload = true }
-            if showProgress {
-                while isSyncing {
-                    try await Task.sleep(for: .milliseconds(50))
-                }
-                if queuedFullReload {
-                    queuedFullReload = false
-                    try await reloadFromCloud(notify: notify, showProgress: true, fullReload: true)
-                }
-            }
-            return
+    @discardableResult
+    private func reloadFromCloud(notify: Bool, showProgress: Bool, fullReload: Bool) async throws -> Bool {
+        // A push during an in-flight fetch must fetch again: the remote change
+        // can be newer than that fetch's token. Cancellation bounds wait time.
+        while isSyncing {
+            try await Task.sleep(for: .milliseconds(50))
         }
+        try Task.checkCancellation()
 
         isSyncing = true
         if showProgress { isRefreshing = true }
@@ -1250,58 +1427,70 @@ final class FListStore {
             if showProgress { isRefreshing = false }
         }
 
-        let shouldReloadFully = fullReload || queuedFullReload
-        queuedFullReload = false
+        let shouldReloadFully = fullReload
         let previous = knownItems
         let hadBaseline = hasItemBaseline
         let state = try await cloudKit.fetchHouseholdState(
             fullReload: shouldReloadFully,
-            includingAssets: shouldReloadFully
+            includingAssets: shouldReloadFully && UIApplication.shared.applicationState == .active
         )
         if !state.hasChanges, !shouldReloadFully {
-            return
+            await NotificationManager.shared.retryPending()
+            if UIApplication.shared.applicationState == .active { suppressGeneralCatchup = false }
+            return false
         }
         items = keepingPhotos(in: state.items, from: items)
         members = keepingPhotos(in: state.members, from: members)
         recipes = keepingPhotos(in: state.recipes, from: recipes)
         shops = keepingCoordinates(in: state.shops, from: shops)
         buyLists = mergedBuyLists(state.buyLists)
-        await collapseDuplicateItemNames()
+        saveMyCartAPIKey = state.saveMyCartAPIKey.trimmingCharacters(in: .whitespacesAndNewlines)
+        if UIApplication.shared.applicationState == .active { await collapseDuplicateItemNames() }
         adoptCurrentUserNameFromMembers()
         if !state.householdName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             householdName = state.householdName
             persistHouseholdName()
         }
         persistLocalCache()
-        startNearbyStoreMatching()
-        knownItems = Dictionary(uniqueKeysWithValues: items.map { ($0.id, $0.status) })
-        persistKnownItems()
+        if UIApplication.shared.applicationState == .active { startNearbyStoreMatching() }
         if let prefs = state.notificationPrefs {
             let prefsChanged = prefs != notificationPrefs
             notificationPrefs = prefs
             persistNotificationPrefs()
-            if prefsChanged {
+            if prefsChanged, UIApplication.shared.applicationState == .active {
                 Task { await enableChangeNotifications() }
             }
         }
-        if notify, hadBaseline {
-            postChangeNotifications(previous: previous, current: items)
+        let showDetailed = notify && (!activeGeneralAlerts ||
+            (UIApplication.shared.applicationState == .active && !suppressGeneralCatchup))
+        await processNotificationEvents(state.notificationEvents, notify: showDetailed && hadBaseline)
+        if showDetailed, hadBaseline {
+            await postChangeNotifications(previous: previous, current: items, events: state.notificationEvents,
+                                          versions: state.itemVersions)
         }
         let hadShoppingBaseline = hasShoppingBaseline
-        applyShoppingTrips(state.shoppingTrips, notify: hadShoppingBaseline)
-        if shouldReloadFully {
+        await applyShoppingTrips(state.shoppingTrips, notify: showDetailed && hadShoppingBaseline)
+        knownItems = Dictionary(uniqueKeysWithValues: items.map { ($0.id, $0.status) })
+        persistKnownItems()
+        if UIApplication.shared.applicationState == .active { suppressGeneralCatchup = false }
+        if shouldReloadFully, UIApplication.shared.applicationState == .active {
             await cloudKit.hideMetaRecordsFromLegacyClients()
         }
+        if state.hasChanges { syncRevision &+= 1 }
+        return state.hasChanges
     }
 
-    private func applyShoppingTrips(_ trips: [ShoppingTrip], notify: Bool) {
+    private func applyShoppingTrips(_ trips: [ShoppingTrip], notify: Bool) async {
         shoppingTrips = trips
         if notify {
             for trip in trips where !seenShoppingTripIDs.contains(trip.id) {
-                guard trip.announcedByRecordName != currentUserRecordName else { continue }
+                guard trip.announcedByRecordName != currentUserRecordName,
+                      trip.createdAt > Date.now.addingTimeInterval(-2 * 60 * 60),
+                      let scope = cloudKit.notificationScope else { continue }
                 let name = members.first(where: { $0.id == trip.announcedByRecordName })?.name
                     ?? trip.announcedByName
-                NotificationManager.shared.notifyGoingShopping(
+                await NotificationManager.shared.notifyGoingShopping(
+                    scope: scope, eventID: "shopping.\(trip.id.uuidString)",
                     name: name,
                     stores: joinedShopNames(trip.storeIDs)
                 )
@@ -1323,6 +1512,7 @@ final class FListStore {
         UserDefaults.standard.set(raw, forKey: "flist.seenShoppingTrips")
         UserDefaults.standard.set(true, forKey: "flist.shoppingBaselineSaved")
         hasShoppingBaseline = true
+        persistNotificationBaseline()
     }
 
     private static func loadSeenShoppingTripIDs() -> Set<UUID> {
@@ -1339,6 +1529,7 @@ final class FListStore {
     }
 
     private func persistNotificationPrefs() {
+        persistNotificationBaseline()
         if let ids = notificationPrefs.recipientIDs {
             UserDefaults.standard.set(ids, forKey: "flist.notifyRecipientIDs")
             UserDefaults.standard.set(true, forKey: "flist.notifyPrefsCustom")
@@ -1455,6 +1646,7 @@ final class FListStore {
         UserDefaults.standard.set(raw, forKey: "flist.knownItemStatus")
         UserDefaults.standard.set(true, forKey: "flist.itemBaselineSaved")
         hasItemBaseline = true
+        persistNotificationBaseline()
     }
 
     private static func loadKnownItems() -> [UUID: ItemStatus] {
@@ -1475,20 +1667,55 @@ final class FListStore {
         return false
     }
 
-    private func postChangeNotifications(previous: [UUID: ItemStatus], current: [ShortageItem]) {
+    private func processNotificationEvents(_ events: [ItemNotificationEvent], notify: Bool) async {
+        guard let scope = cloudKit.notificationScope else { return }
+        let manager = NotificationManager.shared
+        let cutoff = Date.now.addingTimeInterval(-48 * 60 * 60)
+        for event in events where event.createdAt > cutoff {
+            guard !manager.hasHandled(scope: scope, eventID: event.deliveryID) else { continue }
+            guard notify, event.shouldNotify(userID: currentUserRecordName,
+                                            receivesNewItems: currentUserReceivesNewItemAlerts()) else {
+                manager.markHandled(scope: scope, eventID: event.deliveryID)
+                continue
+            }
+            if event.isCreation, cloudKit.hasVisibleCreationAlert(since: event.createdAt, itemName: event.itemName) { continue }
+            let actor = displayName(forRecordName: event.actorID, fallback: event.actorName)
+            if event.status == .needed {
+                await manager.notifyNewItem(scope: scope, eventID: event.deliveryID, name: event.itemName, addedBy: actor)
+            } else {
+                let note = event.note.isEmpty ? "" : "\(actor): \(event.note)"
+                await manager.notifyRestocked(scope: scope, eventID: event.deliveryID, name: event.itemName, note: note)
+            }
+        }
+    }
+
+    private func postChangeNotifications(previous: [UUID: ItemStatus], current: [ShortageItem],
+                                         events: [ItemNotificationEvent], versions: [UUID: String]) async {
+        guard let scope = cloudKit.notificationScope else { return }
         let notifyNewItems = currentUserReceivesNewItemAlerts()
+        let byID = Dictionary(uniqueKeysWithValues: events.map { ($0.id, $0) })
         for item in current {
+            // New clients provide immutable events. Keep status comparison for
+            // writes made by 1.4+ clients that don't produce those events.
+            if let id = item.notificationEventID, let event = byID[id], event.status == item.status { continue }
             let oldStatus = previous[item.id]
             if notifyNewItems,
                (oldStatus == nil || oldStatus == .restocked),
                item.status == .needed,
                !isCurrentUserRecordName(item.addedByRecordName) {
-                NotificationManager.shared.notifyNewItem(
+                if oldStatus == nil, cloudKit.hasVisibleCreationAlert(since: item.createdAt, itemName: item.name) { continue }
+                let version = versions[item.id] ?? String(item.createdAt.timeIntervalSince1970)
+                let id = oldStatus == nil ? "created.\(item.id.uuidString)" : "legacy-needed.\(item.id.uuidString).\(version)"
+                await NotificationManager.shared.notifyNewItem(
+                    scope: scope, eventID: id,
                     name: item.name,
                     addedBy: displayName(for: item)
                 )
-            } else if oldStatus == .needed, item.status == .restocked, isCurrentUserRecordName(item.addedByRecordName) {
-                NotificationManager.shared.notifyRestocked(
+            } else if oldStatus == .needed, item.status == .restocked, isCurrentUserRecordName(item.addedByRecordName),
+                      !isCurrentUserRecordName(item.restockedByRecordName) {
+                let id = "legacy-stock.\(item.id.uuidString).\(item.restockedAt?.timeIntervalSince1970 ?? 0)"
+                await NotificationManager.shared.notifyRestocked(
+                    scope: scope, eventID: id,
                     name: item.name,
                     note: restockFeedback(for: item)
                 )

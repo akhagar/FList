@@ -4,10 +4,6 @@
 <dict>
 	<key>BarcodeLookupAPIKey</key>
 	<string></string>
-	<key>SaveMyCartAPIKey</key>
-	<string></string>
-	<key>SaveMyCartAPIBaseURL</key>
-	<string>https://savemycart.net</string>
 	<key>CFBundleLocalizations</key>
 	<array>
 		<string>en</string>
@@ -21,6 +17,10 @@
 		<string>CKSharing</string>
 		<string>com.apple.corespotlight.CKShare</string>
 	</array>
+	<key>SaveMyCartAPIBaseURL</key>
+	<string>https://savemycart.net</string>
+	<key>SaveMyCartAPIKey</key>
+	<string></string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>remote-notification</string>

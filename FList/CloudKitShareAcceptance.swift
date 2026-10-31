@@ -1,15 +1,20 @@
 import CloudKit
 import SwiftUI
 import UIKit
+import OSLog
 
 @MainActor
 enum CloudKitShareBridge {
-    static weak var store: FListStore?
+    private(set) static var store: FListStore?
     private static var pendingMetadata: CKShare.Metadata?
-    private static var pendingRemoteUserInfo: [AnyHashable: Any]?
 
-    static func bind(_ store: FListStore) {
-        self.store = store
+    /// The delegate and SwiftUI share the same retained store. A background
+    /// launch can initialize it without waiting for a WindowGroup task to run.
+    static var sharedStore: FListStore {
+        if let store { return store }
+        let created = FListStore()
+        store = created
+        return created
     }
 
     static func accept(_ metadata: CKShare.Metadata) {
@@ -30,22 +35,10 @@ enum CloudKitShareBridge {
         }
     }
 
-    static func handleRemoteNotification(_ userInfo: [AnyHashable: Any]) async {
-        if let store {
-            await store.handleRemoteNotification(userInfo)
-        } else {
-            pendingRemoteUserInfo = userInfo
-        }
-    }
-
     static func flushPending() async {
         if let pendingMetadata, let store {
             self.pendingMetadata = nil
             await store.acceptShare(pendingMetadata)
-        }
-        if let pendingRemoteUserInfo, let store {
-            self.pendingRemoteUserInfo = nil
-            await store.handleRemoteNotification(pendingRemoteUserInfo)
         }
     }
 
@@ -230,6 +223,7 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
     ) -> Bool {
         NotificationManager.shared.configure()
+        _ = CloudKitShareBridge.sharedStore
         application.registerForRemoteNotifications()
         return true
     }
@@ -259,9 +253,26 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
         didReceiveRemoteNotification userInfo: [AnyHashable: Any],
         fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void
     ) {
-        Task { @MainActor in
-            await CloudKitShareBridge.handleRemoteNotification(userInfo)
-            completionHandler(.newData)
+        guard let push = CloudNotificationPayload(userInfo) else {
+            completionHandler(.noData)
+            return
         }
+        let completion = BackgroundFetchCompletion(completionHandler)
+        let worker = Task { await CloudKitShareBridge.sharedStore.handleRemoteNotification(push) }
+        let timeout = Task {
+            do { try await Task.sleep(for: .seconds(25)) } catch { return }
+            if completion.finish(.failed) { worker.cancel() }
+        }
+        Task {
+            let result = await worker.value
+            timeout.cancel()
+            completion.finish(result)
+        }
+    }
+
+    func application(_ application: UIApplication, didFailToRegisterForRemoteNotificationsWithError error: Error) {
+        Logger(subsystem: "com.tocnet.FList", category: "Notifications")
+            .error("Push registration failed: \(String(describing: error), privacy: .private)")
+        CloudKitShareBridge.sharedStore.notificationIssue = L10n.string("Could not set up notifications. Check your connection and tap Retry.")
     }
 }

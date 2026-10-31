@@ -1,6 +1,104 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Suggestions from Back in stock" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Suggestions from Back in stock" } },
+        "he" : { "stringUnit" : { "state" : "translated", "value" : "הצעות מפריטים שחזרו למלאי" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Подсказки из списка пополненных товаров" } }
+      }
+    },
+    "Your items are shown first. Tap a suggestion to fill in the name." : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Your items are shown first. Tap a suggestion to fill in the name." } },
+        "he" : { "stringUnit" : { "state" : "translated", "value" : "פריטים שהוספתם בעבר מוצגים ראשונים. לחצו על הצעה כדי למלא את השם." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Сначала показаны товары, добавленные вами. Нажмите на подсказку, чтобы заполнить название." } }
+      }
+    },
+    "Use this item name" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Use this item name" } },
+        "he" : { "stringUnit" : { "state" : "translated", "value" : "השתמשו בשם הפריט הזה" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Использовать это название товара" } }
+      }
+    },
+    "Open Food Facts Israel" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Open Food Facts Israel" } },
+        "he" : { "stringUnit" : { "state" : "translated", "value" : "Open Food Facts ישראל" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Open Food Facts Израиль" } }
+      }
+    },
+    "About the SaveMyCart key" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "About the SaveMyCart key" } },
+        "he" : { "stringUnit" : { "state" : "translated", "value" : "על מפתח SaveMyCart" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "О ключе SaveMyCart" } }
+      }
+    },
+    "What is this key?" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "What is this key?" } },
+        "he" : { "stringUnit" : { "state" : "translated", "value" : "מהו המפתח הזה?" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Что это за ключ?" } }
+      }
+    },
+    "An API key is a secret code that lets OurStock use your SaveMyCart account to look up scanned product barcodes. SaveMyCart is an optional fallback when the other catalogs cannot find a product." : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "An API key is a secret code that lets OurStock use your SaveMyCart account to look up scanned product barcodes. SaveMyCart is an optional fallback when the other catalogs cannot find a product." } },
+        "he" : { "stringUnit" : { "state" : "translated", "value" : "מפתח API הוא קוד סודי שמאפשר ל־OurStock להשתמש בחשבון SaveMyCart שלכם כדי לזהות מוצרים לפי ברקוד שנסרק. SaveMyCart הוא שירות גיבוי אופציונלי, המשמש כשמוצר לא נמצא בקטלוגים האחרים." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Ключ API — это секретный код, который позволяет OurStock использовать ваш аккаунт SaveMyCart для поиска товаров по отсканированным штрихкодам. SaveMyCart — дополнительный источник поиска на случай, если товар не найден в других каталогах." } }
+      }
+    },
+    "You can use OurStock without this key. SaveMyCart offers a free plan with usage limits; check its developer portal for current terms." : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "You can use OurStock without this key. SaveMyCart offers a free plan with usage limits; check its developer portal for current terms." } },
+        "he" : { "stringUnit" : { "state" : "translated", "value" : "אפשר להשתמש ב־OurStock גם ללא המפתח. SaveMyCart מציע מסלול חינמי עם מגבלות שימוש; בדקו את התנאים העדכניים בפורטל המפתחים שלו." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "OurStock можно использовать без этого ключа. SaveMyCart предлагает бесплатный тариф с лимитами использования; актуальные условия доступны на портале разработчиков." } }
+      }
+    },
+    "How to get a key" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "How to get a key" } },
+        "he" : { "stringUnit" : { "state" : "translated", "value" : "איך מקבלים מפתח" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Как получить ключ" } }
+      }
+    },
+    "1. Open the SaveMyCart developer portal below and sign in or create an account." : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "1. Open the SaveMyCart developer portal below and sign in or create an account." } },
+        "he" : { "stringUnit" : { "state" : "translated", "value" : "1. פתחו את פורטל המפתחים של SaveMyCart באמצעות הקישור למטה והתחברו או צרו חשבון." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "1. Откройте портал разработчиков SaveMyCart по ссылке ниже и войдите в аккаунт или создайте новый." } }
+      }
+    },
+    "2. Follow the portal's instructions to create a secret API key (sk_live_…), not a public widget key (pk_live_…)." : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "2. Follow the portal's instructions to create a secret API key (sk_live_…), not a public widget key (pk_live_…)." } },
+        "he" : { "stringUnit" : { "state" : "translated", "value" : "2. פעלו לפי ההוראות בפורטל ליצירת מפתח API סודי (sk_live_…), ולא מפתח ציבורי לווידג'ט (pk_live_…)." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "2. Следуйте инструкциям портала, чтобы создать секретный ключ API (sk_live_…), а не публичный ключ виджета (pk_live_…)." } }
+      }
+    },
+    "3. Copy the key, return here, paste it into the API key field, and tap Save. OurStock checks the key before saving it." : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "3. Copy the key, return here, paste it into the API key field, and tap Save. OurStock checks the key before saving it." } },
+        "he" : { "stringUnit" : { "state" : "translated", "value" : "3. העתיקו את המפתח, חזרו לכאן, הדביקו אותו בשדה מפתח ה־API ולחצו על שמירה. OurStock בודק את המפתח לפני שמירתו." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "3. Скопируйте ключ, вернитесь сюда, вставьте его в поле ключа API и нажмите «Сохранить». OurStock проверит ключ перед сохранением." } }
+      }
+    },
+    "Get a SaveMyCart key" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Get a SaveMyCart key" } },
+        "he" : { "stringUnit" : { "state" : "translated", "value" : "קבלת מפתח SaveMyCart" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Получить ключ SaveMyCart" } }
+      }
+    },
+    "Keep this key private outside your shopping list. People using a shared list use the same key and quota." : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Keep this key private outside your shopping list. People using a shared list use the same key and quota." } },
+        "he" : { "stringUnit" : { "state" : "translated", "value" : "אל תשתפו את המפתח מחוץ לרשימת הקניות שלכם. המשתמשים ברשימה משותפת חולקים את אותו המפתח ואת אותה מכסת שימוש." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Не передавайте ключ тем, кто не пользуется вашим списком покупок. Участники общего списка используют один ключ и общую квоту." } }
+      }
+    },
     "%@ · Invited" : {
       "localizations" : {
         "en" : {
@@ -777,6 +875,10 @@
         }
       }
     },
+    "API key" : {
+      "comment" : "A field for entering a key to access a Barcode Lookup account.",
+      "isCommentAutoGenerated" : true
+    },
     "Appearance" : {
       "localizations" : {
         "en" : {
@@ -953,6 +1055,13 @@
         }
       }
     },
+    "Barcode lookup" : {
+      "comment" : "The title of a screen that lets a user configure barcode lookup.",
+      "isCommentAutoGenerated" : true
+    },
+    "Barcode lookup keys" : {
+
+    },
     "Blue" : {
       "localizations" : {
         "en" : {
@@ -1059,6 +1168,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Проверяем %@."
+          }
+        }
+      }
+    },
+    "Checking and saving…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Checking and saving…"
+          }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "מתבצעות בדיקה ושמירה…"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Проверка и сохранение…"
           }
         }
       }
@@ -1285,6 +1416,28 @@
         }
       }
     },
+    "Could not set up notifications. Check your connection and tap Retry." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Could not set up notifications. Check your connection and tap Retry."
+          }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "לא ניתן להגדיר התראות. בדקו את החיבור והקישו על ניסיון חוזר."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не удалось настроить уведомления. Проверьте подключение и нажмите «Повторить»."
+          }
+        }
+      }
+    },
     "Couldn't join that shared list. In Settings, tap Show invite code and paste that code here. Both devices need the same kind of build — Xcode or TestFlight." : {
       "localizations" : {
         "en" : {
@@ -1348,6 +1501,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Не удалось поделиться"
+          }
+        }
+      }
+    },
+    "Couldn't verify the SaveMyCart key. Check your connection and try again. Your saved key has not changed." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't verify the SaveMyCart key. Check your connection and try again. Your saved key has not changed."
+          }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "לא ניתן לאמת את מפתח SaveMyCart. בדקו את החיבור ונסו שוב. המפתח השמור לא השתנה."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не удалось проверить ключ SaveMyCart. Проверьте подключение и повторите попытку. Сохранённый ключ не изменён."
           }
         }
       }
@@ -1900,6 +2075,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Из рецепта %@"
+          }
+        }
+      }
+    },
+    "General list update alerts" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "General list update alerts"
+          }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "התראות כלליות על עדכוני רשימות"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Общие уведомления об изменениях списков"
           }
         }
       }
@@ -3453,6 +3650,28 @@
         }
       }
     },
+    "Notifications are disabled in iPhone Settings." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notifications are disabled in iPhone Settings."
+          }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ההתראות כבויות בהגדרות ה-iPhone."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Уведомления отключены в настройках iPhone."
+          }
+        }
+      }
+    },
     "Notify family" : {
       "localizations" : {
         "en" : {
@@ -4403,6 +4622,13 @@
         }
       }
     },
+    "Remove SaveMyCart key" : {
+      "comment" : "A destructive button that removes the SaveMyCart API key.",
+      "isCommentAutoGenerated" : true
+    },
+    "Retry" : {
+
+    },
     "Save" : {
       "localizations" : {
         "en" : {
@@ -4443,6 +4669,54 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Сохраните блюдо, чтобы добавить его продукты в список."
+          }
+        }
+      }
+    },
+    "SaveMyCart" : {
+      "comment" : "A section of the barcode lookup settings for SaveMyCart.",
+      "isCommentAutoGenerated" : true
+    },
+    "SaveMyCart rejected this key or restricted its access. Check your key and account limits. Your saved key has not changed." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SaveMyCart rejected this key or restricted its access. Check your key and account limits. Your saved key has not changed."
+          }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SaveMyCart דחה את המפתח או הגביל את הגישה שלו. בדקו את המפתח ואת מגבלות החשבון. המפתח השמור לא השתנה."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SaveMyCart отклонил ключ или ограничил доступ. Проверьте ключ и лимиты аккаунта. Сохранённый ключ не изменён."
+          }
+        }
+      }
+    },
+    "SaveMyCart's request limit was reached. Try again later or check your quota. Your saved key has not changed." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SaveMyCart's request limit was reached. Try again later or check your quota. Your saved key has not changed."
+          }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "הגעתם למגבלת הבקשות של SaveMyCart. נסו שוב מאוחר יותר או בדקו את המכסה. המפתח השמור לא השתנה."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Достигнут лимит запросов SaveMyCart. Повторите попытку позже или проверьте квоту. Сохранённый ключ не изменён."
           }
         }
       }
@@ -4647,6 +4921,9 @@
         }
       }
     },
+    "Set the SaveMyCart key once for this list. Everyone who shares the list can use it for barcode searches." : {
+
+    },
     "Settings" : {
       "localizations" : {
         "en" : {
@@ -4797,6 +5074,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Сведения о доступе"
+          }
+        }
+      }
+    },
+    "Show a general alert when your iCloud lists change, even before the app syncs. Includes recipes and settings changes, regardless of the item recipients below. Applies to your devices using this iCloud account." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show a general alert when your iCloud lists change, even before the app syncs. Includes recipes and settings changes, regardless of the item recipients below. Applies to your devices using this iCloud account."
+          }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "הצגת התראה כללית כשיש שינוי ברשימות iCloud, גם לפני סנכרון היישום. כולל שינויים במתכונים ובהגדרות, ללא תלות בנמעני ההתראות על פריטים שנבחרו למטה. חל על המכשירים המחוברים לחשבון iCloud זה."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показывать общее уведомление об изменениях списков iCloud до синхронизации приложения. Включает изменения рецептов и настроек независимо от выбранных ниже получателей уведомлений о товарах. Применяется к вашим устройствам с этой учётной записью iCloud."
           }
         }
       }
@@ -5288,6 +5587,10 @@
         }
       }
     },
+    "The key is stored with this shared list. Only the list owner can change it." : {
+      "comment" : "The text that appears below the \"Remove SaveMyCart key\" button.",
+      "isCommentAutoGenerated" : true
+    },
     "The list is already up to date." : {
       "localizations" : {
         "en" : {
@@ -5328,6 +5631,31 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Название можно добавить в список недостающего. Описание только для рецепта, например один стакан."
+          }
+        }
+      }
+    },
+    "The owner manages the SaveMyCart key for this shared list." : {
+
+    },
+    "The SaveMyCart key is invalid. Check the key and try again. Your saved key has not changed." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The SaveMyCart key is invalid. Check the key and try again. Your saved key has not changed."
+          }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "מפתח SaveMyCart אינו תקין. בדקו את המפתח ונסו שוב. המפתח השמור לא השתנה."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Недействительный ключ SaveMyCart. Проверьте ключ и повторите попытку. Сохранённый ключ не изменён."
           }
         }
       }
@@ -5441,6 +5769,10 @@
           }
         }
       }
+    },
+    "This key is shared with everyone using this shopping list so their barcode searches can use SaveMyCart." : {
+      "comment" : "The description of the SaveMyCart API key.",
+      "isCommentAutoGenerated" : true
     },
     "This name appears at the top of the list for everyone who shares it." : {
       "localizations" : {
@@ -5881,6 +6213,29 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Вы не вошли в iCloud, поэтому список остаётся на этом устройстве. Войдите в Настройках, чтобы им поделиться."
+          }
+        }
+      }
+    },
+    "Your family list was updated. Open OurStock to see what changed." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your family list was updated. Open OurStock to see what changed."
+          }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "הרשימה המשפחתית עודכנה. פתחו את OurStock כדי לראות מה השתנה."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Семейный список обновлён. Откройте OurStock, чтобы посмотреть изменения."
           }
         }
       }

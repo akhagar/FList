@@ -83,6 +83,36 @@ struct FamilyMembersView: View {
                 Text("Name the shops you use, then tag items and say where you're going. When you're at a store, items for that shop move to the top of the list.")
             }
 
+            if store.canConfigureBarcodeLookup {
+                Section {
+                    NavigationLink {
+                        BarcodeLookupSettingsView(store: store)
+                    } label: {
+                        Label("Barcode lookup keys", systemImage: "key")
+                    }
+                } footer: {
+                    Text("Set the SaveMyCart key once for this list. Everyone who shares the list can use it for barcode searches.")
+                }
+            } else {
+                Section("Barcode lookup") {
+                    Text("The owner manages the SaveMyCart key for this shared list.")
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            Section {
+                Toggle("General list update alerts", isOn: Binding(
+                    get: { store.generalListAlerts },
+                    set: { store.setGeneralListAlerts($0) }
+                ))
+                if let issue = store.notificationIssue {
+                    Text(issue).foregroundStyle(.secondary)
+                    Button("Retry") { Task { await store.retryNotificationSetup() } }
+                }
+            } footer: {
+                Text("Show a general alert when your iCloud lists change, even before the app syncs. Includes recipes and settings changes, regardless of the item recipients below. Applies to your devices using this iCloud account.")
+            }
+
             if !store.members.isEmpty {
                 Section {
                     ForEach(store.members) { member in

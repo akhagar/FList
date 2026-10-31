@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		797B7C613035D18D00B833BA /* CloudKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A20000000000000000000018 /* CloudKit.framework */; };
+		79F144CC308A2026008B0390 /* BarcodeLookupCredentials.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79F144CB308A2026008B0390 /* BarcodeLookupCredentials.swift */; };
+		79F144CE308A206D008B0390 /* BarcodeLookupSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79F144CD308A206D008B0390 /* BarcodeLookupSettingsView.swift */; };
 		A30000000000000000000001 /* FListApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000001 /* FListApp.swift */; };
 		A30000000000000000000002 /* AppConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000002 /* AppConfig.swift */; };
 		A30000000000000000000003 /* ShortageItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000003 /* ShortageItem.swift */; };
@@ -60,6 +62,8 @@
 		A50000000000000000000014 /* CloudKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A20000000000000000000018 /* CloudKit.framework */; };
 		A50000000000000000000015 /* FListWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = A40000000000000000000001 /* FListWatch.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		A50000000000000000000016 /* Shop.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000036 /* Shop.swift */; };
+		B10000000000000000000001 /* ItemNotificationEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000003 /* ItemNotificationEvent.swift */; };
+		B10000000000000000000002 /* ItemNotificationEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000003 /* ItemNotificationEvent.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -87,6 +91,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		79F144CB308A2026008B0390 /* BarcodeLookupCredentials.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BarcodeLookupCredentials.swift; sourceTree = "<group>"; };
+		79F144CD308A206D008B0390 /* BarcodeLookupSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BarcodeLookupSettingsView.swift; sourceTree = "<group>"; };
 		A10000000000000000000300 /* FList.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FList.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A20000000000000000000001 /* FListApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FListApp.swift; sourceTree = "<group>"; };
 		A20000000000000000000002 /* AppConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfig.swift; sourceTree = "<group>"; };
@@ -135,6 +141,7 @@
 		A40000000000000000000005 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A40000000000000000000006 /* FListWatch.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = FListWatch.entitlements; sourceTree = "<group>"; };
 		A40000000000000000000007 /* FListWatchRelease.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = FListWatchRelease.entitlements; sourceTree = "<group>"; };
+		B10000000000000000000003 /* ItemNotificationEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemNotificationEvent.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -202,6 +209,7 @@
 			isa = PBXGroup;
 			children = (
 				A20000000000000000000003 /* ShortageItem.swift */,
+				B10000000000000000000003 /* ItemNotificationEvent.swift */,
 				A20000000000000000000036 /* Shop.swift */,
 				A20000000000000000000031 /* Recipe.swift */,
 				A20000000000000000000034 /* ImportText.swift */,
@@ -220,6 +228,7 @@
 				A20000000000000000000025 /* NotificationManager.swift */,
 				A20000000000000000000038 /* NearbyStoreMatcher.swift */,
 				A20000000000000000000039 /* BarcodeLookupService.swift */,
+				79F144CB308A2026008B0390 /* BarcodeLookupCredentials.swift */,
 			);
 			path = Store;
 			sourceTree = "<group>";
@@ -242,6 +251,7 @@
 				A20000000000000000000023 /* MemberAvatar.swift */,
 				A20000000000000000000009 /* OnboardingView.swift */,
 				A20000000000000000000008 /* FamilySharingController.swift */,
+				79F144CD308A206D008B0390 /* BarcodeLookupSettingsView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -376,11 +386,13 @@
 			files = (
 				A30000000000000000000001 /* FListApp.swift in Sources */,
 				A30000000000000000000019 /* CloudKitShareAcceptance.swift in Sources */,
+				79F144CE308A206D008B0390 /* BarcodeLookupSettingsView.swift in Sources */,
 				A30000000000000000000002 /* AppConfig.swift in Sources */,
 				A30000000000000000000020 /* L10n.swift in Sources */,
 				A30000000000000000000030 /* AppTheme.swift in Sources */,
 				A30000000000000000000031 /* Recipe.swift in Sources */,
 				A30000000000000000000003 /* ShortageItem.swift in Sources */,
+				B10000000000000000000001 /* ItemNotificationEvent.swift in Sources */,
 				A30000000000000000000004 /* FamilyMember.swift in Sources */,
 				A30000000000000000000036 /* Shop.swift in Sources */,
 				A30000000000000000000005 /* LocalPersistence.swift in Sources */,
@@ -402,6 +414,7 @@
 				A30000000000000000000025 /* NotificationManager.swift in Sources */,
 				A30000000000000000000038 /* NearbyStoreMatcher.swift in Sources */,
 				A30000000000000000000039 /* BarcodeLookupService.swift in Sources */,
+				79F144CC308A2026008B0390 /* BarcodeLookupCredentials.swift in Sources */,
 				A30000000000000000000040 /* BarcodeScanSheet.swift in Sources */,
 				A30000000000000000000013 /* ShortageListView.swift in Sources */,
 				A30000000000000000000033 /* FListRootView.swift in Sources */,
@@ -419,6 +432,7 @@
 				A50000000000000000000004 /* AppConfig.swift in Sources */,
 				A50000000000000000000005 /* L10n.swift in Sources */,
 				A50000000000000000000006 /* ShortageItem.swift in Sources */,
+				B10000000000000000000002 /* ItemNotificationEvent.swift in Sources */,
 				A50000000000000000000007 /* FamilyMember.swift in Sources */,
 				A50000000000000000000016 /* Shop.swift in Sources */,
 				A50000000000000000000008 /* Recipe.swift in Sources */,
@@ -446,7 +460,7 @@
 				CODE_SIGN_ENTITLEMENTS = FList/FList.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = FList/Info.plist;
@@ -467,7 +481,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.6.4;
+				MARKETING_VERSION = 1.6.6;
 				MTL_ENABLE_DEBUG_INFO = "DWARF with dSYM File";
 				PRODUCT_BUNDLE_IDENTIFIER = com.tocnet.FList;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -490,7 +504,7 @@
 				CODE_SIGN_ENTITLEMENTS = FList/FListRelease.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = FList/Info.plist;
@@ -511,7 +525,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.6.4;
+				MARKETING_VERSION = 1.6.6;
 				MTL_ENABLE_DEBUG_INFO = "DWARF with dSYM File";
 				PRODUCT_BUNDLE_IDENTIFIER = com.tocnet.FList;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -664,6 +678,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = FListWatch/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = OurStock;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.tocnet.FList;
@@ -672,7 +687,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.6.4;
+				MARKETING_VERSION = 1.6.6;
 				PRODUCT_BUNDLE_IDENTIFIER = com.tocnet.FList.watchkitapp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -701,6 +716,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = FListWatch/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = OurStock;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.tocnet.FList;
@@ -709,7 +725,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.6.4;
+				MARKETING_VERSION = 1.6.6;
 				PRODUCT_BUNDLE_IDENTIFIER = com.tocnet.FList.watchkitapp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";

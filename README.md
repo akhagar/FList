@@ -8,7 +8,8 @@ OurStock is a native iPhone, iPad, and Apple Watch app. Lists sync over iCloud w
 
 - One shared shortage list, with **Needed** and **Back in stock**
 - Add a name, quantity, optional note, photo, and which store you can buy it from
-- Scan a product barcode to look it up in Open Food Facts, Open Beauty Facts, Open Pet Food Facts, Open Products Facts, UPC Item DB, and GS1, then add it to Needed. SaveMyCart is used only if none of those catalogs have the barcode. SaveMyCart and Barcode Lookup run only if you add API keys in Info.plist
+- As you type an item name on iPhone or iPad, get up to five matching suggestions from Back in stock, with items you originally added first. Tap a suggestion to fill the name, then tap Add to mark the existing item as Needed. Suggestions work offline and do not change your quantity, note, photo, or store selections.
+- Scan a product barcode to look it up in Open Food Facts (worldwide and Israel), Open Beauty Facts, Open Pet Food Facts, Open Products Facts, UPC Item DB, and GS1, then add it to Needed. The Israel lookup requests Hebrew product details alongside the worldwide lookup in the app's language; both use the same Open Food Facts database and need no API key. SaveMyCart is used only if none of those catalogs have the barcode and a key has been added in Settings → Barcode lookup keys.
 - Tap an item to mark it back in stock. Long-press to edit, or to leave a note if something wasn’t as described — that note is sent to the person who added the item
 - Cart button to tell the family you’re going shopping, so they can add anything that’s missing
 - Shared **Stores**: name and optional location. When you go shopping you can mention one or more shops. If you’re at a store, items tagged for it move to the top of Needed
@@ -44,6 +45,36 @@ On Apple Watch, OurStock shows the same Needed list. Tap an item to mark it back
 
 Language is not chosen inside the app. Change it in **Settings → General → Language & Region**, or under **Settings → OurStock** if you set a language just for this app.
 
+### Notifications
+
+In Settings, enable **General list update alerts** to receive a visible CloudKit alert before the app finishes synchronizing. This uses the existing iCloud setup: there is no additional server, subscription, or hosting service. The option is off by default and applies to this iCloud account's devices for the selected private/shared database. It covers changes across those lists, including recipes and settings; the recipient switches below it apply to detailed new-item messages, not these general alerts.
+
+While the app is open, synchronization generates detailed messages instead of a second general banner. When general alerts are enabled, background/catch-up synchronization does not repeat the same activity as detailed alerts. With general alerts off, invited-member and restock notifications still depend on iOS allowing background execution. Neither mode overrides disabled notifications, Focus, or Apple's delivery limits.
+
+Item status changes now save an immutable notification event in the same CloudKit transaction as the item. Events use the existing `ShortageItem` record type and `note` field, with no `name` or `addedByRecordName`, so 1.4+ clients ignore them. New clients retain status-comparison fallback for older writers. Event-based delivery preserves the actual person who changed an item, intermediate changes between syncs, and restock notes. Duplicate history is scoped to the household and account and survives relaunches.
+
+Apple Watch registers for CloudKit pushes and refreshes its cache in the background when watchOS grants execution. It preserves the iPhone-configured subscriptions. Notification presentation on a paired Watch remains subject to Apple's iPhone/Watch routing and notification settings.
+
+If notification setup fails, Settings shows a **Retry** button. Developer diagnostics are logged under `com.tocnet.FList` with the categories `Notifications`, `CloudKitNotifications`, `NotificationSync`, and `WatchNotifications`. Do not assume a successful item save means that another person's device displayed an alert.
+
+### Notification regression checks
+
+Run the device-independent compatibility and recipient-rule checks from the project folder:
+
+```sh
+xcrun swiftc -parse-as-library FList/L10n.swift FList/AppConfig.swift FList/Models/ShortageItem.swift FList/Models/ItemNotificationEvent.swift Tests/NotificationRegressionTests.swift -o /tmp/ourstock-notification-tests
+/tmp/ourstock-notification-tests
+```
+
+The CloudKit record-encoding checks also run locally, without signing in or contacting iCloud:
+
+```sh
+xcrun swiftc -parse-as-library FList/L10n.swift FList/AppConfig.swift FList/Models/ShortageItem.swift FList/Models/ItemNotificationEvent.swift FList/Models/FamilyMember.swift FList/Models/Recipe.swift FList/Models/Shop.swift FList/Store/CloudKitService.swift Tests/CloudNotificationRecordTests.swift -o /tmp/ourstock-cloud-record-tests
+/tmp/ourstock-cloud-record-tests
+```
+
+Before shipping, test with two Apple IDs on physical devices: owner and invitee, foreground and locked, new items and repeated needed/restocked transitions, restock notes, shopping announcements, general alerts on/off, and a phone still running 1.4+. Also verify Watch refresh with the phone app closed and notification permissions denied/re-enabled. Simulator builds and the regression checks do not verify production CloudKit subscriptions or APNs delivery.
+
 ## Building
 
 1. Open `FList.xcodeproj` in Xcode.
@@ -56,7 +87,7 @@ Language is not chosen inside the app. Change it in **Settings → General → L
 | Bundle ID | `com.tocnet.FList` |
 | Watch bundle ID | `com.tocnet.FList.watchkitapp` |
 | CloudKit container | `iCloud.com.tocnet.FList` |
-| Version | 1.6.4 |
+| Version | 1.6.6 |
 
 The CloudKit container ID in `FList/AppConfig.swift` must stay in sync with the app entitlements. Debug builds use the Development environment; Release/TestFlight uses Production. New CloudKit record types or fields need a schema deploy in CloudKit Console before they work in Production.
 
@@ -64,4 +95,4 @@ Recipes, personal buy lists, and stores reuse the existing `ShortageItem` type a
 
 ## Privacy
 
-OurStock does not use tracking. List data lives in your iCloud account (and on the device as a local cache). Camera and photo library access are only for optional pictures of items, recipes, or people on the list, invite QR codes, and product barcodes. Scanning a barcode sends the number to Open Food Facts (food, beauty, pet food, and household catalogs), UPC Item DB, and GS1. If none of those have the product, it is sent to SaveMyCart. SaveMyCart needs `SaveMyCartAPIKey` (free key from [savemycart.net/developers](https://savemycart.net/developers); `X-API-Key`). Optional `SaveMyCartAPIBaseURL` defaults to `https://savemycart.net`. Barcode Lookup needs `BarcodeLookupAPIKey`. Location is used on this device only, to recognize when you’re at one of your stores and sort that shop’s items to the top.
+OurStock does not use tracking. List data lives in your iCloud account (and on the device as a local cache). Camera and photo library access are only for optional pictures of items, recipes, or people on the list, invite QR codes, and product barcodes. Scanning a barcode sends the number to Open Food Facts (worldwide and Israel food catalogs, beauty, pet food, and household catalogs), UPC Item DB, and GS1. If none of those have the product and a SaveMyCart key is configured, it is sent to SaveMyCart. Add the key in Settings → Barcode lookup keys ([SaveMyCart developer portal](https://savemycart.net/developers)); it is shared with the iCloud list or stored in this device's Keychain for local-only lists. Optional `SaveMyCartAPIBaseURL` defaults to `https://savemycart.net`. Location is used on this device only, to recognize when you’re at one of your stores and sort that shop’s items to the top.
