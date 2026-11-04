@@ -158,11 +158,7 @@ final class WatchStore {
         if let match = items.first(where: { ShortageItem.namesMatch($0.name, trimmed) }) {
             var updated = match
             if match.status == .restocked {
-                updated.status = .needed
-                updated.restockedAt = nil
-                updated.restockNote = ""
-                updated.restockedByName = ""
-                updated.restockedByRecordName = ""
+                updated.markNeeded(addedByName: currentUserDisplayName, addedByRecordName: currentUserRecordName)
                 updated.quantity = 1
             } else {
                 updated.quantity = match.quantity + 1

@@ -31,6 +31,12 @@ struct CloudNotificationRecordTests {
         itemRecord["note"] = (ItemNoteCodec.marker + #"{"note":"Old-client note","byName":"Bob","byID":"bob"}"#) as CKRecordValue
         let legacy = ShortageItem(record: itemRecord)!
         precondition(legacy.notificationEventID == nil && legacy.restockNote == "Old-client note")
-        print("Passed 9 CloudKit record compatibility checks (no network requests)")
+        var readded = legacy
+        readded.markNeeded(addedByName: "Charlie", addedByRecordName: "charlie")
+        readded.write(to: itemRecord)
+        let savedReadded = ShortageItem(record: itemRecord)!
+        precondition(savedReadded.addedByName == "Charlie" && savedReadded.addedByRecordName == "charlie")
+        precondition(savedReadded.status == .needed && savedReadded.restockNote.isEmpty && savedReadded.restockedByRecordName.isEmpty)
+        print("Passed 11 CloudKit record compatibility checks (no network requests)")
     }
 }

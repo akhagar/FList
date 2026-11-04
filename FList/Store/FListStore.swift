@@ -583,11 +583,7 @@ final class FListStore {
             var updated = match
             let outcome: ItemAddOutcome
             if match.status == .restocked {
-                updated.status = .needed
-                updated.restockedAt = nil
-                updated.restockNote = ""
-                updated.restockedByName = ""
-                updated.restockedByRecordName = ""
+                updated.markNeeded(addedByName: currentUserDisplayName, addedByRecordName: currentUserRecordName)
                 updated.quantity = quantity
                 if applyNoteToExisting {
                     updated.note = note.isEmpty ? match.note : note
@@ -846,11 +842,7 @@ final class FListStore {
             var updated = match
             let outcome: ItemAddOutcome
             if match.status == .restocked {
-                updated.status = .needed
-                updated.restockedAt = nil
-                updated.restockNote = ""
-                updated.restockedByName = ""
-                updated.restockedByRecordName = ""
+                updated.markNeeded(addedByName: currentUserDisplayName, addedByRecordName: currentUserRecordName)
                 updated.quantity = max(1, quantity)
                 outcome = .markedNeeded
             } else {
@@ -963,11 +955,7 @@ final class FListStore {
 
     func markNeeded(_ item: ShortageItem) async {
         var updated = item
-        updated.status = .needed
-        updated.restockedAt = nil
-        updated.restockNote = ""
-        updated.restockedByName = ""
-        updated.restockedByRecordName = ""
+        updated.markNeeded(addedByName: currentUserDisplayName, addedByRecordName: currentUserRecordName)
         await upsert(updated)
         await removeOtherItems(named: updated.name, keeping: updated.id)
     }

@@ -61,11 +61,35 @@ struct NotificationRegressionTests {
         expect(oldCache.notificationEventID == nil && oldCache.name == "Milk", "Decode existing on-device caches")
         expect(AppConfig.isMetaItemRecord(AppConfig.notificationEventPrefix + added.id.uuidString), "Keep events off the grocery list")
 
+        let storeID = UUID()
+        var readded = ShortageItem(name: "Milk", quantity: 2, note: "Two bottles",
+                                  restockNote: "Different brand", restockedByName: "Charlie",
+                                  restockedByRecordName: "charlie", status: .restocked,
+                                  addedByName: "Alice", addedByRecordName: "alice",
+                                  createdAt: now, restockedAt: now, photoData: Data([1, 2]), storeIDs: [storeID])
+        let original = readded
+        readded.markNeeded(addedByName: "Bob", addedByRecordName: "bob")
+        expect(readded.addedByName == "Bob" && readded.addedByRecordName == "bob", "Re-adding transfers authorship to the current person")
+        expect(readded.status == .needed && readded.restockedAt == nil && readded.restockNote.isEmpty
+               && readded.restockedByName.isEmpty && readded.restockedByRecordName.isEmpty, "Clear the previous restock details")
+        expect(readded.id == original.id && readded.createdAt == now && readded.name == original.name
+               && readded.quantity == 2 && readded.note == original.note && readded.photoData == original.photoData
+               && readded.storeIDs == [storeID], "Preserve the item's identity and grocery details")
+        let cachedReadded = try JSONDecoder().decode(ShortageItem.self, from: JSONEncoder().encode(readded))
+        expect(cachedReadded == readded, "Persist the new author in the local cache")
+        let nextRestock = ItemNotificationEvent(id: UUID(), itemID: readded.id, itemName: readded.name,
+                                               status: .restocked, actorID: "charlie", actorName: "Charlie",
+                                               authorID: readded.addedByRecordName, note: "", createdAt: now, isCreation: false)
+        expect(nextRestock.shouldNotify(userID: "bob", receivesNewItems: false), "The next restock alerts the person who re-added the item")
+        expect(!nextRestock.shouldNotify(userID: "alice", receivesNewItems: true), "The next restock no longer alerts the original author")
+        readded.markNeeded(addedByName: "Charlie", addedByRecordName: "charlie")
+        expect(readded.addedByRecordName == "bob" && readded.addedByName == "Bob", "An already-needed item keeps its author")
+
         var completions: [String] = []
         let completion = BackgroundFetchCompletion<String> { completions.append($0) }
         expect(completion.finish("timeout"), "Complete the background callback on timeout")
         expect(!completion.finish("late success") && completions == ["timeout"], "Never call the system completion handler twice")
-        print("Passed 17 notification regression checks")
+        print("Passed 24 notification regression checks")
     }
 
     private static func expect(_ value: @autoclosure () -> Bool, _ message: String) {
