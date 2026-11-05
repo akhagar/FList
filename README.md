@@ -87,7 +87,7 @@ Before shipping, test with two Apple IDs on physical devices: owner and invitee,
 | Bundle ID | `com.tocnet.FList` |
 | Watch bundle ID | `com.tocnet.FList.watchkitapp` |
 | CloudKit container | `iCloud.com.tocnet.FList` |
-| Version | 1.6.6 |
+| Version | 1.6.7 |
 
 The CloudKit container ID in `FList/AppConfig.swift` must stay in sync with the app entitlements. Debug builds use the Development environment; Release/TestFlight uses Production. New CloudKit record types or fields need a schema deploy in CloudKit Console before they work in Production.
 

@@ -31,6 +31,35 @@ struct CloudNotificationRecordTests {
         itemRecord["note"] = (ItemNoteCodec.marker + #"{"note":"Old-client note","byName":"Bob","byID":"bob"}"#) as CKRecordValue
         let legacy = ShortageItem(record: itemRecord)!
         precondition(legacy.notificationEventID == nil && legacy.restockNote == "Old-client note")
-        print("Passed 9 CloudKit record compatibility checks (no network requests)")
+        var readded = legacy
+        readded.markNeeded(addedByName: "Charlie", addedByRecordName: "charlie")
+        readded.write(to: itemRecord)
+        let savedReadded = ShortageItem(record: itemRecord)!
+        precondition(savedReadded.addedByName == "Charlie" && savedReadded.addedByRecordName == "charlie")
+        precondition(savedReadded.status == .needed && savedReadded.restockNote.isEmpty && savedReadded.restockedByRecordName.isEmpty)
+        let otherID = UUID()
+        func buyListRecord(_ member: String, ids: [UUID]) -> CKRecord {
+            let record = CKRecord(recordType: AppConfig.itemRecordType,
+                                  recordID: CKRecord.ID(recordName: AppConfig.buyListRecordName(for: member), zoneID: zone))
+            record["addedByName"] = member as CKRecordValue
+            record["note"] = BuyList(memberID: member, memberName: member, itemIDs: ids).noteJSON as CKRecordValue
+            return record
+        }
+        let aliceList = buyListRecord("alice", ids: [item.id, otherID, item.id])
+        let bobList = buyListRecord("bob", ids: [item.id])
+        let charlieList = buyListRecord("charlie", ids: [otherID])
+        let cleared = BuyList.recordsRemovingItem(item.id, from: [aliceList, bobList, charlieList, itemRecord, record])
+        precondition(cleared.count == 2)
+        let lists = Dictionary(uniqueKeysWithValues: cleared.compactMap(BuyList.init(record:)).map { ($0.memberID, $0) })
+        precondition(lists["alice"]?.itemIDs == [otherID] && lists["bob"]?.itemIDs == [])
+        precondition(cleared.allSatisfy { $0["addedByName"] as? String == BuyList(record: $0)?.memberName })
+        precondition(BuyList(record: aliceList)?.itemIDs == [item.id, otherID, item.id])
+        precondition(BuyList.recordsRemovingItem(item.id, from: cleared).isEmpty)
+        var localList = BuyList(memberID: "alice", memberName: "Alice", itemIDs: [item.id, otherID])
+        localList.removeItem(item.id)
+        precondition(localList.itemIDs == [otherID] && localList.memberID == "alice")
+        let cachedList = try JSONDecoder().decode(BuyList.self, from: JSONEncoder().encode(localList))
+        precondition(cachedList == localList)
+        print("Passed 18 CloudKit record compatibility checks (no network requests)")
     }
 }

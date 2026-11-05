@@ -62,6 +62,20 @@ struct BuyList: Hashable, Codable {
 
     var itemIDSet: Set<UUID> { Set(itemIDs) }
 
+    mutating func removeItem(_ id: UUID) {
+        itemIDs.removeAll { $0 == id }
+    }
+
+    static func recordsRemovingItem(_ id: UUID, from records: [CKRecord]) -> [CKRecord] {
+        records.compactMap { record in
+            guard var list = BuyList(record: record), list.itemIDs.contains(id) else { return nil }
+            list.removeItem(id)
+            let updated = record.copy() as! CKRecord
+            updated["note"] = list.noteJSON as CKRecordValue
+            return updated
+        }
+    }
+
     var noteJSON: String {
         let payload = Payload(itemIDs: itemIDs.map(\.uuidString))
         let data = (try? JSONEncoder().encode(payload)) ?? Data("{}".utf8)
@@ -513,6 +527,12 @@ final class CloudKitService {
         }
         var records = [record]
         if let event { records.append(try event.cloudRecord(zoneID: context.zoneID)) }
+        if previousStatus == .restocked, item.status == .needed {
+            // Fetch every member's latest assignments, including lists this device
+            // has not seen yet. Clear them in the same transaction as the re-add.
+            _ = try await fetchHouseholdState(fullReload: false, includingAssets: false)
+            records.append(contentsOf: BuyList.recordsRemovingItem(item.id, from: Array(zoneRecordCache.values)))
+        }
         // The action and the item commit together, so a failed item save never
         // emits an event and intermediate status changes survive later edits.
         let result = try await context.database.modifyRecords(

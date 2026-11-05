@@ -117,6 +117,18 @@ struct ShortageItem: Identifiable, Hashable, Codable {
         try container.encodeIfPresent(notificationEventID, forKey: .notificationEventID)
     }
 
+    mutating func markNeeded(addedByName: String, addedByRecordName: String) {
+        if status == .restocked {
+            self.addedByName = addedByName
+            self.addedByRecordName = addedByRecordName
+        }
+        status = .needed
+        restockedAt = nil
+        restockNote = ""
+        restockedByName = ""
+        restockedByRecordName = ""
+    }
+
     var restockFeedbackLine: String {
         restockFeedbackLine(restockerName: restockedByName)
     }
