@@ -1278,6 +1278,17 @@ final class FListStore {
     }
 
     private func upsert(_ item: ShortageItem) async {
+        // Keep a background refresh from restoring old buying assignments while
+        // the item's status and the cleared buy lists are being saved together.
+        while isSyncing {
+            do { try await Task.sleep(for: .milliseconds(50)) } catch { return }
+        }
+        isSyncing = true
+        if item.status == .needed, items.contains(where: { $0.id == item.id && $0.status == .restocked }) {
+            for index in buyLists.indices {
+                buyLists[index].removeItem(item.id)
+            }
+        }
         if let index = items.firstIndex(where: { $0.id == item.id }) {
             items[index] = item
         } else {
@@ -1291,12 +1302,15 @@ final class FListStore {
                 persistLocalCache()
             } catch {
                 errorMessage = error.flistDisplayMessage
+                isSyncing = false
                 await refresh()
+                return
             }
         } else {
             remember(item)
             persistLocal()
         }
+        isSyncing = false
     }
 
     private func enableChangeNotifications() async {
