@@ -12,6 +12,17 @@
 	</array>
 	<key>CKSharingSupported</key>
 	<true/>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.tocnet.FList.widgets</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>ourstock</string>
+			</array>
+		</dict>
+	</array>
 	<key>NSUserActivityTypes</key>
 	<array>
 		<string>CKSharing</string>

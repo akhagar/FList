@@ -73,7 +73,7 @@ struct BarcodeLookupResult: Sendable {
 }
 
 enum BarcodeLookupService {
-    private static let userAgent = "OurStock/1.6.7 (https://github.com/akhagar/FList)"
+    private static let userAgent = "OurStock/1.6.8 (https://github.com/akhagar/FList)"
     private static let session: URLSession = {
         let config = URLSessionConfiguration.ephemeral
         config.timeoutIntervalForRequest = 15

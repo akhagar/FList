@@ -26,7 +26,11 @@ struct FListApp: App {
                     await CloudKitShareBridge.flushPending()
                 }
                 .onOpenURL { url in
-                    CloudKitShareBridge.acceptShare(at: url)
+                    if let list = WidgetList(url: url) {
+                        store.widgetNavigationRequest = WidgetNavigationRequest(list: list)
+                    } else {
+                        CloudKitShareBridge.acceptShare(at: url)
+                    }
                 }
                 .onContinueUserActivity("com.apple.corespotlight.CKShare") { activity in
                     CloudKitShareBridge.accept(userActivity: activity)

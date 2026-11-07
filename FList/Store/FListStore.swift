@@ -22,6 +22,7 @@ final class FListStore {
     var currentUserName = L10n.string( "Me")
     var currentUserRecordName = "local"
     var householdName = AppConfig.householdDisplayName
+    var widgetNavigationRequest: WidgetNavigationRequest?
     var errorMessage: String?
     var isBusy = false
     var isRefreshing = false
@@ -71,6 +72,7 @@ final class FListStore {
         }
         nearbyMatcher.onNearbyShopChange = { [weak self] shop in
             self?.nearbyShop = shop
+            self?.publishWidgetSnapshot()
         }
         nearbyMatcher.onResolvedCoordinate = { [weak self] id, latitude, longitude in
             Task { await self?.persistShopCoordinate(id: id, latitude: latitude, longitude: longitude) }
@@ -546,6 +548,7 @@ final class FListStore {
         }
         activeNotificationScope = nil
         LocalPersistence.clear()
+        publishWidgetSnapshot()
         CloudKitService.clearSelection()
     }
 
@@ -1760,9 +1763,11 @@ final class FListStore {
         if !extras.isEmpty {
             persistLocal()
         }
+        publishWidgetSnapshot()
     }
 
     private func persistLocal() {
+        defer { publishWidgetSnapshot() }
         if members.isEmpty {
             members = [
                 FamilyMember(
@@ -1789,6 +1794,7 @@ final class FListStore {
     }
 
     private func persistLocalCache() {
+        defer { publishWidgetSnapshot() }
         LocalPersistence.save(
             LocalSnapshot(
                 hasHousehold: hasHousehold,
@@ -1801,6 +1807,13 @@ final class FListStore {
                 buyLists: buyLists
             )
         )
+    }
+    private func publishWidgetSnapshot() {
+        WidgetPublisher.publish(WidgetSnapshotBuilder.make(
+            hasHousehold: hasHousehold, householdName: householdName,
+            languageCode: Bundle.main.preferredLocalizations.first ?? "en",
+            items: neededItems, buyingIDs: myBuyingIDs
+        ))
     }
 }
 

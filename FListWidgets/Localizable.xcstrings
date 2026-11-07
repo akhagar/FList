@@ -1,0 +1,342 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "%@ %lld": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "%1$@ %2$lld" } },
+        "he": { "stringUnit": { "state": "translated", "value": "%1$@ %2$lld" } },
+        "ru": { "stringUnit": { "state": "translated", "value": "%1$@ %2$lld" } }
+      }
+    },
+    "%@ · %lld": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "%1$@ · %2$lld" } },
+        "he": { "stringUnit": { "state": "translated", "value": "%1$@ · %2$lld" } },
+        "ru": { "stringUnit": { "state": "translated", "value": "%1$@ · %2$lld" } }
+      }
+    },
+    "Needed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Needed"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "חסרים"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Нужно купить"
+          }
+        }
+      }
+    },
+    "To buy": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To buy"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "לקנייה"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "К покупке"
+          }
+        }
+      }
+    },
+    "Your latest saved missing items. Tap to open the list.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your latest saved missing items. Tap to open the list."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "הפריטים החסרים האחרונים שנשמרו. לחצו לפתיחת הרשימה."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Последние сохранённые недостающие товары. Нажмите, чтобы открыть список."
+          }
+        }
+      }
+    },
+    "Your latest saved items you plan to buy. Tap to open the list.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your latest saved items you plan to buy. Tap to open the list."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "הפריטים האחרונים שנשמרו ברשימת הקניות האישית שלכם. לחצו לפתיחת הרשימה."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Последние сохранённые товары, которые вы планируете купить. Нажмите, чтобы открыть список."
+          }
+        }
+      }
+    },
+    "Open OurStock": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open OurStock"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "פתחו את OurStock"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Откройте OurStock"
+          }
+        }
+      }
+    },
+    "Open OurStock to choose a list.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open OurStock to choose a list."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "פתחו את OurStock כדי לבחור רשימה."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Откройте OurStock, чтобы выбрать список."
+          }
+        }
+      }
+    },
+    "Nothing missing": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing missing"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "לא חסר דבר"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Всё в наличии"
+          }
+        }
+      }
+    },
+    "Nothing to buy": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing to buy"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "אין פריטים לקנייה"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Нет товаров для покупки"
+          }
+        }
+      }
+    },
+    "Tap to open the list": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tap to open the list"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "לחצו לפתיחת הרשימה"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Нажмите, чтобы открыть список"
+          }
+        }
+      }
+    },
+    "%lld more": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld more"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "עוד %lld"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ещё %lld"
+          }
+        }
+      }
+    },
+    "Family list": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Family list"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "הרשימה המשפחתית"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Семейный список"
+          }
+        }
+      }
+    },
+    "Milk": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Milk"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "חלב"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Молоко"
+          }
+        }
+      }
+    },
+    "Eggs": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eggs"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ביצים"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Яйца"
+          }
+        }
+      }
+    },
+    "Bread": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bread"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "לחם"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Хлеб"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

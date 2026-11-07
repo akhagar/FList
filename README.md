@@ -7,6 +7,7 @@ OurStock is a native iPhone, iPad, and Apple Watch app. Lists sync over iCloud w
 ## Features
 
 - One shared shortage list, with **Needed** and **Back in stock**
+- **Needed** and **To buy** widgets on iPhone and iPad, with small, medium, and large Home Screen layouts plus circular, rectangular, and inline Lock Screen layouts
 - Add a name, quantity, optional note, photo, and which store you can buy it from
 - As you type an item name on iPhone or iPad, get up to five matching suggestions from Back in stock, with items you originally added first. Tap a suggestion to fill the name, then tap Add to mark the existing item as Needed. Suggestions work offline and do not change your quantity, note, photo, or store selections.
 - Scan a product barcode to look it up in Open Food Facts (worldwide and Israel), Open Beauty Facts, Open Pet Food Facts, Open Products Facts, UPC Item DB, and GS1, then add it to Needed. The Israel lookup requests Hebrew product details alongside the worldwide lookup in the app's language; both use the same Open Food Facts database and need no API key. SaveMyCart is used only if none of those catalogs have the barcode and a key has been added in Settings → Barcode lookup keys.
@@ -44,6 +45,23 @@ The code is the iCloud share token — the same as the old invite link, just sho
 On Apple Watch, OurStock shows the same Needed list. Tap an item to mark it back in stock; use **+** to add a name. Create or join the family list on iPhone first, and sign in to the same iCloud account on the Watch.
 
 Language is not chosen inside the app. Change it in **Settings → General → Language & Region**, or under **Settings → OurStock** if you set a language just for this app.
+
+### Widgets
+
+Open OurStock once after installing this version and select your list. Then use the Home Screen's **Edit → Add Widget**, search for **OurStock**, and choose **Needed** or **To buy**. You can also add the compact versions when customizing the Lock Screen. Tap a widget to open its matching list, including if the app was showing recipes or settings. Widget labels follow the app language selected in iPhone/iPad Settings; Hebrew uses right-to-left layout.
+
+Widgets show the currently selected household and your personal To buy selections. They display the latest data saved by the app, including quantities. The app requests an update after saving changes or receiving a background sync; unchanged polls do not request extra updates. iOS controls widget refresh timing, and widgets do not independently fetch from CloudKit. If another person's change hasn't synced yet, open OurStock to refresh. These are list previews: marking items back in stock still happens inside the app.
+
+The extension reads a small snapshot from the App Group `group.com.tocnet.FList`, without photos, notes, or credentials. Existing local files and CloudKit records stay compatible with older releases. Leaving or deleting the selected list clears both widgets. This extension targets iPhone/iPad; the existing Watch app is unchanged.
+
+Before running on a physical device or archiving, select the same development team for **FList** and **FListWidgets**. In **Signing & Capabilities → App Groups**, register/select `group.com.tocnet.FList` for both targets (Debug and Release entitlements are already included). The extension bundle ID is `com.tocnet.FList.widgets`; automatic signing must provision it and the shared group. No CloudKit schema deployment or paid service is needed.
+
+Run local snapshot and link-routing checks:
+
+```sh
+xcrun swiftc -parse-as-library FList/L10n.swift FList/Models/ShortageItem.swift FList/Widgets/WidgetSnapshot.swift FList/Widgets/WidgetSnapshotBuilder.swift FList/Widgets/WidgetSnapshotStore.swift Tests/WidgetSnapshotTests.swift -o /tmp/ourstock-widget-tests
+/tmp/ourstock-widget-tests
+```
 
 ### Notifications
 
@@ -87,7 +105,7 @@ Before shipping, test with two Apple IDs on physical devices: owner and invitee,
 | Bundle ID | `com.tocnet.FList` |
 | Watch bundle ID | `com.tocnet.FList.watchkitapp` |
 | CloudKit container | `iCloud.com.tocnet.FList` |
-| Version | 1.6.7 |
+| Version | 1.6.8 |
 
 The CloudKit container ID in `FList/AppConfig.swift` must stay in sync with the app entitlements. Debug builds use the Development environment; Release/TestFlight uses Production. New CloudKit record types or fields need a schema deploy in CloudKit Console before they work in Production.
 

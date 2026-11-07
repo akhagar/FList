@@ -22,6 +22,11 @@ struct ShortageListView: View {
         var id: String { rawValue }
     }
 
+    init(store: FListStore, initialList: WidgetList = .needed) {
+        self.store = store
+        _selectedPane = State(initialValue: initialList == .buying ? .buying : .needed)
+    }
+
     var body: some View {
         NavigationStack {
             listContent
