@@ -12,6 +12,13 @@
 	</array>
 	<key>CKSharingSupported</key>
 	<true/>
+	<key>INAlternativeAppNames</key>
+	<array>
+		<dict>
+			<key>INAlternativeAppName</key>
+			<string>OURSTOCK_SIRI_NAME</string>
+		</dict>
+	</array>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>

@@ -74,6 +74,10 @@
 		C10000000000000000000029 /* WidgetPublisher.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000022 /* WidgetPublisher.swift */; };
 		C10000000000000000000030 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000018 /* Localizable.xcstrings */; };
 		C10000000000000000000031 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000017 /* PrivacyInfo.xcprivacy */; };
+		D10000000000000000000006 /* ItemAddition.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000000000000000000001 /* ItemAddition.swift */; };
+		D10000000000000000000007 /* ItemShortcutRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000000000000000000002 /* ItemShortcutRequest.swift */; };
+		D10000000000000000000008 /* AddNeededItemIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000000000000000000003 /* AddNeededItemIntent.swift */; };
+		D10000000000000000000009 /* AppShortcuts.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = D10000000000000000000004 /* AppShortcuts.xcstrings */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -179,6 +183,10 @@
 		C10000000000000000000020 /* WidgetSnapshotStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetSnapshotStore.swift; sourceTree = "<group>"; };
 		C10000000000000000000021 /* WidgetSnapshotBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetSnapshotBuilder.swift; sourceTree = "<group>"; };
 		C10000000000000000000022 /* WidgetPublisher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetPublisher.swift; sourceTree = "<group>"; };
+		D10000000000000000000001 /* ItemAddition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemAddition.swift; sourceTree = "<group>"; };
+		D10000000000000000000002 /* ItemShortcutRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemShortcutRequest.swift; sourceTree = "<group>"; };
+		D10000000000000000000003 /* AddNeededItemIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddNeededItemIntent.swift; sourceTree = "<group>"; };
+		D10000000000000000000004 /* AppShortcuts.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = AppShortcuts.xcstrings; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -241,6 +249,8 @@
 				A20000000000000000000027 /* InfoPlist.xcstrings */,
 				A10000000000000000000700 /* Models */,
 				A10000000000000000000800 /* Store */,
+				D10000000000000000000005 /* Intents */,
+				D10000000000000000000004 /* AppShortcuts.xcstrings */,
 				C10000000000000000000014 /* Widgets */,
 				A10000000000000000000900 /* Views */,
 				A20000000000000000000014 /* Assets.xcassets */,
@@ -256,6 +266,8 @@
 			isa = PBXGroup;
 			children = (
 				A20000000000000000000003 /* ShortageItem.swift */,
+				D10000000000000000000001 /* ItemAddition.swift */,
+				D10000000000000000000002 /* ItemShortcutRequest.swift */,
 				B10000000000000000000003 /* ItemNotificationEvent.swift */,
 				A20000000000000000000036 /* Shop.swift */,
 				A20000000000000000000031 /* Recipe.swift */,
@@ -344,6 +356,14 @@
 				C10000000000000000000022 /* WidgetPublisher.swift */,
 			);
 			path = Widgets;
+			sourceTree = "<group>";
+		};
+		D10000000000000000000005 /* Intents */ = {
+			isa = PBXGroup;
+			children = (
+				D10000000000000000000003 /* AddNeededItemIntent.swift */,
+			);
+			path = Intents;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -465,6 +485,7 @@
 				A30000000000000000000014 /* Assets.xcassets in Resources */,
 				A30000000000000000000017 /* PrivacyInfo.xcprivacy in Resources */,
 				A30000000000000000000021 /* Localizable.xcstrings in Resources */,
+				D10000000000000000000009 /* AppShortcuts.xcstrings in Resources */,
 				A30000000000000000000027 /* InfoPlist.xcstrings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -496,6 +517,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				A30000000000000000000001 /* FListApp.swift in Sources */,
+				D10000000000000000000006 /* ItemAddition.swift in Sources */,
+				D10000000000000000000007 /* ItemShortcutRequest.swift in Sources */,
+				D10000000000000000000008 /* AddNeededItemIntent.swift in Sources */,
 				C10000000000000000000026 /* WidgetSnapshot.swift in Sources */,
 				C10000000000000000000027 /* WidgetSnapshotStore.swift in Sources */,
 				C10000000000000000000028 /* WidgetSnapshotBuilder.swift in Sources */,
@@ -611,7 +635,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.6.8;
+				MARKETING_VERSION = 1.6.9;
 				MTL_ENABLE_DEBUG_INFO = "DWARF with dSYM File";
 				PRODUCT_BUNDLE_IDENTIFIER = com.tocnet.FList;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -655,7 +679,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.6.8;
+				MARKETING_VERSION = 1.6.9;
 				MTL_ENABLE_DEBUG_INFO = "DWARF with dSYM File";
 				PRODUCT_BUNDLE_IDENTIFIER = com.tocnet.FList;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -817,7 +841,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.6.8;
+				MARKETING_VERSION = 1.6.9;
 				PRODUCT_BUNDLE_IDENTIFIER = com.tocnet.FList.watchkitapp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -855,7 +879,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.6.8;
+				MARKETING_VERSION = 1.6.9;
 				PRODUCT_BUNDLE_IDENTIFIER = com.tocnet.FList.watchkitapp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -889,7 +913,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.6.8;
+				MARKETING_VERSION = 1.6.9;
 				PRODUCT_BUNDLE_IDENTIFIER = com.tocnet.FList.widgets;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
@@ -919,7 +943,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.6.8;
+				MARKETING_VERSION = 1.6.9;
 				PRODUCT_BUNDLE_IDENTIFIER = com.tocnet.FList.widgets;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;

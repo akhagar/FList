@@ -246,7 +246,7 @@ final class CloudKitService {
         UserDefaults.standard.set(choice.isOwner, forKey: selectedZoneIsOwnerKey)
     }
 
-    private static func savedSelection() -> HouseholdChoice? {
+    static func savedSelection() -> HouseholdChoice? {
         guard let zoneName = UserDefaults.standard.string(forKey: selectedZoneNameKey),
               let ownerName = UserDefaults.standard.string(forKey: selectedZoneOwnerKey)
         else { return nil }

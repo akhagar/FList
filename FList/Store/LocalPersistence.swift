@@ -66,8 +66,14 @@ enum LocalPersistence {
     }
 
     static func save(_ snapshot: LocalSnapshot) {
-        guard let data = try? JSONEncoder().encode(snapshot) else { return }
-        try? data.write(to: fileURL, options: [.atomic])
+        try? saveChecked(snapshot)
+    }
+
+    /// Siri must not acknowledge a local save that failed on disk. The optional
+    /// destination also lets regression checks avoid the user's real cache.
+    static func saveChecked(_ snapshot: LocalSnapshot, to destination: URL? = nil) throws {
+        let data = try JSONEncoder().encode(snapshot)
+        try data.write(to: destination ?? fileURL, options: [.atomic])
     }
 
     static func clear() {

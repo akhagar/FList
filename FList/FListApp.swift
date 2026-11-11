@@ -1,3 +1,4 @@
+import AppIntents
 import SwiftUI
 
 @main
@@ -7,6 +8,10 @@ struct FListApp: App {
     @State private var store = CloudKitShareBridge.sharedStore
     @AppStorage(AppAppearance.storageKey) private var appearanceRaw = AppAppearance.system.rawValue
     @AppStorage(AppAccent.storageKey) private var accentRaw = AppAccent.green.rawValue
+
+    init() {
+        OurStockShortcuts.updateAppShortcutParameters()
+    }
 
     private var appearance: AppAppearance {
         AppAppearance(rawValue: appearanceRaw) ?? .system

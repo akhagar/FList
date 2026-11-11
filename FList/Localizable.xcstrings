@@ -1,6 +1,374 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Item name": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Item name"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "שם הפריט"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Название товара"
+          }
+        }
+      }
+    },
+    "Quantity": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quantity"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "כמות"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Количество"
+          }
+        }
+      }
+    },
+    "Add missing item": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add missing item"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "הוספת פריט חסר"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Добавить недостающий товар"
+          }
+        }
+      }
+    },
+    "Add an item to the selected OurStock list.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add an item to the selected OurStock list."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "הוספת פריט לרשימה שנבחרה ב־OurStock."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Добавить товар в выбранный список OurStock."
+          }
+        }
+      }
+    },
+    "Which item do you need?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Which item do you need?"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "איזה פריט חסר?"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Какой товар нужен?"
+          }
+        }
+      }
+    },
+    "Choose a quantity between 1 and 999.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a quantity between 1 and 999."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "בחרו כמות בין 1 ל־999."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Укажите количество от 1 до 999."
+          }
+        }
+      }
+    },
+    "Add ${itemName} to Needed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add ${itemName} to Needed"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "הוספת ${itemName} לרשימת החסרים"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Добавить ${itemName} в список недостающих товаров"
+          }
+        }
+      }
+    },
+    "Increased %@ by %lld in %@.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Increased %@ by %lld in %@."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "הכמות של %1$@ הוגדלה ב־%2$lld ברשימה %3$@."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Количество товара «%1$@» увеличено на %2$lld в списке «%3$@»."
+          }
+        }
+      }
+    },
+    "Added %lld × %@ to %@.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Added %lld × %@ to %@."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "נוספו %1$lld × %2$@ לרשימה %3$@."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Добавлено: %1$lld × %2$@ в список «%3$@»."
+          }
+        }
+      }
+    },
+    "Enter an item name.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter an item name."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "הזינו שם פריט."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Введите название товара."
+          }
+        }
+      }
+    },
+    "Quantity must be at least one.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quantity must be at least one."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "הכמות חייבת להיות לפחות אחת."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Количество должно быть не меньше одного."
+          }
+        }
+      }
+    },
+    "The quantity is too large. Edit this item in OurStock.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The quantity is too large. Edit this item in OurStock."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "הכמות גדולה מדי. ערכו את הפריט ב־OurStock."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Количество слишком велико. Измените товар в OurStock."
+          }
+        }
+      }
+    },
+    "Open OurStock and create or select a list first.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open OurStock and create or select a list first."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "פתחו את OurStock וצרו או בחרו רשימה תחילה."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сначала откройте OurStock и создайте или выберите список."
+          }
+        }
+      }
+    },
+    "The selected list changed. Open OurStock, check the list, and try again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The selected list changed. Open OurStock, check the list, and try again."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "הרשימה שנבחרה השתנתה. פתחו את OurStock, בדקו את הרשימה ונסו שוב."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Выбранный список изменился. Откройте OurStock, проверьте список и попробуйте снова."
+          }
+        }
+      }
+    },
+    "Your iCloud list is unavailable. Open OurStock and check your connection before trying again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your iCloud list is unavailable. Open OurStock and check your connection before trying again."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "רשימת iCloud שלכם אינה זמינה. פתחו את OurStock ובדקו את החיבור לפני ניסיון נוסף."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Список iCloud недоступен. Откройте OurStock и проверьте подключение перед повторной попыткой."
+          }
+        }
+      }
+    },
+    "Couldn't confirm the item was saved. Check OurStock before trying again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't confirm the item was saved. Check OurStock before trying again."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "לא ניתן לאשר שהפריט נשמר. בדקו ב־OurStock לפני ניסיון נוסף."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не удалось подтвердить сохранение товара. Проверьте OurStock перед повторной попыткой."
+          }
+        }
+      }
+    },
     "Suggestions from Back in stock" : {
       "localizations" : {
         "en" : { "stringUnit" : { "state" : "translated", "value" : "Suggestions from Back in stock" } },

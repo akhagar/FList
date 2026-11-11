@@ -9,6 +9,7 @@ OurStock is a native iPhone, iPad, and Apple Watch app. Lists sync over iCloud w
 - One shared shortage list, with **Needed** and **Back in stock**
 - **Needed** and **To buy** widgets on iPhone and iPad, with small, medium, and large Home Screen layouts plus circular, rectangular, and inline Lock Screen layouts
 - Add a name, quantity, optional note, photo, and which store you can buy it from
+- Add a missing item with Siri or Shortcuts on iPhone and iPad
 - As you type an item name on iPhone or iPad, get up to five matching suggestions from Back in stock, with items you originally added first. Tap a suggestion to fill the name, then tap Add to mark the existing item as Needed. Suggestions work offline and do not change your quantity, note, photo, or store selections.
 - Scan a product barcode to look it up in Open Food Facts (worldwide and Israel), Open Beauty Facts, Open Pet Food Facts, Open Products Facts, UPC Item DB, and GS1, then add it to Needed. The Israel lookup requests Hebrew product details alongside the worldwide lookup in the app's language; both use the same Open Food Facts database and need no API key. SaveMyCart is used only if none of those catalogs have the barcode and a key has been added in Settings → Barcode lookup keys.
 - Tap an item to mark it back in stock. Long-press to edit, or to leave a note if something wasn’t as described — that note is sent to the person who added the item
@@ -63,6 +64,46 @@ xcrun swiftc -parse-as-library FList/L10n.swift FList/Models/ShortageItem.swift 
 /tmp/ourstock-widget-tests
 ```
 
+### Siri and Shortcuts
+
+Open OurStock once and create or select your household. Then say **“Hey Siri, add an item in OurStock.”** Siri asks which item you need. This action opens OurStock and adds one of that item to the currently selected list. You may need to unlock the device. In Shortcuts, find **OurStock → Add missing item** to supply an item name and an optional quantity from 1 to 999.
+
+**“Hey Siri, add missing item to OurStock”** is also registered explicitly, along with variants using “a missing item” and “in OurStock.” Install this build and open OurStock once before testing a newly added phrase. If Siri says it cannot add items directly to the app, first run **Add missing item** by tapping it in Shortcuts. If it is absent, the installed build or its shortcut registration needs checking. If tapping works but speaking does not, check the exact phrase and Siri language; the refusal alone does not establish that saving failed.
+
+To omit the app name when speaking, create a personal shortcut once on your iPhone:
+
+1. Open **Shortcuts**, tap **+**, and add the **OurStock → Add missing item** action.
+2. Set **Item name** to **Ask Each Time**, and leave **Quantity** at **1**.
+3. Give the personal shortcut a distinctive name, such as **Family basket**, and save it.
+4. Try **“Hey Siri, run Family basket.”** Once the shortcut starts, answer its item-name prompt.
+
+You can instead name it **סל משפחתי** or **Семейная корзина** to match your Siri language. Apple requires the app name in an app's built-in [App Shortcut phrases](https://developer.apple.com/design/human-interface-guidelines/app-shortcuts), but personal shortcuts can be [invoked by their chosen name](https://support.apple.com/en-mide/guide/shortcuts/apd07c25bb38/ios). This is a two-step conversation: say the shortcut name, then answer with the item. The action still opens OurStock and may require unlocking the device.
+
+If the action is still displayed as **Add missing item** after changing Siri to Hebrew or Russian, you can use it as-is: the action's display label does not restrict the language of item names. Siri's language setting does not automatically translate the Shortcuts interface or rename a saved shortcut. Create a personal shortcut using the action, set **Item name → Ask Each Time**, then use the shortcut editor's **Rename** command to give your personal shortcut a Hebrew or Russian name. The action inside it can keep its English label. For Hebrew, name the personal shortcut **סל משפחתי**, then try **“סירי, הפעילי את הקיצור סל משפחתי”** and answer the item prompt with **חלב**. See [Apple's shortcut-renaming instructions](https://support.apple.com/en-euro/guide/shortcuts/apdd57094696/ios).
+
+If tapping the saved shortcut works but Siri tries to add a reminder, the voice request is being routed to a different action. Renaming the personal shortcut and explicitly asking Siri to run it is a diagnostic step, not a guaranteed fix. Wait until the shortcut asks for the item before saying its name. If routing still fails, compare the exact shortcut name with Siri's transcription, then try typing that same request to Siri: a successful typed request narrows the issue to speech recognition; failure of both leaves shortcut matching or registration to investigate. Do not infer a CloudKit save failure from a request that never started OurStock's action.
+
+An item already in Needed gets its quantity increased. An item in Back in stock moves to Needed, with you as its author. Existing notes, photos, and store tags are retained. Siri confirms only after saving; an unavailable iCloud list produces an error instead of saving to a different list or a local copy. If a save cannot be confirmed, check the list before retrying.
+
+Prompts and shortcut phrases are included in English, Hebrew, and Russian. The Siri app-name aliases are **Our Stock**, **אורסטוק**, and **Аурсток**; the visible app name remains OurStock. Use a phrase in Siri's configured language, then answer its item-name prompt:
+
+- Hebrew: **“הוסיפי פריט חסר לאורסטוק”**, then **“חלב”** or **“גבינה לבנה”**.
+- Russian: **“Добавь товар в Аурсток”**, then **“молоко”** or **“сметана”**.
+- English: **“Add missing item to OurStock”**, then the item name.
+
+Set Siri's language under **iPhone Settings → Siri (or Apple Intelligence & Siri) → Language**, as described in [Apple's language settings guide](https://support.apple.com/en-ie/120499). Changing OurStock's app language alone does not select Siri's speech-recognition language. The app accepts Hebrew, Russian, English, and mixed-script names regardless of its display language and preserves the text it receives; it does not translate item names. Recognition of multiple spoken languages in the same session depends on Siri and isn't guaranteed by the app. The earlier Shortcuts registration check still applies if Siri refuses to run the action before asking for an item.
+
+This implementation is for iPhone and iPad, and uses the existing CloudKit records without a schema change or separate service.
+
+Run item-merging, selected-list, and local-save regression checks:
+
+```sh
+xcrun swiftc -parse-as-library FList/L10n.swift FList/AppConfig.swift FList/Models/ShortageItem.swift FList/Models/ItemAddition.swift FList/Models/ItemShortcutRequest.swift FList/Models/ItemNotificationEvent.swift FList/Models/FamilyMember.swift FList/Models/Recipe.swift FList/Models/Shop.swift FList/Store/CloudKitService.swift FList/Store/LocalPersistence.swift Tests/ItemShortcutTests.swift -o /tmp/ourstock-siri-tests
+/tmp/ourstock-siri-tests
+```
+
+Before release, test spoken invocation on a physical device in each supported language, including a cold launch, a locked device, an invited household, a renamed profile, and an unavailable network. Verify the Shortcuts action also works with an explicit quantity. Build and model checks do not verify Siri recognition or production iCloud connectivity.
+
 ### Notifications
 
 In Settings, enable **General list update alerts** to receive a visible CloudKit alert before the app finishes synchronizing. This uses the existing iCloud setup: there is no additional server, subscription, or hosting service. The option is off by default and applies to this iCloud account's devices for the selected private/shared database. It covers changes across those lists, including recipes and settings; the recipient switches below it apply to detailed new-item messages, not these general alerts.
@@ -105,7 +146,7 @@ Before shipping, test with two Apple IDs on physical devices: owner and invitee,
 | Bundle ID | `com.tocnet.FList` |
 | Watch bundle ID | `com.tocnet.FList.watchkitapp` |
 | CloudKit container | `iCloud.com.tocnet.FList` |
-| Version | 1.6.8 |
+| Version | 1.6.9 |
 
 The CloudKit container ID in `FList/AppConfig.swift` must stay in sync with the app entitlements. Debug builds use the Development environment; Release/TestFlight uses Production. New CloudKit record types or fields need a schema deploy in CloudKit Console before they work in Production.
 

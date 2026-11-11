@@ -563,13 +563,6 @@ final class FListStore {
         UserDefaults.standard.removeObject(forKey: "flist.itemBaselineSaved")
     }
 
-    enum ItemAddOutcome {
-        case ignored
-        case created
-        case increasedQuantity
-        case markedNeeded
-    }
-
     @discardableResult
     func addItem(
         name: String,
@@ -579,47 +572,96 @@ final class FListStore {
         storeIDs: [UUID] = [],
         applyNoteToExisting: Bool = true
     ) async -> ItemAddOutcome {
-        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { return .ignored }
-
-        if let match = itemsNamed(trimmed).first {
-            var updated = match
-            let outcome: ItemAddOutcome
-            if match.status == .restocked {
-                updated.markNeeded(addedByName: currentUserDisplayName, addedByRecordName: currentUserRecordName)
-                updated.quantity = quantity
-                if applyNoteToExisting {
-                    updated.note = note.isEmpty ? match.note : note
-                }
-                outcome = .markedNeeded
-            } else {
-                updated.quantity = match.quantity + max(1, quantity)
-                if applyNoteToExisting, !note.isEmpty { updated.note = note }
-                outcome = .increasedQuantity
-            }
-            if let photoData {
-                updated.photoData = photoData
-            }
-            if !storeIDs.isEmpty {
-                var seen = Set(updated.storeIDs)
-                updated.storeIDs.append(contentsOf: storeIDs.filter { seen.insert($0).inserted })
-            }
-            await upsert(updated)
-            await removeOtherItems(named: trimmed, keeping: updated.id)
-            return outcome
+        guard !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return .ignored }
+        do {
+            return try await addItemAndWait(name: name, quantity: quantity, note: note,
+                                           photoData: photoData, storeIDs: storeIDs,
+                                           applyNoteToExisting: applyNoteToExisting)
+        } catch {
+            errorMessage = error.flistDisplayMessage
+            await refresh()
+            return .ignored
         }
+    }
 
-        let item = ShortageItem(
-            name: trimmed,
-            quantity: quantity,
-            note: note.trimmingCharacters(in: .whitespacesAndNewlines),
-            addedByName: currentUserDisplayName,
-            addedByRecordName: currentUserRecordName,
-            photoData: photoData,
-            storeIDs: storeIDs
+    private func addItemAndWait(
+        name: String, quantity: Int, note: String, photoData: Data? = nil,
+        storeIDs: [UUID] = [], applyNoteToExisting: Bool = true,
+        expectedList: ItemShortcutList? = nil
+    ) async throws -> ItemAddOutcome {
+        try await beginItemWrite()
+        defer { isSyncing = false }
+        if let expectedList { try validateShortcutList(expectedList) }
+        let addition = try ItemAddition.prepare(
+            items: items, name: name, quantity: quantity, note: note,
+            addedByName: currentUserDisplayName, addedByRecordName: currentUserRecordName,
+            photoData: photoData, storeIDs: storeIDs, applyNoteToExisting: applyNoteToExisting
         )
-        await upsert(item)
-        return .created
+        // A name-only addition must preserve the server's photo, including
+        // when Siri refreshed metadata without downloading its image.
+        try await saveItemWhileLocked(addition.item, updatePhoto: photoData != nil)
+        await removeOtherItems(named: addition.item.name, keeping: addition.item.id)
+        return addition.outcome
+    }
+
+    func addItemFromSiri(name: String, quantity: Int) async throws -> ItemShortcutReceipt {
+        guard hasHousehold else { throw ItemShortcutError.chooseList }
+        guard !isBusy else { throw ItemShortcutError.listChanged }
+        let expectedList = shortcutListIdentity
+        if startTask != nil || accountKind == .checking || (expectedList.usesCloud && cloudKit.context == nil) {
+            await start()
+        }
+        try Task.checkCancellation()
+        try validateShortcutList(expectedList)
+        if expectedList.usesCloud {
+            do {
+                // Refresh the selected list before merging a spoken name. Siri
+                // doesn't need to download photos to perform this operation.
+                try await reloadFromCloud(notify: true, showProgress: false, fullReload: true, includingAssets: false)
+            } catch is CancellationError {
+                throw CancellationError()
+            } catch {
+                throw ItemShortcutError.cloudUnavailable
+            }
+        }
+        try validateShortcutList(expectedList)
+        let listName = householdName
+        let outcome: ItemAddOutcome
+        do {
+            outcome = try await addItemAndWait(name: name, quantity: quantity, note: "", expectedList: expectedList)
+        } catch let error as ItemShortcutError {
+            throw error
+        } catch is CancellationError {
+            throw CancellationError()
+        } catch let error as ItemAdditionError {
+            throw error
+        } catch {
+            throw ItemShortcutError.saveUnconfirmed
+        }
+        widgetNavigationRequest = WidgetNavigationRequest(list: .needed)
+        return ItemShortcutReceipt(itemName: name.trimmingCharacters(in: .whitespacesAndNewlines),
+                                   householdName: listName, quantity: quantity, outcome: outcome)
+    }
+
+    private var shortcutListIdentity: ItemShortcutList {
+        guard let selection = CloudKitService.savedSelection() else { return .local }
+        return .cloud(zone: selection.zoneName, owner: selection.ownerName,
+                      isOwner: selection.isOwner, user: currentUserRecordName)
+    }
+
+    private func validateShortcutList(_ expected: ItemShortcutList) throws {
+        var cloudIsReady = false
+        if usesiCloud, let context = cloudKit.context {
+            let actual = ItemShortcutList.cloud(zone: context.zoneID.zoneName, owner: context.zoneID.ownerName,
+                                                isOwner: context.isOwner, user: context.currentUserRecordName)
+            cloudIsReady = actual == expected
+        }
+        try expected.validate(current: shortcutListIdentity, hasHousehold: hasHousehold,
+                              isBusy: isBusy, cloudIsReady: cloudIsReady)
+        // A cached iCloud list must never silently become a local-only write.
+        if !expected.usesCloud, usesiCloud || accountKind == .checking {
+            throw ItemShortcutError.listChanged
+        }
     }
 
     func itemsNamed(_ name: String) -> [ShortageItem] {
@@ -1281,12 +1323,31 @@ final class FListStore {
     }
 
     private func upsert(_ item: ShortageItem) async {
+        do {
+            try await beginItemWrite()
+            do {
+                defer { isSyncing = false }
+                try await saveItemWhileLocked(item)
+            }
+        } catch {
+            errorMessage = error.flistDisplayMessage
+            await refresh()
+        }
+    }
+
+    private func beginItemWrite() async throws {
         // Keep a background refresh from restoring old buying assignments while
         // the item's status and the cleared buy lists are being saved together.
         while isSyncing {
-            do { try await Task.sleep(for: .milliseconds(50)) } catch { return }
+            try await Task.sleep(for: .milliseconds(50))
         }
+        try Task.checkCancellation()
         isSyncing = true
+    }
+
+    private func saveItemWhileLocked(_ item: ShortageItem, updatePhoto: Bool = true) async throws {
+        let previousItems = items
+        let previousBuyLists = buyLists
         if item.status == .needed, items.contains(where: { $0.id == item.id && $0.status == .restocked }) {
             for index in buyLists.indices {
                 buyLists[index].removeItem(item.id)
@@ -1298,22 +1359,20 @@ final class FListStore {
             items.insert(item, at: 0)
         }
 
-        if usesiCloud {
-            do {
-                try await cloudKit.save(item, actorName: currentUserDisplayName)
+        do {
+            if usesiCloud {
+                try await cloudKit.save(item, updatePhoto: updatePhoto, actorName: currentUserDisplayName)
                 remember(item)
                 persistLocalCache()
-            } catch {
-                errorMessage = error.flistDisplayMessage
-                isSyncing = false
-                await refresh()
-                return
+            } else {
+                try persistLocalChecked()
+                remember(item)
             }
-        } else {
-            remember(item)
-            persistLocal()
+        } catch {
+            items = previousItems
+            buyLists = previousBuyLists
+            throw error
         }
-        isSyncing = false
     }
 
     private func enableChangeNotifications() async {
@@ -1417,7 +1476,7 @@ final class FListStore {
     }
 
     @discardableResult
-    private func reloadFromCloud(notify: Bool, showProgress: Bool, fullReload: Bool) async throws -> Bool {
+    private func reloadFromCloud(notify: Bool, showProgress: Bool, fullReload: Bool, includingAssets: Bool = true) async throws -> Bool {
         // A push during an in-flight fetch must fetch again: the remote change
         // can be newer than that fetch's token. Cancellation bounds wait time.
         while isSyncing {
@@ -1437,7 +1496,7 @@ final class FListStore {
         let hadBaseline = hasItemBaseline
         let state = try await cloudKit.fetchHouseholdState(
             fullReload: shouldReloadFully,
-            includingAssets: shouldReloadFully && UIApplication.shared.applicationState == .active
+            includingAssets: includingAssets && shouldReloadFully && UIApplication.shared.applicationState == .active
         )
         if !state.hasChanges, !shouldReloadFully {
             await NotificationManager.shared.retryPending()
@@ -1767,7 +1826,10 @@ final class FListStore {
     }
 
     private func persistLocal() {
-        defer { publishWidgetSnapshot() }
+        try? persistLocalChecked()
+    }
+
+    private func persistLocalChecked() throws {
         if members.isEmpty {
             members = [
                 FamilyMember(
@@ -1779,7 +1841,7 @@ final class FListStore {
                 )
             ]
         }
-        LocalPersistence.save(
+        try LocalPersistence.saveChecked(
             LocalSnapshot(
                 hasHousehold: hasHousehold,
                 currentUserName: currentUserName,
@@ -1791,6 +1853,7 @@ final class FListStore {
                 buyLists: buyLists
             )
         )
+        publishWidgetSnapshot()
     }
 
     private func persistLocalCache() {
